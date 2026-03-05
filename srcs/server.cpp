@@ -3,20 +3,23 @@
 #include <string>
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 #include <netinet/in.h>
+
+#define BACKLOG 5
 
 int createSocket(void)
 {
-	int SocketFd;
+	int socketFd;
 	
 	// Creating socket file descriptor
-	SocketFd = socket(PF_INET, SOCK_STREAM, 0);
-	if (SocketFd == -1)
+	socketFd = socket(PF_INET, SOCK_STREAM, 0);
+	if (socketFd == -1)
 		perror("server: socket");
 	
 	int optval = 1;									// 1 is set to enable option
 	socklen_t optlen = sizeof(optval);
-	if (setsockopt(SocketFd, SOL_SOCKET,
+	if (setsockopt(socketFd, SOL_SOCKET,
 		SO_REUSEADDR, &optval, optlen) == -1) {
 		perror("setsockopt");
 	}												// optlen = information for the setsockopt as optval is linked to SO_REUSEADDR
@@ -28,5 +31,17 @@ int createSocket(void)
 	my_addr.sin_port = htons(PORT);					// htons = host to network short, used to set it to Network Byte Order (Big Endian)
 	my_addr.sin_addr.s_addr = htonl(INADDR_ANY); 	// host to network long
 
+	socklen_t addrlen = sizeof(sockaddr_in);
+	if (bind(socketFd, (struct sockaddr*)&my_addr, addrlen) == -1)
+		perror("bind error");
 	
+	int ok  = 0;
+	while (!ok)
+	{
+		ok = listen(socketFd, BACKLOG);
+		if (ok == -1)
+			perror("listen error");
+	}
+
+	return (0);
 }

@@ -1,8 +1,12 @@
+#include "../include/main.hpp"
+#include "../include/server.hpp"
 
 int main(int ac, char **av)
 {
-	if (ac > 2)
-		return (1);
-	
+	(void) ac;
+	(void) av;
+//	if (ac > 2)
+//		return (1);
+	createSocket();
 	return (0);
 }
