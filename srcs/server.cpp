@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <iostream>
 #include <netinet/in.h>
 
 #define BACKLOG 5
@@ -42,6 +43,5 @@ int createSocket(void)
 		if (ok == -1)
 			perror("listen error");
 	}
-
 	return (0);
 }
