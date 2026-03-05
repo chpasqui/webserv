@@ -7,6 +7,7 @@ int main(int ac, char **av)
 	(void) av;
 //	if (ac > 2)
 //		return (1);
-	createSocket();
+	if (createSocket() == 1)
+		return (1);
 	return (0);
 }

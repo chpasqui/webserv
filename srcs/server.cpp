@@ -4,8 +4,10 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
+#include <sys/epoll.h>
 
 #define BACKLOG 5
 
@@ -16,8 +18,16 @@ int createSocket(void)
 	// Creating socket file descriptor
 	socketFd = socket(PF_INET, SOCK_STREAM, 0);
 	if (socketFd == -1)
+	{
 		perror("server: socket");
-	
+		return (1);
+	}
+	if (fcntl(socketFd, F_SETFL, O_NONBLOCK) == -1)
+	{
+		perror("server: Fcntl");
+		return (1);
+	}
+
 	int optval = 1;									// 1 is set to enable option
 	socklen_t optlen = sizeof(optval);
 	if (setsockopt(socketFd, SOL_SOCKET,
@@ -39,9 +49,33 @@ int createSocket(void)
 	int ok  = 0;
 	while (!ok)
 	{
-		ok = listen(socketFd, BACKLOG);
+		ok = listen(socketFd, BACKLOG); //SOMAXCONN ?
 		if (ok == -1)
 			perror("listen error");
 	}
+
+	int epollFd;
+	epollFd = epoll_create(1);
+	if (epollFd == -1)
+	{
+		perror("epoll_create");
+		return (1);
+	}
+
+	struct epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = socketFd;
+
+	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, socketFd, &event) == -1)
+	{
+		perror("epoll_ctl");
+		return (1);
+	}
+
+	//See epoll_wait()
+	//While (true)
+	//main struct renvoie de int listener ?
+	
+
 	return (0);
 }
