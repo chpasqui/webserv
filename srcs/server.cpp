@@ -12,30 +12,30 @@
 
 int handleClientsConnections(int listenFd)
 {
-	int					epollFd = -1;
+	int					epoll_fd = -1;
 	int					nbFd = -1;
 	struct epoll_event	events[MAX_EVENT];
 	struct epoll_event	event;
 
 	event.events = EPOLLIN;
 	event.data.fd = listenFd;
-	epollFd = epoll_create(1);
-	if (epollFd == -1)
+	epoll_fd = epoll_create(1);
+	if (epoll_fd == -1)
 	{
 		perror("epoll_create");
 		return (1);
 	}
 
-	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, listenFd, &event) == -1)
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listenFd, &event) == -1)
 	{
-		close(epollFd);
+		close(epoll_fd);
 		perror("epoll_ctl");
 		return (1);
 	}
 
 	while (true)
 	{
-		nbFd = epoll_wait(epollFd, events, MAX_EVENT, 0); // 0 because we want it to be non blocking
+		nbFd = epoll_wait(epoll_fd, events, MAX_EVENT, 0); // 0 because we want it to be non blocking
 		if (nbFd == -1)
 			break ;
 
@@ -43,9 +43,30 @@ int handleClientsConnections(int listenFd)
 		{
 			if (events[i].data.fd == listenFd)
 			{
-				std::cout << "new connection" << std::endl;
-				struct sockaddr_in client_addr;
-				(void) client_addr;
+				while (1)
+				{
+					std::cout << "new connection" << std::endl;
+					struct sockaddr_in client_addr;
+					socklen_t client_len = sizeof(client_addr);
+					int client_fd = accept(listenFd, (struct sockaddr *)&client_addr, &client_len);
+					if (client_fd == -1)
+					{
+						if (errno == EAGAIN || errno == EWOULDBLOCK)
+							break ;
+						else
+						{
+							perror("accept error");
+							break;
+						}
+					}
+					event.events = EPOLLIN | EPOLLET;
+					event.data.fd = client_fd;
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
+					{
+						perror("epoll_ctl: client_fd");
+						close(client_fd);
+					} 
+				}
 			}
 		}
 	}

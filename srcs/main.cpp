@@ -21,7 +21,7 @@ int main(int ac, char **av)
 		perror("listen error");
 		return (1);
 	}
-
+	//init epoll
 	handleClientsConnections(listenFd);
 	close(listenFd);
 	return (0);
