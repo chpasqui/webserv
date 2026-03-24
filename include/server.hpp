@@ -11,6 +11,6 @@
 
 int		createListeningSocket(void);
 int		bindListeningSocket(int *listenFd);
-int		handleClientsConnetions(int listenFd);
+int		handleClientsConnections(int listenFd);
 
 #endif

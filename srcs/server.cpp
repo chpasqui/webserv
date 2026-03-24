@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 
-int handleClientsConnetions(int listenFd)
+int handleClientsConnections(int listenFd)
 {
 	int					epollFd = -1;
 	int					nbFd = -1;

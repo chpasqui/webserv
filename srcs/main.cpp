@@ -22,7 +22,7 @@ int main(int ac, char **av)
 		return (1);
 	}
 
-	handleClientsConnetions(listenFd);
+	handleClientsConnections(listenFd);
 	close(listenFd);
 	return (0);
 }
