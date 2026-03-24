@@ -1,9 +1,16 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+# define PORT 8080
+# define ROOT ./www/
+# define BACKLOG 5
+# define MAX_EVENT 5
+
 #include <sys/types.h>
 #include <sys/socket.h>
 
-int createSocket(void);
+int		createListeningSocket(void);
+int		bindListeningSocket(int *listenFd);
+int		handleClientsConnetions(int listenFd);
 
 #endif
