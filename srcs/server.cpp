@@ -14,8 +14,8 @@ int handleClientsConnections(int listenFd)
 {
 	int					epoll_fd = -1;
 	int					nbFd = -1;
-	struct epoll_event	events[MAX_EVENT];
-	struct epoll_event	event;
+	struct epoll_event	events[MAX_EVENT]; // events est un tableau de fd comprenant une structure event par fd
+	struct epoll_event	event; // une sturcture tampon singuliere qui est envoyee a epoll_ctl pour controler certains parametres (que l'on set)
 
 	event.events = EPOLLIN;
 	event.data.fd = listenFd;
