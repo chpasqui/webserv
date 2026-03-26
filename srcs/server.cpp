@@ -15,6 +15,7 @@ int handleClientsConnections(int listenFd)
 {
 	int					epoll_fd = -1;
 	int					nbFd = -1;
+	char				buffer[BUFFER_SIZE];
 	struct epoll_event	events[MAX_EVENT]; // events est un tableau de fd comprenant une structure event par fd
 	struct epoll_event	event; // une sturcture tampon singuliere qui est envoyee a epoll_ctl pour controler certains parametres (que l'on set)
 
@@ -33,16 +34,16 @@ int handleClientsConnections(int listenFd)
 		perror("epoll_ctl");
 		return (1);
 	}
-	char BuffSend[] = "Hello World";
-	char buffer[BUFFER_SIZE];
+
 	while (true)
 	{
 		nbFd = epoll_wait(epoll_fd, events, MAX_EVENT, 0); // 0 because we want it to be non blocking
 		if (nbFd == -1)
-			break ;
+			//break ;
 
 		for (int i = 0; i < nbFd; i++)
 		{
+			printf("%u\n", events[i].events);
 			if (events[i].data.fd == listenFd) //New connection
 			{
 				while (1)
@@ -61,7 +62,7 @@ int handleClientsConnections(int listenFd)
 						}
 					}
 					std::cout << "new connection" << std::endl; //debug
-					event.events = EPOLLIN | EPOLLET;
+					event.events = EPOLLIN;
 					event.data.fd = client_fd;
 					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
 					{
@@ -70,32 +71,23 @@ int handleClientsConnections(int listenFd)
 					} 
 				}
 			}
-			else if (events[i].events & (EPOLLIN | EPOLLOUT))
+			else if (events[i].events & EPOLLIN)
 			{
-				if (events[i].events & EPOLLIN)
+				ssize_t bytesRead = recv(events[i].data.fd, buffer, BUFFER_SIZE - 1, 0);
+				if (bytesRead == 0)
+					continue;
+				if (bytesRead == -1)
 				{
-					ssize_t bytesRead = recv(events[i].data.fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
-					if (bytesRead == -1)
-					{
-						perror("recv error");
-						continue ;
-					}
-					buffer[bytesRead] = '\0';
-					printf("RECV: FD %i message: %s\n",events[i].data.fd, buffer);
+					perror("recv error");
+					close(events[i].data.fd);
+					break;
 				}
-				if(events[i].events & EPOLLOUT)
-				{
-					ssize_t bytesSent = send(events[i].data.fd, BuffSend, strlen(BuffSend), MSG_DONTWAIT);
-					if (bytesSent == -1)
-					{
-						perror("send error");
-						continue ;
-					}
-					printf("SEND: %s\n", BuffSend);
-				}
+				buffer[bytesRead] = '\0';
+				printf("RECV: FD %i message: %s\n",events[i].data.fd, buffer);
 			}
 			else
 			{
+				printf("closed");
 				if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
 					perror("epoll_ctl_del");
 				close(events[i].data.fd); //safe_close
