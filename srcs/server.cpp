@@ -81,6 +81,8 @@ int handleClientsConnections(int listenFd)
 				}
 				if (bytesRead == -1)
 				{
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
+						perror("epoll_ctl_del");
 					perror("recv error");
 					close(events[i].data.fd);
 					continue ;
