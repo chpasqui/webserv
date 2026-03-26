@@ -39,11 +39,10 @@ int handleClientsConnections(int listenFd)
 	{
 		nbFd = epoll_wait(epoll_fd, events, MAX_EVENT, 0); // 0 because we want it to be non blocking
 		if (nbFd == -1)
-			//break ;
+			break ;
 
 		for (int i = 0; i < nbFd; i++)
 		{
-			printf("%u\n", events[i].events);
 			if (events[i].data.fd == listenFd) //New connection
 			{
 				while (1)
