@@ -72,14 +72,18 @@ int handleClientsConnections(int listenFd)
 			}
 			else if (events[i].events & EPOLLIN)
 			{
-				ssize_t bytesRead = recv(events[i].data.fd, buffer, BUFFER_SIZE - 1, 0);
+				ssize_t bytesRead = recv(events[i].data.fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
 				if (bytesRead == 0)
+				{
+					printf("closed\n");
+					close(events[i].data.fd);
 					continue;
+				}
 				if (bytesRead == -1)
 				{
 					perror("recv error");
 					close(events[i].data.fd);
-					break;
+					continue ;
 				}
 				buffer[bytesRead] = '\0';
 				printf("RECV: FD %i message: %s\n",events[i].data.fd, buffer);
@@ -92,6 +96,7 @@ int handleClientsConnections(int listenFd)
 				close(events[i].data.fd); //safe_close
 			}
 		}
+		nbFd = 0;
 	}
 	return (0);
 }
