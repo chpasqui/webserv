@@ -9,6 +9,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
+#define BUFFER_SIZE 100
 
 int handleClientsConnections(int listenFd)
 {
@@ -32,7 +33,8 @@ int handleClientsConnections(int listenFd)
 		perror("epoll_ctl");
 		return (1);
 	}
-
+	char BuffSend[] = "Hello World";
+	char buffer[BUFFER_SIZE];
 	while (true)
 	{
 		nbFd = epoll_wait(epoll_fd, events, MAX_EVENT, 0); // 0 because we want it to be non blocking
@@ -41,11 +43,10 @@ int handleClientsConnections(int listenFd)
 
 		for (int i = 0; i < nbFd; i++)
 		{
-			if (events[i].data.fd == listenFd)
+			if (events[i].data.fd == listenFd) //New connection
 			{
 				while (1)
 				{
-					std::cout << "new connection" << std::endl;
 					struct sockaddr_in client_addr;
 					socklen_t client_len = sizeof(client_addr);
 					int client_fd = accept(listenFd, (struct sockaddr *)&client_addr, &client_len);
@@ -59,6 +60,7 @@ int handleClientsConnections(int listenFd)
 							break;
 						}
 					}
+					std::cout << "new connection" << std::endl; //debug
 					event.events = EPOLLIN | EPOLLET;
 					event.data.fd = client_fd;
 					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
@@ -67,6 +69,36 @@ int handleClientsConnections(int listenFd)
 						close(client_fd);
 					} 
 				}
+			}
+			else if (events[i].events & (EPOLLIN | EPOLLOUT))
+			{
+				if (events[i].events & EPOLLIN)
+				{
+					ssize_t bytesRead = recv(events[i].data.fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
+					if (bytesRead == -1)
+					{
+						perror("recv error");
+						continue ;
+					}
+					buffer[bytesRead] = '\0';
+					printf("RECV: FD %i message: %s\n",events[i].data.fd, buffer);
+				}
+				if(events[i].events & EPOLLOUT)
+				{
+					ssize_t bytesSent = send(events[i].data.fd, BuffSend, strlen(BuffSend), MSG_DONTWAIT);
+					if (bytesSent == -1)
+					{
+						perror("send error");
+						continue ;
+					}
+					printf("SEND: %s\n", BuffSend);
+				}
+			}
+			else
+			{
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
+					perror("epoll_ctl_del");
+				close(events[i].data.fd); //safe_close
 			}
 		}
 	}
