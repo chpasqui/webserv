@@ -53,7 +53,7 @@ int handleClientsConnections(int listenFd)
 					if (client_fd == -1)
 					{
 						if (errno == EAGAIN || errno == EWOULDBLOCK)
-							break ;
+						break ;
 						else
 						{
 							perror("accept error");
@@ -88,7 +88,13 @@ int handleClientsConnections(int listenFd)
 					continue ;
 				}
 				buffer[bytesRead] = '\0';
+				if (buffer[bytesRead - 1] == '\n')
+				{
+
+				}
 				printf("RECV: FD %i message: %s\n",events[i].data.fd, buffer);
+				Request request(buffer, events[i].data.fd);
+				request.requestType();
 			}
 			else
 			{

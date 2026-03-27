@@ -6,6 +6,8 @@
 # define BACKLOG 5
 # define MAX_EVENT 5
 
+#include "Request.hpp" //remove this later
+
 #include <sys/types.h>
 #include <sys/socket.h>
 
