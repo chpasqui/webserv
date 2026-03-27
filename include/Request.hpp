@@ -16,7 +16,6 @@ class Request
 		std::string	_requestMessage;
 		std::string	_response;
 		int			_socketId;
-		bool		_isComplete;
 
 		void	sendReponse(void);
 };

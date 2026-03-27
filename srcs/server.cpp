@@ -9,7 +9,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 2
 
 int handleClientsConnections(int listenFd)
 {
@@ -18,6 +18,7 @@ int handleClientsConnections(int listenFd)
 	char				buffer[BUFFER_SIZE];
 	struct epoll_event	events[MAX_EVENT]; // events est un tableau de fd comprenant une structure event par fd
 	struct epoll_event	event; // une sturcture tampon singuliere qui est envoyee a epoll_ctl pour controler certains parametres (que l'on set)
+	std::string			request;
 
 	event.events = EPOLLIN;
 	event.data.fd = listenFd;
@@ -72,33 +73,36 @@ int handleClientsConnections(int listenFd)
 			}
 			else if (events[i].events & EPOLLIN)
 			{
+				memset(&buffer, '\0', BUFFER_SIZE -1);
 				ssize_t bytesRead = recv(events[i].data.fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
-				if (bytesRead == 0)
+				if (bytesRead == 0) // in the case of the EOF signal at end of the client request
 				{
 					printf("closed\n");
 					close(events[i].data.fd);
 					continue;
 				}
-				if (bytesRead == -1)
+				else if (bytesRead == -1)
 				{
 					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
 						perror("epoll_ctl_del");
-					perror("recv error");
 					close(events[i].data.fd);
 					continue ;
 				}
 				buffer[bytesRead] = '\0';
-				if (buffer[bytesRead - 1] == '\n')
+				request += buffer; // add a result buffer "request" and concatenate what was read after epoll_wait call
+				if (bytesRead < BUFFER_SIZE - 0) // end condition, no need to call read again, send for parsing of HTTP request 
 				{
-
+					std::cout << request << std::endl;
+					Request request(buffer, events[i].data.fd); //TODO send completebuffer
+					request.requestType();
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
+						perror("epoll_ctl_del");
+					close(events[i].data.fd); // dont forget to close the fd 
 				}
-				printf("RECV: FD %i message: %s\n",events[i].data.fd, buffer);
-				Request request(buffer, events[i].data.fd);
-				request.requestType();
 			}
-			else
+			else // question about the error treatment of this condition with EPOLLERR
 			{
-				printf("closed");
+				printf("closed due unknow event");
 				if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
 					perror("epoll_ctl_del");
 				close(events[i].data.fd); //safe_close
