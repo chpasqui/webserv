@@ -1,31 +1,28 @@
-#include "../include/server.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include "Server.hpp"
-#include "Client.hpp"
-
+#include "../include/Server.hpp"
+#include "../include/Client.hpp"
+#include "../include/server.hpp"
 
 int main(int ac, char **av)
 {
 	(void) ac;
 	(void) av;
-	Client testClient;
+	Server testServer;
 
-	int	listenFd = createListeningSocket();
-	if (listenFd == -1)
-		return (1);
-	if (bindListeningSocket(&listenFd) == -1)
-		return (1);
-	if (listen(listenFd, BACKLOG) == -1) // 1156 listen system call marks as passive socket
+	try {
+		testServer.createListeningSocket();
+		testServer.bindAndListen();
+	}
+	catch (const std::exception &e)
 	{
-		close(listenFd); //safe close
-		perror("listen error");
+		std::cerr << e.what() << '\n';
 		return (1);
 	}
 	//init epoll
-	handleClientsConnections(listenFd);
-	close(listenFd);
+	handleClientsConnections(testServer.getListenFd());
+	close(testServer.getListenFd());
 	return (0);
 }

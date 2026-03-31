@@ -6,14 +6,16 @@
 
 class Client
 {
-	private:
-		int						_clientFd;
-		ssize_t					_bytesRead;
-		std::string				_buffer;
-		int						_bodyStatus;
 	public:
 		Client();
+		Client(const Client& other);
 		~Client();
+	private:
+		int						_clientFd;
+		size_t					_bytesRead;
+		std::string				_buffer;
+		int						_bodyStatus;
+		
 };
 
 #endif
