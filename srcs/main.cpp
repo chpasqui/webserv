@@ -3,12 +3,15 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#include "Server.hpp"
+#include "Client.hpp"
 
 
 int main(int ac, char **av)
 {
 	(void) ac;
 	(void) av;
+	Client testClient;
 
 	int	listenFd = createListeningSocket();
 	if (listenFd == -1)
