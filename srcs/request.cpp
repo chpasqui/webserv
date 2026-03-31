@@ -21,12 +21,14 @@ bool Request::parseRequestLine(const std::string &message){
 	
 	if (!checkSpace(message) || !checkMethod() || !checkVersion())
 		return false;
+	if (!parseUrl());
+		return false;
 	std::cout << _method << ' ' << _url << ' ' << _version << std::endl;
 	return true;
 }
 
 bool Request::checkSpace(const std::string &message){
-	size_t end = message.find("\0");
+	size_t end = message.find("\r\n");
     if (end == std::string::npos){
         _statusCode = 400;
 		std::cout << "error find" << std::endl;
@@ -58,13 +60,23 @@ bool Request::checkMethod(){
 }
 
 bool Request::checkVersion(){
-	if (_version != "HTTP/1.1" && _version != "HTTP/1.0")
+	if (_version != "HTTP/0.9" && _version != "HTTP/1.0") // a voir si on garde 0.9
     {
         _statusCode = 505;
 		std::cout << "error version" << std::endl;
         return false;
     }
 	return true ;
+}
+
+bool Request::parseUrl(){
+    if (_url.empty() || _url[0] != '/'){
+        _statusCode = 400;
+        return false;
+    }
+    if (i dont know)
+
+    return true;
 }
 
 int main(int argc, char *argv[]){
