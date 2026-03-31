@@ -11,6 +11,9 @@
 
 #define BUFFER_SIZE 2
 
+
+// TO DO : add the timestamp tp check the timeout 
+
 int handleClientsConnections(int listenFd)
 {
 	int					epoll_fd = -1;
@@ -46,30 +49,22 @@ int handleClientsConnections(int listenFd)
 		{
 			if (events[i].data.fd == listenFd) //New connection
 			{
-				while (1)
+				struct sockaddr_in client_addr;
+				socklen_t client_len = sizeof(client_addr);
+				int client_fd = accept(listenFd, (struct sockaddr *)&client_addr, &client_len);
+				if (client_fd == -1)
 				{
-					struct sockaddr_in client_addr;
-					socklen_t client_len = sizeof(client_addr);
-					int client_fd = accept(listenFd, (struct sockaddr *)&client_addr, &client_len);
-					if (client_fd == -1)
-					{
-						if (errno == EAGAIN || errno == EWOULDBLOCK)
-						break ;
-						else
-						{
-							perror("accept error");
-							break;
-						}
-					}
-					std::cout << "new connection" << std::endl; //debug
-					event.events = EPOLLIN;
-					event.data.fd = client_fd;
-					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
-					{
-						perror("epoll_ctl: client_fd");
-						close(client_fd);
-					} 
+						perror("accept error");
+						break;
 				}
+				std::cout << "new connection" << std::endl; //debug
+				event.events = EPOLLIN;
+				event.data.fd = client_fd;
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
+				{
+					perror("epoll_ctl: client_fd");
+					close(client_fd);
+				} 
 			}
 			else if (events[i].events & EPOLLIN)
 			{
@@ -100,13 +95,7 @@ int handleClientsConnections(int listenFd)
 					close(events[i].data.fd); // dont forget to close the fd 
 				}
 			}
-			else // question about the error treatment of this condition with EPOLLERR
-			{
-				printf("closed due unknow event");
-				if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
-					perror("epoll_ctl_del");
-				close(events[i].data.fd); //safe_close
-			}
+
 		}
 		nbFd = 0;
 	}
