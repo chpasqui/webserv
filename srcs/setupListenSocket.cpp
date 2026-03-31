@@ -5,45 +5,45 @@
 #include <netinet/in.h>
 #include <string.h>
 
-static int	setListeningSocketOptions(int *listenFd);
+// static int	setListeningSocketOptions(int *listenFd);
 
-int	createListeningSocket(void)
-{
-	int listenFd; //TODO: close socketFd 
+// int	createListeningSocket(void)
+// {
+// 	int listenFd; //TODO: close socketFd 
 
-	listenFd = socket(PF_INET, SOCK_STREAM, 0); // page 1156 linux book
-	if (listenFd == -1)
-	{
-		perror("Server: socket");
-		return (-1);
-	}
-	if (fcntl(listenFd, F_SETFL, O_NONBLOCK) == -1)
-	{
-		perror("Server: Fcntl");
-		return (-1);
-	}
-	if (setListeningSocketOptions(&listenFd) == -1)
-	{
-		close(listenFd);
-		return (1);
-	}
+// 	listenFd = socket(PF_INET, SOCK_STREAM, 0); // page 1156 linux book
+// 	if (listenFd == -1)
+// 	{
+// 		perror("Server: socket");
+// 		return (-1);
+// 	}
+// 	if (fcntl(listenFd, F_SETFL, O_NONBLOCK) == -1)
+// 	{
+// 		perror("Server: Fcntl");
+// 		return (-1);
+// 	}
+// 	if (setListeningSocketOptions(&listenFd) == -1)
+// 	{
+// 		close(listenFd);
+// 		return (1);
+// 	}
 
-	return listenFd;
-}
+// 	return listenFd;
+// }
 
-static int	setListeningSocketOptions(int *listenFd)
-{
-	int optval = 1;									// 1 is set to enable option
-	socklen_t optlen = sizeof(optval);
-	if (setsockopt(*listenFd, SOL_SOCKET,
-		SO_REUSEADDR, &optval, optlen) == -1) {
-		perror("setsockopt");
-		return (-1);
-	}												// optlen = information for the setsockopt as optval is linked to SO_REUSEADDR
-	return (0);
-}
+// static int	setListeningSocketOptions(int *listenFd)
+// {
+// 	int optval = 1;									// 1 is set to enable option
+// 	socklen_t optlen = sizeof(optval);
+// 	if (setsockopt(*listenFd, SOL_SOCKET,
+// 		SO_REUSEADDR, &optval, optlen) == -1) {
+// 		perror("setsockopt");
+// 		return (-1);
+// 	}												// optlen = information for the setsockopt as optval is linked to SO_REUSEADDR
+// 	return (0);
+// }
 
-	int	bindListeningSocket(int *listenFd)
+int	bindListeningSocket(int *listenFd)
 {
 	struct sockaddr_in server_addr;
 	
