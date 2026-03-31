@@ -44,32 +44,41 @@ int handleClientsConnections(int listenFd)
 		nbFd = epoll_wait(epoll_fd, events, MAX_EVENT, 0); // 0 because we want it to be non blocking
 		if (nbFd == -1)
 			break ;
-
+		//check all fd time(); while loop if timeout => error 505
 		for (int i = 0; i < nbFd; i++)
 		{
 			if (events[i].data.fd == listenFd) //New connection
-			{
-				struct sockaddr_in client_addr;
-				socklen_t client_len = sizeof(client_addr);
-				int client_fd = accept(listenFd, (struct sockaddr *)&client_addr, &client_len);
-				if (client_fd == -1)
 				{
+					struct sockaddr_in client_addr;
+					socklen_t client_len = sizeof(client_addr);
+					int client_fd = accept(listenFd, (struct sockaddr *)&client_addr, &client_len);
+					if (client_fd == -1)
+					{
 						perror("accept error");
 						break;
-				}
-				std::cout << "new connection" << std::endl; //debug
-				event.events = EPOLLIN;
-				event.data.fd = client_fd;
-				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
-				{
-					perror("epoll_ctl: client_fd");
-					close(client_fd);
-				} 
+					}
+					// start measuring timestamp
+					std::cout << "new connection" << std::endl; //debug
+					event.events = EPOLLIN;
+					event.data.fd = client_fd;
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
+					{
+						perror("epoll_ctl: client_fd");
+						close(client_fd);
+					} 
+			}
+			else if (events[i].events & (EPOLLERR | EPOLLHUP))
+			{
+				printf("closed");
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
+					perror("epoll_ctl_del");
+				close(events[i].data.fd); //safe_close
 			}
 			else if (events[i].events & EPOLLIN)
 			{
-				memset(&buffer, '\0', BUFFER_SIZE -1);
+				//memset(&buffer, '\0', BUFFER_SIZE - 1);
 				ssize_t bytesRead = recv(events[i].data.fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
+				// update time
 				if (bytesRead == 0) // in the case of the EOF signal at end of the client request
 				{
 					printf("closed\n");
@@ -89,13 +98,11 @@ int handleClientsConnections(int listenFd)
 				{
 					std::cout << request << std::endl;
 					Request request(buffer, events[i].data.fd); //TODO send completebuffer
-					request.requestType();
 					if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, &event) == -1)
 						perror("epoll_ctl_del");
 					close(events[i].data.fd); // dont forget to close the fd 
 				}
 			}
-
 		}
 		nbFd = 0;
 	}
