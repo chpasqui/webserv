@@ -1,28 +1,22 @@
-#include "../include/server.hpp"
 #include <iostream>
+#include <stdexcept>
 #include <unistd.h>
 #include <netinet/in.h>
-#include <stdio.h>
-
+#include "../include/color.hpp"
+#include "../include/Epoll.hpp"
 
 int main(int ac, char **av)
 {
 	(void) ac;
 	(void) av;
 
-	int	listenFd = createListeningSocket();
-	if (listenFd == -1)
-		return (1);
-	if (bindListeningSocket(&listenFd) == -1)
-		return (1);
-	if (listen(listenFd, BACKLOG) == -1) // 1156 listen system call marks as passive socket
-	{
-		close(listenFd); //safe close
-		perror("listen error");
-		return (1);
+	try {
+		Epoll epoll = Epoll::getInstance();
 	}
-	//init epoll
-	handleClientsConnections(listenFd);
-	close(listenFd);
+	catch (std::runtime_error &e) {
+		std::cerr << C_RED << e.what() << RESET << std::endl;
+	}
+	
+
 	return (0);
 }

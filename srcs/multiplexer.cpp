@@ -11,23 +11,14 @@
 
 #define BUFFER_SIZE 2
 
-int handleClientsConnections(int listenFd)
+int handleClientsConnections(Server server, int epollFd)
 {
-	int					epoll_fd = -1;
 	int					nbFd = -1;
-	char				buffer[BUFFER_SIZE];
 	struct epoll_event	events[MAX_EVENT]; // events est un tableau de fd comprenant une structure event par fd
 	struct epoll_event	event; // une sturcture tampon singuliere qui est envoyee a epoll_ctl pour controler certains parametres (que l'on set)
-	std::string			request;
 
 	event.events = EPOLLIN;
 	event.data.fd = listenFd;
-	epoll_fd = epoll_create(1);
-	if (epoll_fd == -1)
-	{
-		perror("epoll_create");
-		return (1);
-	}
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listenFd, &event) == -1)
 	{
@@ -112,3 +103,4 @@ int handleClientsConnections(int listenFd)
 	}
 	return (0);
 }
+
