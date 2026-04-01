@@ -11,7 +11,7 @@
 
 #define BUFFER_SIZE 2
 
-int handleClientsConnections(Server server, int epollFd)
+int handleClientsConnections(Server &server)
 {
 	int					nbFd = -1;
 	struct epoll_event	events[MAX_EVENT]; // events est un tableau de fd comprenant une structure event par fd
