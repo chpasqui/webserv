@@ -1,29 +1,31 @@
-NAME		= webserv
-CXX			= c++
-CXXFLAGS	= -Wall -Werror -Wextra -std=c++98 -Iinclude
+NAME		=	webserv
+DIR_SRC		=	./src
+DIR_BUILD	=	./build
+DIR_INCLUDE =	./include
+CXX			=	c++
+CXXFLAGS	=	-std=c++98 -Wall -Werror -Wextra -g
+LDINCLUDE	=	-I$(DIR_INCLUDE)
 
-BUILD_DIR	= build/
-SRCS_DIR	= srcs/
-SRCS_FILES	= main.cpp server.cpp setupListenSocket.cpp request.cpp Server.cpp Client.cpp
-OBJS		= $(addprefix $(BUILD_DIR), $(SRCS_FILES:.cpp=.o))
+SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp run.cpp 
+SRCS_NAME	=	$(basename $(SRCS))
+OBJS		=	$(addsuffix .o, $(addprefix $(DIR_BUILD)/, $(SRCS_NAME)))
 
-all: $(BUILD_DIR) $(NAME)
+all: $(NAME)
 
-$(NAME) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJS)
+$(NAME): $(OBJS)
+	@$(CXX) $(OBJS) $(CXXFLAGS) -o $@
 
-$(BUILD_DIR) :
-	mkdir -p $(BUILD_DIR)
-
-$(BUILD_DIR)%.o: $(SRCS_DIR)%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(DIR_BUILD)/%.o: $(DIR_SRC)/%.cpp
+	@mkdir -p $(dir $@) 
+	@$(CXX) $(CXXFLAGS) $(LDINCLUDE) -c $< -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)
+	@rm -rf $(OBJS)
+	@rm -rf $(DIR_BUILD)
 
 fclean: clean
-	rm -f $(NAME)
+	@rm -rf $(NAME)
 
-re:	fclean all
+re: fclean all
 
 .PHONY: all clean fclean re

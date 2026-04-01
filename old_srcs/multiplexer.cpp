@@ -47,7 +47,7 @@ int handleClientsConnections(Server &server)
 					}
 					// start measuring timestamp
 					std::cout << "new connection" << std::endl; //debug
-					event.events = EPOLLIN;
+					event.events = EPOLLIN | EPOLLOUT;
 					event.data.fd = client_fd;
 					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event) == -1)
 					{
