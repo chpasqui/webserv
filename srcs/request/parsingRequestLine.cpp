@@ -96,6 +96,7 @@ bool Request::validUrl(){
 		return false;
 	}
 	if (_url.find(' ') != std::string::npos){
+	if (_url.find(' ') != std::string::npos){
 		_statusCode = BAD_REQUEST;
 		std::cout << "error url space >> error :" << _statusCode << std::endl;
 		return false;
