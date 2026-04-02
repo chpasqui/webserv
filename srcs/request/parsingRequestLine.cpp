@@ -72,7 +72,7 @@ bool Request::validMethod(){
 bool Request::validVersion(){
 	if (_version != "HTTP/1.0" && _version != "HTTP/1.1"){
         _statusCode = WRONG_HTTP;
-		std::cout << "error version" << std::endl;
+		std::cout << "error version error : " << _statusCode << std::endl;
         return false;
     }
 	return true ;
@@ -95,7 +95,6 @@ bool Request::validUrl(){
 		std::cout << "error URL too long >> error :" << _statusCode << std::endl;
 		return false;
 	}
-	if (_url.find(' ') != std::string::npos){
 	if (_url.find(' ') != std::string::npos){
 		_statusCode = BAD_REQUEST;
 		std::cout << "error url space >> error :" << _statusCode << std::endl;
@@ -121,7 +120,7 @@ static std::string decodeUrl(std::string url){
 		if (url[i] == '%' && i + 2 < url.size()){
 			std::string hex = url.substr(i + 1, 2);
 			long ascii = std::strtol(hex.c_str(), NULL, 16);
-			std::cout << ascii << std::endl;
+			//std::cout << ascii << std::endl;
 			if ((ascii >= 0 && ascii < 32) || ascii == 127)
 				return ("-1");
 			decoded += static_cast<char>(ascii);
@@ -130,7 +129,7 @@ static std::string decodeUrl(std::string url){
 		else 
 			decoded += url[i];
 	}
-	std::cout << decoded << std::endl;
+	//std::cout << decoded << std::endl;
 	return decoded;
 }
 

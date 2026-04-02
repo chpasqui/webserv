@@ -29,6 +29,8 @@ class Request
 		std::string _path;
 		std::string _body;
 		std::string _query;
+		std::string _requestMessage;
+		int			_contentLength;
 		int			_statusCode;
 	
 		std::map<std::string, int> _headers;
