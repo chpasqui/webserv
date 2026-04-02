@@ -53,26 +53,26 @@ bool Client::recvSucceeded()
 	return (true);
 }
 
-void	Client::requestComplete()
-{
-	size_t pos = this->_buffer.find("\r\n\r\n");
-	if (pos == std::string::npos) // npos indicates the not found state
-	{
-		return;
-	}
+// void	Client::requestComplete()
+// {
+// 	size_t pos = this->_buffer.find("\r\n\r\n");
+// 	if (pos == std::string::npos) // npos indicates the not found state
+// 	{
+// 		return;
+// 	}
 
 
-	// getline with the delimiter
+// 	// getline with the delimiter
 
-	// if (_ParsingStatus == REQUESTLINE)
-	// 	parseRequestLine(); // set to header
+// 	// if (_ParsingStatus == REQUESTLINE)
+// 	// 	parseRequestLine(); // set to header
 	
-	// if (_ParsingStatus = HEADER)
-	// 	parseHEadeers(); // set to body
+// 	// if (_ParsingStatus = HEADER)
+// 	// 	parseHEadeers(); // set to body
 
-	// if (_ParsingStatus == BODY)
-	// 	defineBody(); // set bool _isdone
-}
+// 	// if (_ParsingStatus == BODY)
+// 	// 	defineBody(); // set bool _isdone
+// }
 
 int		Client::getParsingIsDone() const
 {
