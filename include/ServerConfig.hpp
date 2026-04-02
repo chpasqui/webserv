@@ -8,7 +8,7 @@ class ServerConfig
 	private:
 		int			_port;
 		std::string	_route;
-
+		//int			_maxBodySize;
 	public:
 		ServerConfig();
 		~ServerConfig();

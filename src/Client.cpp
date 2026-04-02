@@ -38,11 +38,14 @@ bool Client::recvSucceeded()
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(_buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0)
 	{
-		_isDisconnected = true;
+		//potentially add the safe close
+		
 		return false; // 
 	}
 	if (this->_bytesRead == -1)
 	{
+		//safe close 
+		// epoll ctl
 		return (false);
 	}
 	_buffer += std::string(buffer);
@@ -50,13 +53,16 @@ bool Client::recvSucceeded()
 	return (true);
 }
 
-void	Client::requestCompete()
+void	Client::requestComplete()
 {
 	size_t pos = this->_buffer.find("\r\n\r\n");
 	if (pos == std::string::npos) // npos indicates the not found state
 	{
 		return;
 	}
+
+
+	// getline with the delimiter
 
 	// if (_ParsingStatus == REQUESTLINE)
 	// 	parseRequestLine(); // set to header

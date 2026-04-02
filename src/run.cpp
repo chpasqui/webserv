@@ -97,19 +97,22 @@ void	Server::run()
 			else if (events[i].events & EPOLLIN) // now in this case we would receive the fd = 6, its a client, and ready for EPOLIN
 			{
 				Client& client = _clients[fd]; // _ciebts[6] will give us the Client class at fd = 6
+				// send the llistenfd portentially
 				if (client.recvSucceeded() == false)
 				{
 					delFromEpoll(fd);
 					close(fd);
+					//client.request.
 					_clients.erase(fd);
 					continue;
 				}
 				if (client.getParsingIsDone() == true)
 				{
 					modifyEpoll(fd, EPOLLOUT);
-					delFromEpoll(fd);
-					_clients.erase(fd);
-					close(events[i].data.fd); // dont forget to close the fd 
+					//builresponse();
+					// delFromEpoll(fd);
+					// _clients.erase(fd);
+					// close(events[i].data.fd); // dont forget to close the fd 
 				}
 			}
 			else if(events[i].events & EPOLLOUT)

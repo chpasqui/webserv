@@ -6,11 +6,6 @@ ServerConfig::ServerConfig() : _port(0), _route("")
 {
 }
 
-ServerConfig::~ServerConfig()
-{
-	
-}
-
 void ServerConfig::setPort(const int port)
 {
 	this->_port = port;
@@ -24,4 +19,9 @@ void ServerConfig::setRoute(const std::string& route)
 int	ServerConfig::getPort(void)
 {
 	return (this->_port);
+}
+
+ServerConfig::~ServerConfig()
+{
+	
 }

@@ -88,7 +88,7 @@ int Server::createListeningSocket()
  * @param port which is the serverConfigVec[i].getport() so that we bind the
  * listen fd to that specific port
  */
-void	Server::bindAndListen(int &listenFd, int port)
+void	Server::bindAndListen(int &listenFd, int port) const
 {
 	struct sockaddr_in server_addr;
 	
@@ -114,7 +114,7 @@ void	Server::bindAndListen(int &listenFd, int port)
 
 Server::~Server() {}
 
-void	Server::addToEpoll(int fd, uint32_t flag)
+void	Server::addToEpoll(int fd, uint32_t flag) const
 {
 	struct epoll_event	event;
 	event.events = flag;
@@ -127,7 +127,7 @@ void	Server::addToEpoll(int fd, uint32_t flag)
 	}
 }
 
-void	Server::modifyEpoll(int fd, uint32_t flag)
+void	Server::modifyEpoll(int fd, uint32_t flag) const
 {
 	struct epoll_event	event;
 	event.events = flag;
@@ -140,7 +140,7 @@ void	Server::modifyEpoll(int fd, uint32_t flag)
 	}
 }
 
-void	Server::delFromEpoll(int fd)
+void	Server::delFromEpoll(int fd) const
 {
 	struct epoll_event	event;
 	event.events = 0;
