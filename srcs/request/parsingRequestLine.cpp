@@ -34,7 +34,7 @@ bool Request::parseRequestLine(const std::string &message){
 }
 
 bool Request::checkSpace(const std::string &message){
-	size_t end = message.find("\0");
+	size_t end = message.find("\r\n");
     if (end == std::string::npos){
         _statusCode = BAD_REQUEST;
 		std::cout << "error find" << std::endl;
@@ -100,7 +100,7 @@ bool Request::parseUrl(){
 		std::cout << "error URL too long" << std::endl;
 		return false;
 	}
-	if (url_decode.find(' ') != std::string::npos){
+	if (_url.find(' ') != std::string::npos){
 		_statusCode = BAD_REQUEST;
 			std::cout << "error url unsafe caractere" << std::endl;
 			return false;
@@ -134,6 +134,7 @@ static bool checkUnsafeChar(std::string url_decode){
 
 // Step1: Decode -- OK
 // Step2: verify if ascii is a control CTL (octets 0 - 31) and DEL (127) -- OK
+// note: verifier si il faut stocker decode_url
 static std::string decodeUrl(std::string url){
 	std::string decoded;
 	for (size_t i = 0; i < url.size(); i++){

@@ -90,8 +90,10 @@ int main(int argc, char *argv[]){
 // PARSING GENERIQUE DU HEADER
 bool Request::parseHeader(){ 
 // Step1: définir début headers : buffer.find("\r\n") + 2
+std::string start buffer.find("r\n") + 2;
 // Step2: définir fin headers   : buffer.find("\r\n\r\n")
 // Step3: extraire headersSection = buffer.substr(begin, end - begin)
+// Step3.1: headersSection.size() < maxHeaderSize defini dans le config file
 
 // Step4: boule getline chaque ligne
 	// Step 5: enlever \r final
@@ -119,13 +121,14 @@ bool Request::parseHeader(){
 // faire un isValid au lieu decrire partout == 200 bool isValid() const { return _statusCode == 200; }
 
 //ATTENTION POUR BOUCLE EPOLL:
-if (STATE == PARSING_REQUEST_LINE)
+fd = append()
+if (STATE == PARSING_REQUEST_LINE buffer.find("\r\n"))
 {
-   	parseRequestLine(buffer);
+   	parseRequestLine(fd);
     STATE = PARSING_HEADERS;
 }
 
-if (STATE == PARSING_HEADERS)
+if (STATE == PARSING_HEADERS && buffer.find("\r\n\r\n"))
 {
     if (request.isValid) // au lieu de statusCode==200 par exemple
         parseHeaders(buffer);

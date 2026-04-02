@@ -80,6 +80,7 @@ int handleClientsConnections(int listenFd)
 				ssize_t bytesRead = recv(events[i].data.fd, buffer, BUFFER_SIZE - 1, MSG_DONTWAIT);
 				// update time
 				if (bytesRead == 0) // in the case of the EOF signal at end of the client request
+				
 				{
 					printf("closed\n");
 					close(events[i].data.fd);
