@@ -258,3 +258,44 @@ void	Server::run()
 		// _listenfdToCorrespondingConfig = & serverConfig; // fd 6 belongs to this config
 		// epoll_ctl(add the listening socket fd = 6 )
 //}
+
+
+//VALIDER LA SEMANTIQUE DE LA REQUEST
+// Step 1 : verify if both Transfer-Encoding ET Content-Length présents -> error 400
+// Step 2: if HTTP/1.1 et "host" absent --> error 400
+// Step 3: si method == POST et ni "content-length" ni "transfer-encoding" --> error 411
+
+
+// // faire un isValid au lieu decrire partout == 200 bool isValid() const { return _statusCode == 200; }
+
+// //ATTENTION POUR BOUCLE EPOLL:
+// fd = append()
+// if (STATE == PARSING_REQUEST_LINE buffer.find("\r\n"))
+// {
+//    	parseRequestLine(fd);
+//     STATE = PARSING_HEADERS;
+// }
+
+// if (STATE == PARSING_HEADERS && buffer.find("\r\n\r\n"))
+// {
+//     if (request.isValid) // au lieu de statusCode==200 par exemple
+//         parseHeaders(buffer);
+// 	  // need to validation sémantique
+//     if (statusCode == 200)
+//         validateRequest(maxbodysize);
+    
+//     STATE = PARSING_BODY;
+// }
+
+// if (STATE == PARSING_BODY)
+// {
+//     if (statusCode == 200)
+//         defineBody(buffer);
+//     STATE = COMPLETE;
+// }
+
+// if (STATE == COMPLETE)
+// {
+//     response = buildResponse(request, serverConfig);
+//     // et on switch to EPOLLOUT
+// }
