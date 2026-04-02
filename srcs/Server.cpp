@@ -27,8 +27,7 @@
  * 
  * @param serverConfigsVec (loop through)
  */
-Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients()
-{
+Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
 	createEpollInstance();
 	std::string errorMsg;
 
@@ -45,8 +44,7 @@ Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients()
  * @brief Create a new listeningSocket and set its options to non blocking. 
  * It sets the private attribute epollFd to the single fd (3)
  */
-void	Server::createEpollInstance(void)
-{
+void	Server::createEpollInstance(void) {
 	std::string errorMsg;
 
 	this->epollFd = epoll_create(1);
@@ -57,8 +55,7 @@ void	Server::createEpollInstance(void)
 	}
 }
 
-int Server::createListeningSocket()
-{
+int Server::createListeningSocket() {
 	int listenFd = socket(PF_INET, SOCK_STREAM, 0);
 	if (listenFd == -1)
 		throw std::runtime_error("Server: socket() failed.");
@@ -87,8 +84,7 @@ int Server::createListeningSocket()
  * @param port which is the serverConfigVec[i].getport() so that we bind the
  * listen fd to that specific port
  */
-void	Server::bindAndListen(int &listenFd, int port) const
-{
+void	Server::bindAndListen(int &listenFd, int port) const {
 	struct sockaddr_in server_addr;
 	
 	memset(&server_addr, 0, sizeof(sockaddr_in));
@@ -113,8 +109,7 @@ void	Server::bindAndListen(int &listenFd, int port) const
 
 Server::~Server() {}
 
-void	Server::addToEpoll(int fd, uint32_t flag) const
-{
+void	Server::addToEpoll(int fd, uint32_t flag) const {
 	struct epoll_event	event;
 	event.events = flag;
 	event.data.fd = fd;
@@ -126,8 +121,7 @@ void	Server::addToEpoll(int fd, uint32_t flag) const
 	}
 }
 
-void	Server::modifyEpoll(int fd, uint32_t flag) const
-{
+void	Server::modifyEpoll(int fd, uint32_t flag) const {
 	struct epoll_event	event;
 	event.events = flag;
 	event.data.fd = fd;
@@ -139,8 +133,7 @@ void	Server::modifyEpoll(int fd, uint32_t flag) const
 	}
 }
 
-void	Server::delFromEpoll(int fd) const
-{
+void	Server::delFromEpoll(int fd) const {
 	struct epoll_event	event;
 	event.events = 0;
 	event.data.fd = fd;
@@ -153,16 +146,14 @@ void	Server::delFromEpoll(int fd) const
 }
 
 
-void	Server::timeoutCheck(void)
-{
+void	Server::timeoutCheck(void) {
 	time_t	timestamp;
 
 	time(&timestamp);
 	std::cout << ctime(&timestamp) << std::endl;
 }
 
-void	Server::signalCheck(void)
-{
+void	Server::signalCheck(void) {
 
 }
 

@@ -32,8 +32,7 @@ Client::Client(const Client& other) : _clientFd(other._clientFd),
 	_isDisconnected(other._isDisconnected),
 	_ParsingIsDone(other._ParsingIsDone) {}
 
-bool Client::recvSucceeded()
-{
+bool Client::recvSucceeded() {
 	char buffer[1024];
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(_buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0)
