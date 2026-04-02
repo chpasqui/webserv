@@ -2,6 +2,8 @@
 #include "../include/ServerConfig.hpp"
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
+#include <iostream>
 
 # define BUFFERSIZE 1024
 
@@ -11,8 +13,10 @@ Client::Client() : _clientFd(-1),
 	_bodyStatus(-1),
 	_config(NULL),
 	_isDisconnected(false),
-	_ParsingIsDone(false)
-{}
+	_ParsingIsDone(false) {
+	std::cout << "Client: Default constructor called" << std::endl;
+	time(&(this)->_timestamp);
+}
 
 Client::Client(int fd, ServerConfig* config) :
 	_clientFd(fd),
@@ -21,8 +25,10 @@ Client::Client(int fd, ServerConfig* config) :
 	_bodyStatus(-1),
 	_config(config),
 	_isDisconnected(false),
-	_ParsingIsDone(false)
-{}
+	_ParsingIsDone(false){
+	std::cout << "Client: normal constructor called" << std::endl;
+	time(&(this)->_timestamp);
+	}
 
 Client::Client(const Client& other) : _clientFd(other._clientFd),
 	_bytesRead(other._bytesRead),
@@ -30,7 +36,12 @@ Client::Client(const Client& other) : _clientFd(other._clientFd),
 	_bodyStatus(other._bodyStatus),
 	_config(other._config),
 	_isDisconnected(other._isDisconnected),
-	_ParsingIsDone(other._ParsingIsDone) {}
+	_ParsingIsDone(other._ParsingIsDone),
+	_timestamp(other._timestamp)
+{
+	std::cout << "Client: Copy constructor called" << std::endl;
+}
+
 
 bool Client::recvSucceeded() {
 	char buffer[1024];
@@ -50,6 +61,11 @@ bool Client::recvSucceeded() {
 	_buffer += std::string(buffer);
 	_ParsingIsDone = true; // change this later
 	return (true);
+}
+
+time_t	Client::getTimestamp(void) const
+{
+	return (this->_timestamp);
 }
 
 // void	Client::requestComplete()
@@ -78,4 +94,12 @@ int		Client::getParsingIsDone() const
 	return (this->_ParsingIsDone);
 }
 
-Client::~Client() {}
+Client::~Client()
+{
+	std::cout << "Client: Destructor called: FD " << _clientFd << std::endl;
+
+	//if (this->_clientFd == -1)
+	//	return;
+	//close(this->_clientFd);
+	//this->_clientFd == -1;
+}

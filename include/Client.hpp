@@ -26,15 +26,17 @@ class Client
 		bool					_isDisconnected;
 		bool					_ParsingIsDone;
 		// bool					_ParsingStatus;
-		std::tm					_timestamp;
+		time_t					_timestamp;
+		std::string				_response;
 	public:
 		Client();
 		Client(int fd, ServerConfig* config);
-		Client(const Client& other);
+		Client(const Client& other); //WARN:Veut on vraiment copier un client avec ses infos ?
 		~Client();
 		bool	recvSucceeded();
 		void	requestCompete();
 		int		getParsingIsDone() const;
+		time_t	getTimestamp(void) const;
 };
 
 #endif

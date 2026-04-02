@@ -1,7 +1,7 @@
 #include "../include/Server.hpp"
 
-#include <ctime>
 #include <iostream>
+#include <ctime>
 #include <stdexcept>
 #include <string>
 #include <string.h>
@@ -10,9 +10,11 @@
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <map>
 
 #define BACKLOG 20
 #define MAXEVENT 1024
+#define TIMEOUT 30
 
 /**
  * @brief Construct a new Server:: Server object by looping through 
@@ -116,7 +118,7 @@ void	Server::addToEpoll(int fd, uint32_t flag) const {
 	if (epoll_ctl(this->epollFd, EPOLL_CTL_ADD, fd, &event) == -1)
 	{
 		close(this->epollFd);
-		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
+		std::string errorMsg = std::string("Epoll_ctl_add() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
 }
@@ -128,7 +130,7 @@ void	Server::modifyEpoll(int fd, uint32_t flag) const {
 	if (epoll_ctl(this->epollFd, EPOLL_CTL_MOD, fd, &event) == -1)
 	{
 		close(this->epollFd);
-		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
+		std::string errorMsg = std::string("Epoll_ctl_mod() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
 }
@@ -140,17 +142,28 @@ void	Server::delFromEpoll(int fd) const {
 	if (epoll_ctl(this->epollFd, EPOLL_CTL_DEL, fd, &event) == -1)
 	{
 		close(this->epollFd);
-		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
+		std::string errorMsg = std::string("Epoll_ctl_del() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
 }
 
 
 void	Server::timeoutCheck(void) {
-	time_t	timestamp;
+	time_t	currentTime;
 
-	time(&timestamp);
-	std::cout << ctime(&timestamp) << std::endl;
+	time(&currentTime);
+	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	{
+		if (std::difftime(it->second.getTimestamp(), currentTime) > TIMEOUT)
+		{
+			std::cout << "Timeout on socket " << it->first << std::endl;
+			//buildReponse();
+			//this->modifyEpoll(it->first, EPOLLOUT);
+			//sendResponse();
+			this->delFromEpoll(it->first);
+			this->_clients.erase(it);
+		}
+	}
 }
 
 void	Server::signalCheck(void) {
