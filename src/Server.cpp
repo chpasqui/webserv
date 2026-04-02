@@ -13,7 +13,7 @@
 #include <map>
 
 #define BACKLOG 20
-#define MAXEVENT 1024
+#define MAX_EVENTS 1024
 
 /**
  * @brief Construct a new Server:: Server object by looping through 
@@ -152,6 +152,73 @@ void	Server::delFromEpoll(int fd) const
 		throw (std::runtime_error(errorMsg));
 	}
 }
+
+void	Server::run()
+{
+	struct epoll_event	events[MAX_EVENTS];
+	int					nFd;
+
+	while (true)
+	{
+		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, 0);
+		if (nFd == -1)
+			break ;
+		for (int i = 0; i < nFd; i++)
+		{
+			int fd = events[i].data.fd; // for example fd = 5 (the listening socket we added earlier)
+			if (_listenFds.count(fd))
+			{
+				struct sockaddr_in client_addr;
+				socklen_t client_len = sizeof(client_addr);
+				int client_fd = accept(fd, (struct sockaddr *)&client_addr, &client_len);
+				if (client_fd == -1)
+				{
+					perror("accept error");
+					continue;
+				}
+				ServerConfig *config = _listenFds[fd]; // config 8080
+				_clients.insert(std::make_pair(client_fd, Client(client_fd, config))); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
+				std::cout << "new connection to client, socket " << client_fd << "created" << std::endl;
+				addToEpoll(client_fd, EPOLLIN); // watch fd = 6
+			}
+			else if (events[i].events & (EPOLLERR | EPOLLHUP))
+			{
+				delFromEpoll(fd);
+				close(fd);
+				_clients.erase(fd);
+			}
+			else if (events[i].events & EPOLLIN) // now in this case we would receive the fd = 6, its a client, and ready for EPOLIN
+			{
+				Client& client = _clients[fd]; // _ciebts[6] will give us the Client class at fd = 6
+				// send the llistenfd portentially
+				if (client.recvSucceeded() == false)
+				{
+					delFromEpoll(fd);
+					close(fd);
+					//client.request.
+					_clients.erase(fd);
+					continue;
+				}
+				if (client.getParsingIsDone() == true)
+				{
+					modifyEpoll(fd, EPOLLOUT);
+					//builresponse();
+					// delFromEpoll(fd);
+					// _clients.erase(fd);
+					// close(events[i].data.fd); // dont forget to close the fd 
+				}
+			}
+			else if(events[i].events & EPOLLOUT)
+			{
+				//send(response);
+				delFromEpoll(fd);
+				close(fd);
+				_clients.erase(fd);
+			}
+		}
+	}
+}
+
 
 
 /**
