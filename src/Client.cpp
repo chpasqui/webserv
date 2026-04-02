@@ -1,5 +1,5 @@
-#include "Client.hpp"
-#include "ServerConfig.hpp"
+#include "../include/Client.hpp"
+#include "../include/ServerConfig.hpp"
 #include <sys/types.h>
 #include <sys/socket.h>
 

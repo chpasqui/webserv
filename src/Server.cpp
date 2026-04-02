@@ -1,16 +1,15 @@
-#include "Server.hpp"
+#include "../include/Server.hpp"
 
+#include <ctime>
+#include <iostream>
+#include <stdexcept>
 #include <string>
 #include <string.h>
 #include <errno.h>
-#include <stdio.h>
 #include <fcntl.h>
-#include <iostream>
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <unistd.h>
-#include <vector>
-#include <map>
 
 #define BACKLOG 20
 #define MAXEVENT 1024
@@ -153,6 +152,19 @@ void	Server::delFromEpoll(int fd) const
 	}
 }
 
+
+void	Server::timeoutCheck(void)
+{
+	time_t	timestamp;
+
+	time(&timestamp);
+	std::cout << ctime(&timestamp) << std::endl;
+}
+
+void	Server::signalCheck(void)
+{
+
+}
 
 /**
  * @brief there is only one Server class and it will hve one fd for the epollfd

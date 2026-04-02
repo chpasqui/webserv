@@ -1,11 +1,11 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
+#include <ctime>
 #include <string>
-#include <map>
 #include <sys/types.h>
 
-#include "ServerConfig.hpp"
+class ServerConfig;
 
 enum ParsingStatus
 {
@@ -26,6 +26,7 @@ class Client
 		bool					_isDisconnected;
 		bool					_ParsingIsDone;
 		// bool					_ParsingStatus;
+		std::tm					_timestamp;
 	public:
 		Client();
 		Client(int fd, ServerConfig* config);

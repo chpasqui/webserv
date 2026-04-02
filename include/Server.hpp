@@ -31,9 +31,9 @@ class Server
 		int		createListeningSocket(void);
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
+		void	timeoutCheck(void);
+		void	signalCheck(void);
 };
-
-
 
 
 #endif
