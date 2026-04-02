@@ -22,6 +22,8 @@ class Request
 
 		bool parseHeader(const std::string &request);
 
+		bool Request::isValid() const;
+
 	private:
 		std::string _method;
 		std::string _version;
@@ -33,7 +35,7 @@ class Request
 		int			_contentLength;
 		int			_statusCode;
 	
-		std::map<std::string, int> _headers;
+		std::map<std::string, std::string> _headers;
 };
 
 #endif
