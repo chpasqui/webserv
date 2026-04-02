@@ -5,14 +5,13 @@
 
 # define BUFFERSIZE 1024
 
-Client::Client() : _clientFd(-1),
+Client::Client() :
+	_clientFd(-1),
 	_bytesRead(-1),
 	_buffer(""),
 	_bodyStatus(-1),
 	_config(NULL),
-	_isDisconnected(false),
-	_ParsingIsDone(false)
-{}
+	_clientStatus(-1) {}
 
 Client::Client(int fd, ServerConfig* config) :
 	_clientFd(fd),
@@ -20,38 +19,36 @@ Client::Client(int fd, ServerConfig* config) :
 	_buffer(""), \
 	_bodyStatus(-1),
 	_config(config),
-	_isDisconnected(false),
-	_ParsingIsDone(false)
-{}
+	_clientStatus(-1) {}
 
-Client::Client(const Client& other) : _clientFd(other._clientFd),
+Client::Client(const Client& other) :
+	_clientFd(other._clientFd),
 	_bytesRead(other._bytesRead),
 	_buffer(other._buffer),
 	_bodyStatus(other._bodyStatus),
 	_config(other._config),
-	_isDisconnected(other._isDisconnected),
-	_ParsingIsDone(other._ParsingIsDone) {}
+	_clientStatus(-1) {}
 
-bool Client::recvSucceeded()
-{
-	char buffer[1024];
-	this->_bytesRead = recv(_clientFd, buffer, sizeof(_buffer), MSG_DONTWAIT);
-	if (_bytesRead == 0)
-	{
-		//potentially add the safe close
+// bool Client::recvSucceeded()
+// {
+// 	char buffer[1024];
+// 	this->_bytesRead = recv(_clientFd, buffer, sizeof(_buffer), MSG_DONTWAIT);
+// 	if (_bytesRead == 0)
+// 	{
+// 		//potentially add the safe close
 		
-		return false; // 
-	}
-	if (this->_bytesRead == -1)
-	{
-		//safe close 
-		// epoll ctl
-		return (false);
-	}
-	_buffer += std::string(buffer);
-	_ParsingIsDone = true; // change this later
-	return (true);
-}
+// 		return false; // 
+// 	}
+// 	if (this->_bytesRead == -1)
+// 	{
+// 		//safe close 
+// 		// epoll ctl
+// 		return (false);
+// 	}
+// 	_buffer += std::string(buffer);
+// 	_ParsingIsDone = true; // change this later
+// 	return (true);
+// }
 
 // void	Client::requestComplete()
 // {
@@ -74,9 +71,9 @@ bool Client::recvSucceeded()
 // 	// 	defineBody(); // set bool _isdone
 // }
 
-int		Client::getParsingIsDone() const
+int		Client::getClientStatus() const
 {
-	return (this->_ParsingIsDone);
+	return (this->_clientStatus);
 }
 
 Client::~Client() {}

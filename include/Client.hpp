@@ -9,10 +9,10 @@
 
 enum ParsingStatus
 {
-	REQUESTLINE,
-	HEADER,
-	BODY, 
-	DONE
+	PARSING_REQUEST_LINE,
+	PARSING_HEADERS,
+	PARSING_BODY, 
+	COMPLETE
 };
 
 class Client
@@ -23,17 +23,18 @@ class Client
 		std::string				_buffer;
 		int						_bodyStatus;
 		ServerConfig*			_config;
-		bool					_isDisconnected;
-		bool					_ParsingIsDone;
+		id_t					_clientStatus;
+		// bool					_isDisconnected;
+		// bool					_ParsingIsDone;
 		// bool					_ParsingStatus;
 	public:
 		Client();
 		Client(int fd, ServerConfig* config);
 		Client(const Client& other);
 		~Client();
-		bool	recvSucceeded();
-		void	requestCompete();
-		int		getParsingIsDone() const;
+		// bool	recvSucceeded();
+		// void	requestCompete();
+		int		getClientStatus() const;
 };
 
 #endif

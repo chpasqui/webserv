@@ -189,24 +189,10 @@ void	Server::run()
 			}
 			else if (events[i].events & EPOLLIN) // now in this case we would receive the fd = 6, its a client, and ready for EPOLIN
 			{
-				Client& client = _clients[fd]; // _ciebts[6] will give us the Client class at fd = 6
-				// send the llistenfd portentially
-				if (client.recvSucceeded() == false)
-				{
-					delFromEpoll(fd);
-					close(fd);
-					//client.request.
-					_clients.erase(fd);
-					continue;
-				}
-				if (client.getParsingIsDone() == true)
-				{
-					modifyEpoll(fd, EPOLLOUT);
-					//builresponse();
-					// delFromEpoll(fd);
-					// _clients.erase(fd);
-					// close(events[i].data.fd); // dont forget to close the fd 
-				}
+				Client& client = _clients[fd]; // _clients[6] will give us the Client class at fd = 6
+				std::cout << client.getClientStatus() << std::endl;
+
+				
 			}
 			else if(events[i].events & EPOLLOUT)
 			{
@@ -220,44 +206,6 @@ void	Server::run()
 }
 
 
-
-/**
- * @brief there is only one Server class and it will hve one fd for the epollfd
- * it will also contain the map for the rest.
- * 
- */
-//Server(vector<int, ServerConfig> serverConfigs)
-//{
-	// create the epoll instance and keep it as the instance of that server
-	// this solves the question of the 1 epoll instance for everyone
-	// 	std::string	errorMsg;
-
-	// errno = 0;
-	// this->_epollFd = epoll_create(1);
-	// if (this->_epollFd == -1)
-	// {
-	// 	errorMsg = std::string("Epoll_create error: ") + strerror(errno);
-	// 	throw (std::runtime_error(errorMsg));
-	// }
-	// return ;
-
-
-	// Server CONFIGS (so thr main server which will bind and create the listening sockets for the corresponding ports and conf)
-	// Loop over the config file 
-		// FIRST LOOP
-		// fd = createListening socket; (creates the new fd = 5)
-		// bind(fd, configport); bindlisteningsocket to the port in the config (fd 5 is bound to port 8080)
-		// listen(fd, BACKLOG); call listen(fd) for fd 5
-		// _listenFdToConfig = &ServerConfig; // fd 5 belongs to this config
-		// epoll_ctl(ADD the listening socket fd = 5)
-		
-		//SECOND LOOP
-		// fd = createListening socket; (creates the new fd = 6)
-		// bindlisteningsock to the port in the config (fd 6 is bound to port 9090)
-		// call listen(fd) for fd 6
-		// _listenfdToCorrespondingConfig = & serverConfig; // fd 6 belongs to this config
-		// epoll_ctl(add the listening socket fd = 6 )
-//}
 
 
 //VALIDER LA SEMANTIQUE DE LA REQUEST
@@ -299,3 +247,51 @@ void	Server::run()
 //     response = buildResponse(request, serverConfig);
 //     // et on switch to EPOLLOUT
 // }
+
+
+/**
+ * @brief the Server() constructor does not need to receive anything, for now it is void because the server 
+ * instance has access to the properties of the server class. 
+ * 
+ */
+// Server::run(void )
+
+// kind of the same logic but it will have to be adapted 
+//  The fds have already been added in the constructor of the server. so we do not need to add them
+
+	// then we enter the infinity loop of while 1 which will continuously run. 
+	// epoll_wait call which will return the number of file descriptor which havee I/O activity on them
+
+	// lets say a client connects on the port to a server, if the fd in the events structure = to a listening socket in the map
+		// we accept the connection into a new socket represneint the conneciton with the client 
+		// we go and search for the config based on the fd in the map <int, ServerConfig> config = _listentocongid[fd]
+		// Once we have found the corresponding configuration to the fd, we give it to the client
+		// we create a new client sending it the  config and we give it the address of config 
+		// client[fd] = Client(fd, config)
+
+	// otherwise there is an error 
+		// treat the error
+	
+	// We have not received a listenfd, but we fall on a clientfd meaning there is i/o activity on it
+
+
+	// if it is EPOLIN 
+	// client = client[fd] (in the map strucutre) // for practical reaons easier to work with.
+	// client.recv() // and logic according to that
+	// if we receive all the message 
+		// parse requesttline(client.buffer) && parsingStatus =  REQUESTLINE
+		// parse header(buffer) && parsingStatus =  HEADER// request will be filled but the body is not read yet
+		// definebody(client[fd].request) && parsingStatus =  BODY to find the content length and without or body, no body
+			// internal 3 possibilities
+		
+
+	// if request completely read status && && parsingStatus =  COMPLETE
+		// build response(instance of client) so that we have access to the configuration of the server and the request sent by client
+		// change the flag to watch to EPOLLOUT in epoll_ctl()
+
+
+	// else if it is EPOLLOUT then we do something
+	// send(send the response on the client fd)
+	// epoll_ctl delete
+	// close()
+	// client.buffer.empty();
