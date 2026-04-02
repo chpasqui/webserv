@@ -14,14 +14,13 @@ class Request
 		~Request();
 
 		bool parseRequestLine(const std::string &message);
-		bool parseHeader();
-
-
-		bool checkMethod();
-		bool checkVersion();
-		bool checkSpace(const std::string &line);
-		bool parseUrl();
+		bool validSynthax(const std::string &line);
+		bool validMethod();
+		bool validVersion();
+		bool validUrl();
 		void stockIfQuery(std::string url_decode);
+
+		bool parseHeader(const std::string &request);
 
 	private:
 		std::string _method;
@@ -29,10 +28,8 @@ class Request
 		std::string _url;
 		std::string _path;
 		std::string _body;
-		std::string _queryString;
-		std::string	_requestMessage;
+		std::string _query;
 		int			_statusCode;
-		int 		_contentLength;
 	
 		std::map<std::string, int> _headers;
 };

@@ -10,6 +10,7 @@ typedef enum e_statusCode {
 	URL_TOOLONG = 414,
 	NOT_IMPLEMENTED = 501,
 	WRONG_HTTP = 505,
+	REQUEST_TIMEOUT = 408,
 } statusCode;
 
 
