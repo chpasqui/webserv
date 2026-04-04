@@ -19,7 +19,7 @@ int main() {
 	
 	try
 	{
-		Server server(configs);
+		Server server(configs); //INFO: Singleton class for Server ?
 		server.run(); // server instance out of scope if declared outside, I need it here but run does not 
 	}
 	catch(const std::exception& e)
