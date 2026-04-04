@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <iostream>
 
 
 
@@ -21,8 +22,15 @@ class Request
 		void stockIfQuery(std::string url_decode);
 
 		bool parseHeader(const std::string &request);
+		bool validateCRLF(const std::string &line);
+		bool validateObsFold(const std::string &line);
+		bool validateFieldName(const std::string &line, size_t colonPos);
+		std::string extractFieldName(const std::string &line, size_t colonPos);
+		std::string extractValue(const std::string &line, size_t colonPos);
+		bool validateFieldValue(const std::string &fieldname, const std::string &value);
+		bool setError(int code);
 
-		bool Request::isValid() const;
+		bool validateHeader();
 
 	private:
 		std::string _method;
@@ -37,5 +45,7 @@ class Request
 	
 		std::map<std::string, std::string> _headers;
 };
+
+void debugListHeader(std::map<std::string, std::string> &_headers);
 
 #endif
