@@ -45,32 +45,28 @@ static std::string extractHeaderSection(std::string request){
 
 bool Request::validateCRLF(const std::string &line){
 	if (line.back() != '\r'){
-			std::cout << line << std::endl;
-			_statusCode = BAD_REQUEST;
-			std::cout << "error getline" << std::endl;
-			return false;
-		}
+		std::cout << line << std::endl;
+		return(setError(BAD_REQUEST));
+	}
 	return true;
 }
 
 bool Request::validateObsFold(const std::string &line){
 	if (line.front() == ' ' || line.front() == '\t'){
-				_statusCode = BAD_REQUEST;
-				return false;
-		}
+		return(setError(BAD_REQUEST));
+	}
 	return true ;
 }
 
 bool Request::validateFieldName(const std::string &line, size_t colonPos){
 	if (colonPos == std::string::npos || colonPos == 0 || line[colonPos - 1] == ' '){
-		_statusCode = BAD_REQUEST;
+		return(setError(BAD_REQUEST));
 		std::cout << "error colonPos" << std::endl;
-		return false;
 		}
 	for(size_t i = 0; i < colonPos; i++){
 		if (!isTokenChar(line[i])){
-			_statusCode = BAD_REQUEST;
-			return false;
+			return(setError(BAD_REQUEST));
+
 		}
 	}
 	return true ;
@@ -96,15 +92,11 @@ std::string Request::extractValue(const std::string &line, size_t colonPos){
 bool Request::validateFieldValue(const std::string &fieldname, const std::string &value){
 	if (fieldname == "content-length"){
 		if ((_headers.count("content-length") > 0) || (value.find(",") != std::string::npos))
-			_statusCode = BAD_REQUEST;
+			return(setError(BAD_REQUEST));
 		errno = 0;
 		long val = strtol(value.c_str(), NULL, 10);
 		if (errno == ERANGE || val < 0 || val > INT_MAX)
-			_statusCode = BAD_REQUEST;
-		if (!isValidStatusCode()){
-			std::cout << "content length not valid" << std::endl;
-			return false;
-		}
+			return(setError(BAD_REQUEST));
 	}
 	return true ;
 }
@@ -140,8 +132,21 @@ bool Request::parseHeader(const std::string &request){
 	return true ;
 }
 
-bool Request::isValidStatusCode() const { return _statusCode == 200; }
 
+bool Request::validateHeader(){
+	if (_headers.count("content-length") && _headers.count("transfer-encoding"))
+		return(setError(BAD_REQUEST));
+	if (_version == "HTTP/1.1" && !_headers.count("host"))
+		return(setError(BAD_REQUEST));
+	if (_method == "POST" && !_headers.count("transfer-encoding") && !_headers.count("content-length"))
+		return(setError(411));
+	return true ;
+}
+
+bool Request::setError(int code) {
+    _statusCode = code;
+    return false;
+}
 //VALIDER LA SEMANTIQUE DE LA REQUEST
 // Step 1 : verify if both Transfer-Encoding ET Content-Length présents -> error 400
 // Step 2: if HTTP/1.1 et "host" absent --> error 400

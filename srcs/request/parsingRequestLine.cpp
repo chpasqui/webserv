@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <iostream>
+
 
 static std::string decodeUrl(std::string url);
 static bool checkUnsafeChar(std::string url_decode);
@@ -36,15 +36,16 @@ bool Request::parseRequestLine(const std::string &message){
 
 bool Request::validSynthax(const std::string &message){
 
-	size_t end = message.find("\0"); //pour le moment "\0" pour tester mais sinon ca doit etre "\r\n"
+	size_t end = message.find("\r\n"); //pour le moment "\0" pour tester mais sinon ca doit etre "\r\n"
     if (end == std::string::npos){
         _statusCode = BAD_REQUEST;
 		std::cout << "error find >> error : " << _statusCode << std::endl;
         return false;
     }
 	std::string line = message.substr(0, end);
+	std::cout << line << std::endl;
 	char splitChar = ' ';
-	std::istringstream split(message);
+	std::istringstream split(line);
 	std::vector<std::string> tokens;
 	for (std::string each; std::getline(split, each, splitChar); tokens.push_back(each));
 	if (tokens.size() != 3){
@@ -149,6 +150,8 @@ void	Request::stockIfQuery(std::string url_decode){
 		_query = url_decode.substr(queryPos + 1);
 		_path = url_decode.substr(0, queryPos);
 	}
+	else
+		_path = _url;
 }
 
 
@@ -159,5 +162,6 @@ int main(int argc, char *argv[]){
 	if (argc != 2)
 		return 1;
 	data.parseRequestLine(argv[1]);
+	data.parseHeader(argv[1]);
 	return (0);
 }
