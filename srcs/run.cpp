@@ -1,6 +1,6 @@
-#include "Server.hpp"
-#include "ServerConfig.hpp"
-#include "Client.hpp"
+#include "../include/Server.hpp"
+#include "../include/ServerConfig.hpp"
+#include "../include/Client.hpp"
 
 #include <stdio.h>
 #include <errno.h>
@@ -70,6 +70,7 @@ void	Server::run()
 		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, 0);
 		if (nFd == -1)
 			break ;
+		this->timeoutCheck(); //WARN:: We may need to move it and only perform a timeout test when a request is made. 
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd; // for example fd = 5 (the listening socket we added earlier)
@@ -84,8 +85,8 @@ void	Server::run()
 					continue;
 				}
 				ServerConfig *config = _listenFds[fd]; // config 8080
-				_clients.insert(std::make_pair(client_fd, Client(client_fd, config))); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
-				std::cout << "new connection to client, socket " << client_fd << "created" << std::endl;
+				Client *client = new Client(client_fd, config);
+				_clients.insert(std::make_pair(client_fd, client)); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
 				addToEpoll(client_fd, EPOLLIN); // watch fd = 6
 			}
 			else if (events[i].events & (EPOLLERR | EPOLLHUP))
@@ -96,7 +97,7 @@ void	Server::run()
 			}
 			else if (events[i].events & EPOLLIN) // now in this case we would receive the fd = 6, its a client, and ready for EPOLIN
 			{
-				Client& client = _clients[fd]; // _ciebts[6] will give us the Client class at fd = 6
+				Client& client = *(this)->_clients[fd]; // _ciebts[6] will give us the Client class at fd = 6
 				// send the llistenfd portentially
 				if (client.recvSucceeded() == false)
 				{

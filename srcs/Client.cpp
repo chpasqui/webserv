@@ -14,7 +14,6 @@ Client::Client() : _clientFd(-1),
 	_config(NULL),
 	_isDisconnected(false),
 	_ParsingIsDone(false) {
-	std::cout << "Client: Default constructor called" << std::endl;
 	time(&(this)->_timestamp);
 }
 
@@ -25,8 +24,7 @@ Client::Client(int fd, ServerConfig* config) :
 	_bodyStatus(-1),
 	_config(config),
 	_isDisconnected(false),
-	_ParsingIsDone(false){
-	std::cout << "Client: normal constructor called" << std::endl;
+	_ParsingIsDone(false) {
 	time(&(this)->_timestamp);
 	}
 
@@ -38,9 +36,7 @@ Client::Client(const Client& other) : _clientFd(other._clientFd),
 	_isDisconnected(other._isDisconnected),
 	_ParsingIsDone(other._ParsingIsDone),
 	_timestamp(other._timestamp)
-{
-	std::cout << "Client: Copy constructor called" << std::endl;
-}
+{}
 
 
 bool Client::recvSucceeded() {
@@ -98,8 +94,8 @@ Client::~Client()
 {
 	std::cout << "Client: Destructor called: FD " << _clientFd << std::endl;
 
-	//if (this->_clientFd == -1)
-	//	return;
-	//close(this->_clientFd);
-	//this->_clientFd == -1;
+	//OPTIM:: Use the Server::delFromEpoll(this->_clientFd); function ?
+	if (this->_clientFd == -1)
+		return;
+	close(this->_clientFd);
 }

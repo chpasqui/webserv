@@ -14,7 +14,7 @@
 
 #define BACKLOG 20
 #define MAXEVENT 1024
-#define TIMEOUT 30
+#define TIMEOUT 10
 
 /**
  * @brief Construct a new Server:: Server object by looping through 
@@ -141,6 +141,8 @@ void	Server::delFromEpoll(int fd) const {
 	event.data.fd = fd;
 	if (epoll_ctl(this->epollFd, EPOLL_CTL_DEL, fd, &event) == -1)
 	{
+		//FIX: if (errno == ENOENT)
+		//			return; 
 		close(this->epollFd);
 		std::string errorMsg = std::string("Epoll_ctl_del() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
@@ -152,16 +154,16 @@ void	Server::timeoutCheck(void) {
 	time_t	currentTime;
 
 	time(&currentTime);
-	for (std::map<int, Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	for (std::map<int, Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
 	{
-		if (std::difftime(it->second.getTimestamp(), currentTime) > TIMEOUT)
+		if (std::difftime(currentTime, it->second->getTimestamp()) == TIMEOUT)
 		{
 			std::cout << "Timeout on socket " << it->first << std::endl;
 			//buildReponse();
 			//this->modifyEpoll(it->first, EPOLLOUT);
 			//sendResponse();
-			this->delFromEpoll(it->first);
-			this->_clients.erase(it);
+			//delete it->seconde;
+			this->_clients.erase(it->first);
 		}
 	}
 }

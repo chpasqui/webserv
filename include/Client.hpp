@@ -31,7 +31,7 @@ class Client
 	public:
 		Client();
 		Client(int fd, ServerConfig* config);
-		Client(const Client& other); //WARN:Veut on vraiment copier un client avec ses infos ?
+		Client(const Client& other); //WARN:Veut on vraiment copier un client et ses infos ?
 		~Client();
 		bool	recvSucceeded();
 		void	requestCompete();
