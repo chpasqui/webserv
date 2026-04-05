@@ -29,10 +29,11 @@ class Client
 		time_t					_timestamp;
 		std::string				_response;
 	public:
-		Client();
+		Client(); //WARN: Private constructor ?
 		Client(int fd, ServerConfig* config);
 		Client(const Client& other); //WARN:Veut on vraiment copier un client et ses infos ?
 		~Client();
+
 		bool	recvSucceeded();
 		void	requestCompete();
 		int		getParsingIsDone() const;
