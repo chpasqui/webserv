@@ -11,6 +11,9 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <map>
+#include <csignal>
+#include <signal.h>
+
 
 #define BACKLOG 20
 #define MAXEVENT 1024
@@ -29,10 +32,14 @@
  * 
  * @param serverConfigsVec (loop through)
  */
-Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
+Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients(), _signal(0) {
 	createEpollInstance();
 	std::string errorMsg;
 
+	signal(SIGINT, Server::signalHandler);
+	signal(SIGQUIT, Server::signalHandler);
+
+	Server::_instance = this;
 	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
 	{
 		int listenFd = createListeningSocket();
@@ -123,6 +130,7 @@ void	Server::addToEpoll(int fd, uint32_t flag) const {
 	}
 }
 
+
 void	Server::modifyEpoll(int fd, uint32_t flag) const {
 	struct epoll_event	event;
 	event.events = flag;
@@ -149,7 +157,6 @@ void	Server::delFromEpoll(int fd) const {
 	}
 }
 
-
 void	Server::timeoutCheck(void) {
 	time_t	currentTime;
 
@@ -162,14 +169,17 @@ void	Server::timeoutCheck(void) {
 			//buildReponse();
 			//this->modifyEpoll(it->first, EPOLLOUT);
 			//sendResponse();
-			//delete it->seconde;
 			this->_clients.erase(it->first);
 		}
 	}
 }
 
-void	Server::signalCheck(void) {
-
+void	Server::signalHandler(int signal) {
+	if (signal == SIGINT)
+		std::cout << "\nSIGINT signal detected, stopping server\n";
+	else if (signal == SIGQUIT)
+		std::cout << "\nSIGQUIT signal detected, stopping server\n";
+	Server::_instance->_signal = signal;
 }
 
 /**
@@ -209,3 +219,6 @@ void	Server::signalCheck(void) {
 		// _listenfdToCorrespondingConfig = & serverConfig; // fd 6 belongs to this config
 		// epoll_ctl(add the listening socket fd = 6 )
 //}
+
+Server *Server::_instance = 0; //OPTIM: if singleton class, use getInstance() fonction
+

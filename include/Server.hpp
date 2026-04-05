@@ -8,8 +8,6 @@
 #include "ServerConfig.hpp"
 #include "Client.hpp"
 
-
-
 // Client lives in server
 // ServerConfig lives in Client
 // Server lives in main
@@ -20,6 +18,9 @@ class Server
 		int epollFd;
 		std::map<int, ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 		std::map<int, Client*> _clients;
+		bool _signal;
+		static Server *_instance;
+
 	public:
 		Server(std::vector<ServerConfig> serverConfigsVec);
 		~Server();
@@ -32,8 +33,8 @@ class Server
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
 		void	timeoutCheck(void);
-		void	signalCheck(void);
-};
 
+		static void	signalHandler(int signal);
+};
 
 #endif

@@ -65,7 +65,7 @@ void	Server::run()
 	struct epoll_event	events[MAX_EVENTS];
 	int					nFd;
 
-	while (true)
+	while (!this->_signal) //WARN: Becareful with CGI signal too
 	{
 		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, 0);
 		if (nFd == -1)
@@ -125,4 +125,6 @@ void	Server::run()
 			}
 		}
 	}
+	std::cout << "end of the loop" << std::endl;
 }
+
