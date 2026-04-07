@@ -21,10 +21,10 @@
  * 1. create the epollfd
  * 2. loop through the vector of all the configs and create one listenfd for
  * each config, bind that listenfd to the specific port in the config,
- * update the map of _listenFds with a fd <==> config file
+ * update the map of _listenFds with a fd <==> configuration
  * 3. because fds are created incrementally, it will start at 5, 6, 7 etc.
  * (0 stdin, 1 stdout, 2 stderr, 3 epollfd, 4 listeningsocket, 5 listeningsocket)
- * so for the map call, we do _listenFds[4] = serverConfig[0]; then [5] <==> [1]
+ * so for the map call, we do _listenFds[4] = serverConfig[0]; then [5] <==> [1], etc.
  * 
  * @param serverConfigsVec (loop through)
  */
@@ -38,7 +38,7 @@ Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients()
 		int listenFd = createListeningSocket();
 		bindAndListen(listenFd, serverConfigsVec[i].getPort());
 		this->_listenFds[listenFd] = &serverConfigsVec[i];
-		addToEpoll(listenFd, EPOLLIN);
+		addToEpoll(epollFd, listenFd, EPOLLIN);
 	}
 }
 
@@ -114,40 +114,45 @@ void	Server::bindAndListen(int &listenFd, int port) const
 
 Server::~Server() {}
 
-void	Server::addToEpoll(int fd, uint32_t flag) const
+int		Server::getEpollFd(void) const
+{
+	return (this->epollFd);
+}
+
+void	Server::addToEpoll(int epollFd, int fdToModify, uint32_t flag)
 {
 	struct epoll_event	event;
 	event.events = flag;
-	event.data.fd = fd;
-	if (epoll_ctl(this->epollFd, EPOLL_CTL_ADD, fd, &event) == -1)
+	event.data.fd = fdToModify;
+	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fdToModify, &event) == -1)
 	{
-		close(this->epollFd);
+		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
 }
 
-void	Server::modifyEpoll(int fd, uint32_t flag) const
+void	Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
 {
 	struct epoll_event	event;
 	event.events = flag;
-	event.data.fd = fd;
-	if (epoll_ctl(this->epollFd, EPOLL_CTL_MOD, fd, &event) == -1)
+	event.data.fd = fdToModify;
+	if (epoll_ctl(epollFd, EPOLL_CTL_MOD, fdToModify, &event) == -1)
 	{
-		close(this->epollFd);
+		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
 }
 
-void	Server::delFromEpoll(int fd) const
+void	Server::delFromEpoll(int epollFd, int fdToModify)
 {
 	struct epoll_event	event;
 	event.events = 0;
-	event.data.fd = fd;
-	if (epoll_ctl(this->epollFd, EPOLL_CTL_DEL, fd, &event) == -1)
+	event.data.fd = fdToModify;
+	if (epoll_ctl(epollFd, EPOLL_CTL_DEL, fdToModify, &event) == -1)
 	{
-		close(this->epollFd);
+		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
@@ -177,28 +182,43 @@ void	Server::run()
 					continue;
 				}
 				ServerConfig *config = _listenFds[fd]; // config 8080
-				_clients.insert(std::make_pair(client_fd, Client(client_fd, config))); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
+				_clients.insert(std::make_pair(client_fd, new Client(client_fd, config))); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
 				std::cout << "new connection to client, socket " << client_fd << "created" << std::endl;
-				addToEpoll(client_fd, EPOLLIN); // watch fd = 6
+				addToEpoll(epollFd, client_fd, EPOLLIN); // watch fd = 6
 			}
 			else if (events[i].events & (EPOLLERR | EPOLLHUP))
 			{
-				delFromEpoll(fd);
+				delFromEpoll(epollFd, fd);
 				close(fd);
 				_clients.erase(fd);
 			}
+			// Now the fd is the clientfd and it had activity so 6
 			else if (events[i].events & EPOLLIN) // now in this case we would receive the fd = 6, its a client, and ready for EPOLIN
 			{
-				Client& client = _clients[fd]; // _clients[6] will give us the Client class at fd = 6
-				std::cout << client.getClientStatus() << std::endl;
-
-				
+				//timeout
+				Client& client = *_clients[fd]; // _clients[6] will give us the Client class at fd = 6
+				client.handleRequest();
+				if (client.getClientStatus() == CLOSEFD)
+				{
+					delFromEpoll(epollFd, fd);
+					close(fd);
+					delete _clients[fd];
+					_clients.erase(fd);
+				}
+				if (client.getClientStatus() == COMPLETE)
+				{
+					std::cout << "building response..." << std::endl;
+					///buildResponse()
+					modifyEpoll(epollFd, fd, EPOLLOUT);
+				}
 			}
 			else if(events[i].events & EPOLLOUT)
 			{
+				std::cout << "sending response now :)" << std::endl;
 				//send(response);
-				delFromEpoll(fd);
+				delFromEpoll(epollFd, fd);
 				close(fd);
+				delete(_clients[fd]);
 				_clients.erase(fd);
 			}
 		}
@@ -218,7 +238,7 @@ void	Server::run()
 
 // //ATTENTION POUR BOUCLE EPOLL:
 // fd = append()
-// if (STATE == PARSING_REQUEST_LINE buffer.find("\r\n"))
+// if (STATE == PARSING_REQUEST_LINE buffer.find(c))
 // {
 //    	parseRequestLine(fd);
 //     STATE = PARSING_HEADERS;

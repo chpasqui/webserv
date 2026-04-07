@@ -12,7 +12,8 @@ enum ParsingStatus
 	PARSING_REQUEST_LINE,
 	PARSING_HEADERS,
 	PARSING_BODY, 
-	COMPLETE
+	COMPLETE,
+	CLOSEFD
 };
 
 class Client
@@ -21,9 +22,9 @@ class Client
 		int						_clientFd;
 		ssize_t					_bytesRead; // ssize so that it can be compared to -1 
 		std::string				_buffer;
-		int						_bodyStatus;
 		ServerConfig*			_config;
 		id_t					_clientStatus;
+	
 		// bool					_isDisconnected;
 		// bool					_ParsingIsDone;
 		// bool					_ParsingStatus;
@@ -35,6 +36,7 @@ class Client
 		// bool	recvSucceeded();
 		// void	requestCompete();
 		int		getClientStatus() const;
+		void	handleRequest();
 };
 
 #endif

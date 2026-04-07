@@ -19,15 +19,15 @@ class Server
 	private:
 		int epollFd;
 		std::map<int, ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
-		std::map<int, Client> _clients;
+		std::map<int, Client*> _clients;
 	public:
 		Server(std::vector<ServerConfig> serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);
-		void	addToEpoll(int fd, uint32_t flag) const;
-		void	modifyEpoll(int fd, uint32_t flag) const;
-		void	delFromEpoll(int fd) const;
-
+		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
+		static void	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
+		static void	delFromEpoll(int epollFd, int fdToModify);
+		int		getEpollFd(void) const;
 		int		createListeningSocket(void);
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
