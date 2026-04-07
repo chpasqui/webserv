@@ -4,8 +4,7 @@
 #include <string>
 #include <map>
 #include <iostream>
-
-
+#include <sstream>
 
 class Request
 {
@@ -32,8 +31,8 @@ class Request
 
 		bool validateHeader();
 
-		bool parseBody(const std::string &request);
-		std::string unchunkedBody(const std::string &body);
+		bool parseBody(const std::string &request, int maxBodySize);
+		bool unchunkedBody(const std::string &body);
 
 	private:
 		std::string _method;
