@@ -8,9 +8,9 @@
 static std::string decodeUrl(std::string url);
 static bool checkUnsafeChar(std::string url_decode);
 
-Request::Request() : _contentLength(0), _statusCode(OK){}
+Request::Request() : _contentLength(-1), _statusCode(OK){}
 
-Request::Request(std::string requestMessage) : _requestMessage(requestMessage), _contentLength(0), _statusCode(OK) {}
+Request::Request(std::string requestMessage) : _requestMessage(requestMessage), _contentLength(-1), _statusCode(OK) {}
 
 Request::~Request(){}
 
@@ -155,5 +155,6 @@ int main(int argc, char *argv[]){
 		return 1;
 	data.parseRequestLine(argv[1]);
 	data.parseHeader(argv[1]);
+	data.parseBody(argv[1], 1024);
 	return (0);
 }

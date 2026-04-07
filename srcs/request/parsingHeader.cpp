@@ -2,7 +2,7 @@
 #include "../../include/statusCode.hpp"
 #include <vector>
 #include <string>
-#include <sstream>
+
 
 #include <climits>
 #include <algorithm>
@@ -28,6 +28,8 @@
 //     - if pas un nombre -> error 400 -- OK
 //     - check for overflow (> INT_MAX) sinon error 400 -- OK
 // Step 12: stocker dans map header lalala -- OK
+
+static std::string extractHeaderSection(std::string request);
 
 bool Request::parseHeader(const std::string &request){ 
 
@@ -127,15 +129,20 @@ bool Request::validateFieldValue(const std::string &fieldname, const std::string
 			return(setError(BAD_REQUEST));
 		_contentLength = static_cast<int>(val);
 	}
+	if (fieldname == "transfer-encoding" && value != "chunked"){
+		return(setError(BAD_REQUEST));
+	}
 	return true ;
 }
 
 bool Request::validateHeader(){
 	if (_headers.count("content-length") && _headers.count("transfer-encoding"))
 		return(setError(BAD_REQUEST));
-	if (_version == "HTTP/1.1" && !_headers.count("host"))
-		return(setError(BAD_REQUEST));
 	if (_method == "POST" && !_headers.count("transfer-encoding") && !_headers.count("content-length"))
+		return(setError(LENGTH_REQUIRED));
+	if (_headers.count("content-length") == 0 && _headers.count("transfer-encoding") == 0)
+		_contentLength = 0;
+	if (_version == "HTTP/1.1" && !_headers.count("host"))
 		return(setError(BAD_REQUEST));
 	return true ;
 }
