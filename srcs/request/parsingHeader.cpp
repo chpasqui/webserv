@@ -29,6 +29,37 @@
 //     - check for overflow (> INT_MAX) sinon error 400 -- OK
 // Step 12: stocker dans map header lalala -- OK
 
+bool Request::parseHeader(const std::string &request){ 
+
+	std::string header = extractHeaderSection(request);
+	std::string line;
+	std::istringstream split(header);
+
+	while(std::getline(split, line)){
+		if (!validateCRLF(line))
+			return false;
+		line.pop_back();
+		if (line.empty())
+			break ;
+		if(!validateObsFold(line))
+			return false;
+
+		size_t colonPos = line.find(':');
+		if(!validateFieldName(line, colonPos))
+			return false;
+
+		std::string fieldname = extractFieldName(line, colonPos);
+		std::string value = extractValue(line, colonPos);
+		
+		if (!validateFieldValue(fieldname, value))
+			return false;
+		
+		_headers.insert(std::make_pair(fieldname, value));
+	}
+	debugListHeader(_headers);
+	return true ;
+}
+
 static bool isTokenChar(unsigned char c){
 	if(isalnum(c))
 		return true;
@@ -64,10 +95,8 @@ bool Request::validateFieldName(const std::string &line, size_t colonPos){
 		std::cout << "error colonPos" << std::endl;
 		}
 	for(size_t i = 0; i < colonPos; i++){
-		if (!isTokenChar(line[i])){
+		if (!isTokenChar(line[i]))
 			return(setError(BAD_REQUEST));
-
-		}
 	}
 	return true ;
 }
@@ -81,9 +110,8 @@ std::string Request::extractFieldName(const std::string &line, size_t colonPos){
 std::string Request::extractValue(const std::string &line, size_t colonPos){
 		std::string value = line.substr(colonPos + 1, line.size());
 		size_t trim = value.find_first_not_of(" \t");
-		if (trim == std::string::npos){
+		if (trim == std::string::npos)
 			return ("") ;
-		}
 		value = value.substr(trim);
 		std:: cout << value << std::endl;
 		return value ;
@@ -97,41 +125,10 @@ bool Request::validateFieldValue(const std::string &fieldname, const std::string
 		long val = strtol(value.c_str(), NULL, 10);
 		if (errno == ERANGE || val < 0 || val > INT_MAX)
 			return(setError(BAD_REQUEST));
+		_contentLength = static_cast<int>(val);
 	}
 	return true ;
 }
-
-bool Request::parseHeader(const std::string &request){ 
-
-	std::string header = extractHeaderSection(request);
-	std::string line;
-	std::istringstream split(header);
-
-	while(std::getline(split, line)){
-		if (!validateCRLF(line))
-			return false;
-		line.pop_back();
-		if (line.empty())
-			break ;
-		if(!validateObsFold(line))
-			return false;
-
-		size_t colonPos = line.find(':');
-		if(!validateFieldName(line, colonPos))
-			return false;
-
-		std::string fieldname = extractFieldName(line, colonPos);
-		std::string value = extractValue(line, colonPos);
-		
-		if (!validateFieldValue(fieldname, value))
-			return false;
-		
-		_headers.insert(std::make_pair(fieldname, value));
-	}
-	debugListHeader(_headers);
-	return true ;
-}
-
 
 bool Request::validateHeader(){
 	if (_headers.count("content-length") && _headers.count("transfer-encoding"))
@@ -139,7 +136,7 @@ bool Request::validateHeader(){
 	if (_version == "HTTP/1.1" && !_headers.count("host"))
 		return(setError(BAD_REQUEST));
 	if (_method == "POST" && !_headers.count("transfer-encoding") && !_headers.count("content-length"))
-		return(setError(411));
+		return(setError(BAD_REQUEST));
 	return true ;
 }
 
@@ -147,14 +144,14 @@ bool Request::setError(int code) {
     _statusCode = code;
     return false;
 }
+
+
 //VALIDER LA SEMANTIQUE DE LA REQUEST
 // Step 1 : verify if both Transfer-Encoding ET Content-Length présents -> error 400
 // Step 2: if HTTP/1.1 et "host" absent --> error 400
 // Step 3: si method == POST et ni "content-length" ni "transfer-encoding" --> error 411
 //Step 4: attention faudrait verifier si la taille du content length est < maxbodysize
 
-
-// faire un isValid au lieu decrire partout == 200 bool isValid() const { return _statusCode == 200; }
 
 //ATTENTION POUR BOUCLE EPOLL:
 
@@ -181,6 +178,7 @@ bool Request::setError(int code) {
 // {
 //     if (statusCode == 200)
 //         defineBody(buffer);
+//
 //     STATE = COMPLETE;
 // }
 

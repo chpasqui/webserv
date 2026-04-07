@@ -32,6 +32,9 @@ class Request
 
 		bool validateHeader();
 
+		bool parseBody(const std::string &request);
+		std::string unchunkedBody(const std::string &body);
+
 	private:
 		std::string _method;
 		std::string _version;
