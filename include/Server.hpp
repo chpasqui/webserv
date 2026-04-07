@@ -24,13 +24,13 @@ class Server
 		Server(std::vector<ServerConfig> serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);
-		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
-		static void	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
-		static void	delFromEpoll(int epollFd, int fdToModify);
 		int		getEpollFd(void) const;
 		int		createListeningSocket(void);
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
+		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
+		static void	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
+		static void	delFromEpoll(int epollFd, int fdToModify);
 };
 
 

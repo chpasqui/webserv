@@ -24,17 +24,12 @@ class Client
 		std::string				_buffer;
 		ServerConfig*			_config;
 		id_t					_clientStatus;
-	
-		// bool					_isDisconnected;
-		// bool					_ParsingIsDone;
-		// bool					_ParsingStatus;
 	public:
 		Client();
 		Client(int fd, ServerConfig* config);
 		Client(const Client& other);
 		~Client();
-		// bool	recvSucceeded();
-		// void	requestCompete();
+		int		getClientFd() const;
 		int		getClientStatus() const;
 		void	handleRequest();
 };

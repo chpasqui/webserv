@@ -14,14 +14,20 @@ Client::Client() :
 	_bytesRead(-1),
 	_buffer(""),
 	_config(NULL),
-	_clientStatus(PARSING_REQUEST_LINE) {}
+	_clientStatus(PARSING_REQUEST_LINE)
+{
+	std::cout << "Client default constructor called" << std::endl;
+}
 
 Client::Client(int fd, ServerConfig* config) :
 	_clientFd(fd),
 	_bytesRead(-1),
 	_buffer(""), \
 	_config(config),
-	_clientStatus(PARSING_REQUEST_LINE) {}
+	_clientStatus(PARSING_REQUEST_LINE)
+{
+	std::cout << "Client with fd" << fd << std::endl;
+}
 
 Client::Client(const Client& other) :
 	_clientFd(other._clientFd),
@@ -63,6 +69,11 @@ void	Client::handleRequest()
 	// CHECK TIMEOUT because we never entered the conitions
 	_buffer += std::string(buffer);
 	return ;
+}
+
+int		Client::getClientFd() const
+{
+	return (this->_clientFd);
 }
 
 int		Client::getClientStatus() const

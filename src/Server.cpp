@@ -56,6 +56,7 @@ void	Server::createEpollInstance(void)
 		errorMsg = std::string("Epoll_create() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
+	std::cout << "Server::createEpollInstance epollFd " << epollFd << " is created" << std::endl; 
 }
 
 int Server::createListeningSocket()
@@ -74,6 +75,7 @@ int Server::createListeningSocket()
 		close(listenFd);
 		throw std::runtime_error("Server: setsockopt() failed.");
 	}
+	std::cout << "Server::createlisteningSocket listenFd " << listenFd << " is created" <<  std::endl;
 	return listenFd;
 }
 
@@ -171,6 +173,7 @@ void	Server::run()
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd; // for example fd = 5 (the listening socket we added earlier)
+			std::cout << "Server::run epollwait: current fd we are working on is " << fd << std::endl;
 			if (_listenFds.count(fd))
 			{
 				struct sockaddr_in client_addr;
@@ -183,8 +186,9 @@ void	Server::run()
 				}
 				ServerConfig *config = _listenFds[fd]; // config 8080
 				_clients.insert(std::make_pair(client_fd, new Client(client_fd, config))); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
-				std::cout << "new connection to client, socket " << client_fd << "created" << std::endl;
+				//std::cout << "new client added to the _cliets map : " << _clients[fd]->getClientFd() << std::endl;
 				addToEpoll(epollFd, client_fd, EPOLLIN); // watch fd = 6
+
 			}
 			else if (events[i].events & (EPOLLERR | EPOLLHUP))
 			{
@@ -195,13 +199,16 @@ void	Server::run()
 			// Now the fd is the clientfd and it had activity so 6
 			else if (events[i].events & EPOLLIN) // now in this case we would receive the fd = 6, its a client, and ready for EPOLIN
 			{
+				std::cout << "Server::run inside EPOLIN : existing connection " << fd << " is sending a request." << std::endl;
 				//timeout
-				Client& client = *_clients[fd]; // _clients[6] will give us the Client class at fd = 6
+				Client& client = *(_clients[fd]); // _clients[6] will give us the Client class at fd = 6
+				
 				client.handleRequest();
 				if (client.getClientStatus() == CLOSEFD)
 				{
 					delFromEpoll(epollFd, fd);
 					close(fd);
+					std::cout << "Server::run in EPOLIN ,fd " << fd << " was closed because its status was CLOSEFD" << std::endl;
 					delete _clients[fd];
 					_clients.erase(fd);
 				}
@@ -210,7 +217,7 @@ void	Server::run()
 					std::cout << "building response..." << std::endl;
 					///buildResponse()
 					modifyEpoll(epollFd, fd, EPOLLOUT);
-				}
+				} 
 			}
 			else if(events[i].events & EPOLLOUT)
 			{
@@ -218,56 +225,13 @@ void	Server::run()
 				//send(response);
 				delFromEpoll(epollFd, fd);
 				close(fd);
+				std::cout << "After sending the response, fd " << fd << "is closed" << std::endl;
 				delete(_clients[fd]);
 				_clients.erase(fd);
 			}
 		}
 	}
 }
-
-
-
-
-//VALIDER LA SEMANTIQUE DE LA REQUEST
-// Step 1 : verify if both Transfer-Encoding ET Content-Length présents -> error 400
-// Step 2: if HTTP/1.1 et "host" absent --> error 400
-// Step 3: si method == POST et ni "content-length" ni "transfer-encoding" --> error 411
-
-
-// // faire un isValid au lieu decrire partout == 200 bool isValid() const { return _statusCode == 200; }
-
-// //ATTENTION POUR BOUCLE EPOLL:
-// fd = append()
-// if (STATE == PARSING_REQUEST_LINE buffer.find(c))
-// {
-//    	parseRequestLine(fd);
-//     STATE = PARSING_HEADERS;
-// }
-
-// if (STATE == PARSING_HEADERS && buffer.find("\r\n\r\n"))
-// {
-//     if (request.isValid) // au lieu de statusCode==200 par exemple
-//         parseHeaders(buffer);
-// 	  // need to validation sémantique
-//     if (statusCode == 200)
-//         validateRequest(maxbodysize);
-    
-//     STATE = PARSING_BODY;
-// }
-
-// if (STATE == PARSING_BODY)
-// {
-//     if (statusCode == 200)
-//         defineBody(buffer);
-//     STATE = COMPLETE;
-// }
-
-// if (STATE == COMPLETE)
-// {
-//     response = buildResponse(request, serverConfig);
-//     // et on switch to EPOLLOUT
-// }
-
 
 /**
  * @brief the Server() constructor does not need to receive anything, for now it is void because the server 
