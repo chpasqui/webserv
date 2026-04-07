@@ -1,11 +1,10 @@
-#include "Server.hpp"
-#include "ServerConfig.hpp"
+#include "../include/Server.hpp"
+#include "../include/ServerConfig.hpp"
 
 #include <vector>
 #include <iostream>
 
-int main()
-{
+int main() {
 	std::vector<ServerConfig> configs;
 	ServerConfig config1;
 	config1.setPort(8080);

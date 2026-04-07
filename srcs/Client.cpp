@@ -1,11 +1,11 @@
-#include "Client.hpp"
-#include "Server.hpp"
-#include "ServerConfig.hpp"
+#include "../include/Client.hpp"
+#include "../include/Client.hpp"
+#include "../include/ServerConfig.hpp"
 #include <sys/types.h>
 #include <sys/socket.h>
-
-#include <iostream>
 #include <unistd.h>
+#include <unistd.h>
+#include <iostream>
 
 # define BUFFERSIZE 1024
 
@@ -17,6 +17,7 @@ Client::Client() :
 	_clientStatus(PARSING_REQUEST_LINE)
 {
 	std::cout << "Client default constructor called" << std::endl;
+	time(&(this)->_timestamp);
 }
 
 Client::Client(int fd, ServerConfig* config) :
@@ -27,6 +28,7 @@ Client::Client(int fd, ServerConfig* config) :
 	_clientStatus(PARSING_REQUEST_LINE)
 {
 	std::cout << "Client with fd" << fd << std::endl;
+	time(&(this)->_timestamp);
 }
 
 Client::Client(const Client& other) :
@@ -34,7 +36,9 @@ Client::Client(const Client& other) :
 	_bytesRead(other._bytesRead),
 	_buffer(other._buffer),
 	_config(other._config),
-	_clientStatus(other._clientStatus) {}
+	_clientStatus(other._clientStatus),
+	_timestamp(other._timestamp)
+{}
 
 void	Client::handleRequest()
 {
@@ -75,6 +79,32 @@ int		Client::getClientFd() const
 {
 	return (this->_clientFd);
 }
+
+time_t	Client::getTimestamp(void) const
+{
+	return (this->_timestamp);
+}
+
+// void	Client::requestComplete()
+// {
+// 	size_t pos = this->_buffer.find("\r\n\r\n");
+// 	if (pos == std::string::npos) // npos indicates the not found state
+// 	{
+// 		return;
+// 	}
+
+
+// 	// getline with the delimiter
+
+// 	// if (_ParsingStatus == REQUESTLINE)
+// 	// 	parseRequestLine(); // set to header
+	
+// 	// if (_ParsingStatus = HEADER)
+// 	// 	parseHEadeers(); // set to body
+
+// 	// if (_ParsingStatus == BODY)
+// 	// 	defineBody(); // set bool _isdone
+// }
 
 int		Client::getClientStatus() const
 {

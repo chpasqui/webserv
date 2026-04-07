@@ -1,20 +1,26 @@
-#include "Server.hpp"
+#include "../include/Server.hpp"
 
+#include <iostream>
+#include <ctime>
+#include <stdexcept>
 #include <string>
 #include <string.h>
-#include <errno.h>
 #include <stdio.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <iostream>
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <unistd.h>
-#include <vector>
 #include <map>
+#include <csignal>
+#include <signal.h>
+
 
 #define BACKLOG 20
 #define MAX_EVENTS 1024
+#define TIMEOUT 10
 
+static int serverSignal = 0;
 /**
  * @brief Construct a new Server:: Server object by looping through 
  * the @param serverConfigsVec and for each configuration, it will:
@@ -28,10 +34,12 @@
  * 
  * @param serverConfigsVec (loop through)
  */
-Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients()
-{
+Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
 	createEpollInstance();
 	std::string errorMsg;
+
+	signal(SIGINT, Server::signalHandler);
+	signal(SIGQUIT, Server::signalHandler);
 
 	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
 	{
@@ -46,8 +54,7 @@ Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients()
  * @brief Create a new listeningSocket and set its options to non blocking. 
  * It sets the private attribute epollFd to the single fd (3)
  */
-void	Server::createEpollInstance(void)
-{
+void	Server::createEpollInstance(void) {
 	std::string errorMsg;
 
 	this->epollFd = epoll_create(1);
@@ -59,8 +66,7 @@ void	Server::createEpollInstance(void)
 	std::cout << "Server::createEpollInstance epollFd " << epollFd << " is created" << std::endl; 
 }
 
-int Server::createListeningSocket()
-{
+int Server::createListeningSocket() {
 	int listenFd = socket(PF_INET, SOCK_STREAM, 0);
 	if (listenFd == -1)
 		throw std::runtime_error("Server: socket() failed.");
@@ -90,8 +96,7 @@ int Server::createListeningSocket()
  * @param port which is the serverConfigVec[i].getport() so that we bind the
  * listen fd to that specific port
  */
-void	Server::bindAndListen(int &listenFd, int port) const
-{
+void	Server::bindAndListen(int &listenFd, int port) const {
 	struct sockaddr_in server_addr;
 	
 	memset(&server_addr, 0, sizeof(sockaddr_in));
@@ -136,6 +141,7 @@ void	Server::addToEpoll(int epollFd, int fdToModify, uint32_t flag)
 
 void	Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
 {
+
 	struct epoll_event	event;
 	event.events = flag;
 	event.data.fd = fdToModify;
@@ -154,6 +160,8 @@ void	Server::delFromEpoll(int epollFd, int fdToModify)
 	event.data.fd = fdToModify;
 	if (epoll_ctl(epollFd, EPOLL_CTL_DEL, fdToModify, &event) == -1)
 	{
+		//WARN: if (errno == ENOENT) //don't close an inexistant file (Double close);
+		//			return; 
 		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
@@ -165,11 +173,12 @@ void	Server::run()
 	struct epoll_event	events[MAX_EVENTS];
 	int					nFd;
 
-	while (true)
+	while (!serverSignal) //WARN: Becareful with CGI signal too
 	{
 		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, 0);
 		if (nFd == -1)
 			break ;
+		this->timeoutCheck(); //WARN:: We may need to move it and only perform a timeout test when a request is made. 
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd; // for example fd = 5 (the listening socket we added earlier)
@@ -231,7 +240,33 @@ void	Server::run()
 			}
 		}
 	}
+	std::cout << "end of the loop" << std::endl;
 }
+void	Server::timeoutCheck(void) {
+	time_t	currentTime;
+
+	time(&currentTime);
+	for (std::map<int, Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	{
+		if (std::difftime(currentTime, it->second->getTimestamp()) == TIMEOUT)
+		{
+			std::cout << "Timeout on socket " << it->first << std::endl;
+			//buildReponse();
+			//this->modifyEpoll(it->first, EPOLLOUT);
+			//sendResponse();
+			this->_clients.erase(it->first);
+		}
+	}
+}
+
+void	Server::signalHandler(int signal) {
+	if (signal == SIGINT)
+		std::cout << "\nSIGINT signal detected, stopping server\n";
+	else if (signal == SIGQUIT)
+		std::cout << "\nSIGQUIT signal detected, stopping server\n";
+	serverSignal = signal;
+}
+
 
 /**
  * @brief the Server() constructor does not need to receive anything, for now it is void because the server 
@@ -267,7 +302,6 @@ void	Server::run()
 		// parse header(buffer) && parsingStatus =  HEADER// request will be filled but the body is not read yet
 		// definebody(client[fd].request) && parsingStatus =  BODY to find the content length and without or body, no body
 			// internal 3 possibilities
-		
 
 	// if request completely read status && && parsingStatus =  COMPLETE
 		// build response(instance of client) so that we have access to the configuration of the server and the request sent by client

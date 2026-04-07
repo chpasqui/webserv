@@ -1,5 +1,5 @@
 NAME		=	webserv
-DIR_SRC		=	./src
+DIR_SRC		=	./srcs
 DIR_BUILD	=	./build
 DIR_INCLUDE =	./include
 CXX			=	c++
