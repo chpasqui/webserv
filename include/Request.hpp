@@ -42,7 +42,7 @@ class Request
 		bool unchunkedBody(const std::string &body);
 		bool extractChunkData(const std::string &body, size_t &pos, long chunkSize);
 
-	private:
+		private:
 		std::string _method;
 		std::string _version;
 		std::string _url;
