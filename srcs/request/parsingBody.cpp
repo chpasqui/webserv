@@ -11,7 +11,7 @@ bool Request::parseBody(const std::string &request, int maxBodySize){
     else if (_headers.count("content-length")){
         if (_body.size() < _contentLength)
             return false; // doit continuer de read, donc si false + statusCode == 200
-        if (_contentLength > maxBodySize)
+        if (_contentLength > maxBodySize) //a voir si ce point on le met en dehors pour eviter d envoyer maxBodySize
             return setError(PAYLOAD_TOO_LARGE);
     }
     else
