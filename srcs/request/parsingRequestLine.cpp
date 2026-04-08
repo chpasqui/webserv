@@ -147,14 +147,14 @@ void	Request::stockIfQuery(std::string url_decode){
 }
 
 
-int main(int argc, char *argv[]){
+// int main(int argc, char *argv[]){
 
-	Request data;
+// 	Request data;
 
-	if (argc != 2)
-		return 1;
-	data.parseRequestLine(argv[1]);
-	data.parseHeader(argv[1]);
-	data.parseBody(argv[1], 1024);
-	return (0);
-}
+// 	if (argc != 2)
+// 		return 1;
+// 	data.parseRequestLine(argv[1]);
+// 	data.parseHeader(argv[1]);
+// 	data.parseBody(argv[1], 1024);
+// 	return (0);
+// }
