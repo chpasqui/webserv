@@ -4,10 +4,16 @@ DIR_BUILD	=	./build
 DIR_INCLUDE =	./include
 CXX			=	c++
 CXXFLAGS	=	-std=c++98 -Wall -Werror -Wextra -g
+
+ifdef DEBUG
+    CXXFLAGS += -DDEBUG
+endif
+
 LDINCLUDE	=	-I$(DIR_INCLUDE)
 
-SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp parsingRequestLine.cpp \
-				parsingHeader.cpp parsingBody.cpp debug.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp
+SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp \
+				Request.cpp requestParsingLine.cpp requestParsingHeader.cpp requestParsingBody.cpp debug.cpp \
+				requestUtils.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp
 SRCS_NAME	=	$(basename $(SRCS))
 OBJS		=	$(addsuffix .o, $(addprefix $(DIR_BUILD)/, $(SRCS_NAME)))
 
