@@ -21,6 +21,8 @@
 #define MAX_EVENTS 1024
 #define TIMEOUT 10
 
+// CONSTRUCTOR AND DESTRUCTOR
+
 static int serverSignal = 0;
 /**
  * @brief Construct a new Server:: Server object by looping through 
@@ -38,10 +40,10 @@ static int serverSignal = 0;
 Server::Server(std::vector<ServerConfig*> serverConfigsVec) : _clients() {
 	createEpollInstance();
 	std::string errorMsg;
-
+	
 	signal(SIGINT, Server::signalHandler);
 	signal(SIGQUIT, Server::signalHandler);
-
+	
 	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
 	{
 		int listenFd = createListeningSocket();
@@ -50,6 +52,11 @@ Server::Server(std::vector<ServerConfig*> serverConfigsVec) : _clients() {
 		addToEpoll(epollFd, listenFd, EPOLLIN);
 	}
 }
+
+Server::~Server() {}
+
+
+// SOCKET CREATION FOR SEVERS, BINDING
 
 /**
  * @brief Create a new listeningSocket and set its options to non blocking. 
@@ -122,7 +129,7 @@ void	Server::bindAndListen(int &listenFd, int port) const {
 	return ;
 }
 
-Server::~Server() {}
+// EPOLL HELPER FUNCTIONS
 
 int		Server::getEpollFd(void) const
 {
@@ -170,6 +177,8 @@ void	Server::delFromEpoll(int epollFd, int fdToModify)
 		throw (std::runtime_error(errorMsg));
 	}
 }
+
+// MAIN LOOP FOR RUNNING THE SERVER
 
 void	Server::run()
 {
@@ -245,6 +254,9 @@ void	Server::run()
 	}
 	std::cout << "end of the loop" << std::endl;
 }
+
+// TIME CHECKING UTILS
+
 void	Server::timeoutCheck(void) {
 	time_t	currentTime;
 
@@ -261,6 +273,8 @@ void	Server::timeoutCheck(void) {
 		}
 	}
 }
+
+// SIGNAL HANDLING UTILS
 
 void	Server::signalHandler(int signal) {
 	if (signal == SIGINT)
