@@ -1,23 +1,24 @@
 #include "../../include/Request.hpp"
 #include "../../include/statusCode.hpp"
 
-bool Request::parseBody(const std::string &request, int maxBodySize){
-    size_t pos = request.find("\r\n\r\n");
-    std::string body = request.substr(pos + 4);
-    if(_headers.count("transfer-encoding")){
-        if (!unchunkedBody(body))
-            return (setError(BAD_REQUEST));
+void Request::parseBody(const std::string &body, int maxBodySize){
+    
+    if (_headers.count("transfer-encoding")){
+        if (!unchunkedBody(body)){
+            _statusCode = BAD_REQUEST;
+            return ;
+        }
     }
     else if (_headers.count("content-length")){
-        if (_body.size() < _contentLength)
-            return false; // doit continuer de read, donc si false + statusCode == 200
-        if (_contentLength > maxBodySize) //a voir si ce point on le met en dehors pour eviter d envoyer maxBodySize
-            return setError(PAYLOAD_TOO_LARGE);
+        if (_contentLength > maxBodySize){ //a voir si ce point on le met en dehors pour eviter d envoyer maxBodySize
+            _statusCode = PAYLOAD_TOO_LARGE;
+            return ;
+        }
+        _body = body;
     }
     else
-        _contentLength = 0;
-    std::cout << _body << std::endl;
-    return true;
+        _body = "";
+    std::cout << _body << std::endl; //si pas de body du tout, initialisation de _body vide ou traiter autrement pour l attribut
 }
 
 bool Request::unchunkedBody(const std::string &body){
@@ -42,7 +43,7 @@ bool Request::unchunkedBody(const std::string &body){
         if (chunkSizeHex.back() == '\r')
             chunkSizeHex.pop_back();
         char *end;
-        long chunkSize = std::strtol(chunkSizeHex.c_str(), &end, 16);
+        long chunkSize = strtol(chunkSizeHex.c_str(), &end, 16);
         if (*end != '\0' || chunkSize < 0){
             std::cout << *end << std::endl;
             std::cout << "strtol error" << std::endl;
@@ -65,6 +66,10 @@ bool Request::unchunkedBody(const std::string &body){
     }
     return true;
 }
+
+
+
+
 
 //from RFC 9112 - 7.1.3 Decoding Chunked
 // Decoding Chunked

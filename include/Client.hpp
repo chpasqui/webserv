@@ -1,6 +1,7 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
+#include "../include/Request.hpp"
 #include <ctime>
 #include <string>
 #include <sys/types.h>
@@ -27,8 +28,10 @@ class Client
 		ServerConfig*			_config;
 		id_t					_clientStatus;
 		time_t					_timestamp;
+		Request*				_request;
+		
 	public:
-		Client(int fd, ServerConfig* config);
+		Client(int fd, ServerConfig* config, Request *request);
 		Client(const Client& other);
 		~Client();
 
@@ -36,6 +39,7 @@ class Client
 		int		getClientStatus() const;
 		void	handleRequest();
 		time_t	getTimestamp(void) const;
+		bool	bodyRead(std::string& buffer);
 };
 
 #endif

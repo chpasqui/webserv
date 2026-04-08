@@ -34,6 +34,8 @@ static std::string extractHeaderSection(std::string request);
 bool Request::parseHeader(const std::string &request){ 
 
 	std::string header = extractHeaderSection(request);
+	if (header.empty())	
+		return(setError(BAD_REQUEST));
 	std::string line;
 	std::istringstream split(header);
 
@@ -71,7 +73,9 @@ static bool isTokenChar(unsigned char c){
 
 static std::string extractHeaderSection(std::string request){
 	size_t start = request.find("\r\n") + 2;
-	size_t end = request.find("\r\n\r\n");
+	size_t end = request.find("\r\n\r\n"); //rajouter des verifications if end == npos
+	if (end == std::string::npos)
+		return("");
 	std::string header = request.substr(start, end - start + 2);
 	return (header);
 }
@@ -140,8 +144,8 @@ bool Request::validateHeader(){
 		return(setError(BAD_REQUEST));
 	if (_method == "POST" && !_headers.count("transfer-encoding") && !_headers.count("content-length"))
 		return(setError(LENGTH_REQUIRED));
-	if (_headers.count("content-length") == 0 && _headers.count("transfer-encoding") == 0)
-		_contentLength = 0;
+	// if (_headers.count("content-length") == 0 && _headers.count("transfer-encoding") == 0)
+	// 	_contentLength = 0;
 	if (_version == "HTTP/1.1" && !_headers.count("host"))
 		return(setError(BAD_REQUEST));
 	return true ;
