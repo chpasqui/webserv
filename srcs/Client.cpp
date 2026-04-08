@@ -91,7 +91,6 @@ void	Client::parseRequest() {
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
-		std::cout << "entered parseBody" << std::endl;
 		if(!_request->parseBody(_buffer, 1024)){
 			this->_parsingStatus = COMPLETE;
 			return;

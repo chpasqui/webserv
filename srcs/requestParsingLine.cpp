@@ -101,3 +101,27 @@ void	Request::stockIfQuery(std::string url_decode){
 	else
 		_path = _url;
 }
+
+std::string Request::getMethod(void) const{
+	return this->_method;
+}
+
+std::string Request::getUrl(void) const{
+	return this->_url;
+}
+
+std::string Request::getPath(void) const{
+	return this->_path;
+}
+
+std::string Request::getQuery(void) const{
+	return this->_query;
+}
+
+const std::map<std::string, std::string>& Request::getHeaders() const{
+	return this->_headers;
+}
+
+std::string Request::getVersion(void) const {
+	return this->_version;
+}
