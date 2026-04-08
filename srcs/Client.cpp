@@ -45,7 +45,11 @@ Client::Client(const Client& other) :
 bool Client::bodyRead(std::string& buffer){
 	size_t pos = buffer.find("\r\n\r\n");
 	buffer = buffer.substr(pos + 4);
-	
+	if (this->_request->getContentLength() == -1) {
+		if (buffer.find("0\r\n\r\n") == std::string::npos)
+			return false;
+		return true;
+	}
 	if (buffer.size() < (size_t)_request->getContentLength())
 		return false;
 	return true;

@@ -14,8 +14,11 @@
 #define BACKLOG 20
 
 /**
- * @brief Create a new listeningSocket and set its options to non blocking. 
- * It sets the private attribute epollFd to the single fd (3)
+ * @brief Creates the epoll instance used to monitor all file descriptors (listening
+ * sockets and client connections) throughout the server's lifetime. Sets the 
+ * Server private attribute _epollFd to the returned file descriptor
+ * 
+ * @throws std::runtime_error if epoll_create() fails
  */
 void	Server::createEpollInstance(void) {
 	std::string errorMsg;
@@ -29,6 +32,13 @@ void	Server::createEpollInstance(void) {
 	std::cout << "Server::createEpollInstance epollFd " << epollFd << " is created" << std::endl; 
 }
 
+/**
+ * @brief Creates a TCP listening socket, sets it to non blocking mode via fcntl()
+ * and enables the SO_REUSEADDR to alllow the rebinding to another port in the 
+ * TIME_WAIT state
+ * 
+ * @return the listenfd socket fd, ready to be bound to a port
+ */
 int Server::createListeningSocket() {
 	int listenFd = socket(PF_INET, SOCK_STREAM, 0);
 	if (listenFd == -1)
@@ -49,13 +59,11 @@ int Server::createListeningSocket() {
 }
 
 /**
- * @brief binds the listening fd to the corresponding port in the
- * configuration file. The port number is used by the kernel to match
- * an incoming packet to a certain process's socket descriptor.et it to listen
- * to incoming connecitons on a specific port. Backllog says how many
- * connections are allower to queue up.
+ * @brief Binds all the listening socket to the given port on all available 
+ * network interfaces INADDR_ANY and marks them as passive via
+ * the listen() syscall, allowing it to queue up to BACKLOG incoming connections 
  * 
- * @param listenFd is the one created in the main constructor 
+ * @param listenFd listening socket to be bound, closed upon failure
  * @param port which is the serverConfigVec[i].getport() so that we bind the
  * listen fd to that specific port
  */

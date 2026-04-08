@@ -135,48 +135,6 @@ int		Server::getEpollFd(void) const
 	return (this->epollFd);
 }
 
-void	Server::addToEpoll(int epollFd, int fdToModify, uint32_t flag)
-{
-	struct epoll_event	event;
-	event.events = flag;
-	event.data.fd = fdToModify;
-	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fdToModify, &event) == -1)
-	{
-		close(epollFd);
-		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
-		throw (std::runtime_error(errorMsg));
-	}
-}
-
-void	Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
-{
-
-	struct epoll_event	event;
-	event.events = flag;
-	event.data.fd = fdToModify;
-	if (epoll_ctl(epollFd, EPOLL_CTL_MOD, fdToModify, &event) == -1)
-	{
-		close(epollFd);
-		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
-		throw (std::runtime_error(errorMsg));
-	}
-}
-
-void	Server::delFromEpoll(int epollFd, int fdToModify)
-{
-	struct epoll_event	event;
-	event.events = 0;
-	event.data.fd = fdToModify;
-	if (epoll_ctl(epollFd, EPOLL_CTL_DEL, fdToModify, &event) == -1)
-	{
-		//WARN: if (errno == ENOENT) //don't close an inexistant file (Double close);
-		//			return; 
-		close(epollFd);
-		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
-		throw (std::runtime_error(errorMsg));
-	}
-}
-
 // MAIN LOOP FOR RUNNING THE SERVER
 
 void	Server::run()
