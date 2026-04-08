@@ -62,11 +62,11 @@ void	Client::handleRequest()
 		this->_clientStatus = CLOSEFD;
 		return ;
 	}
-	_buffer += std::string(buffer);
+	_buffer += std::string(buffer, _bytesRead);
 	if (this->_clientStatus == PARSING_REQUEST_LINE && this->_buffer.find("\r\n") != std::string::npos)
 	{	
 		std::cout << "parsing request line" << std::endl;
-		std::cout << _buffer << std::endl;
+		//std::cout << _buffer << std::endl;
 		if (!_request->parseRequestLine(_buffer)){
 			this->_clientStatus	= COMPLETE;
 			return ;
@@ -85,8 +85,11 @@ void	Client::handleRequest()
 	}
 	if (this->_clientStatus == PARSING_BODY && bodyRead(_buffer))
 	{
-		_request->parseBody(_buffer, 1024); //faire peut etre une fonction qui definit si on a lu tout le body
 		std::cout << "entered parseBody" << std::endl;
+		if(!_request->parseBody(_buffer, 1024)){
+			this->_clientStatus = COMPLETE;
+			return;
+		}
 		this->_clientStatus = COMPLETE;
 	}
 	// CHECK TIMEOUT because we never entered the conitions
