@@ -190,7 +190,7 @@ void	Server::run()
 		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, 0);
 		if (nFd == -1)
 			break ;
-		this->timeoutCheck(); //WARN:: We may need to move it and only perform a timeout test when a request is made. 
+		//this->timeoutCheck(); //WARN:: We may need to move it and only perform a timeout test when a request is made. 
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd; // for example fd = 5 (the listening socket we added earlier)
@@ -206,7 +206,7 @@ void	Server::run()
 					continue;
 				}
 				ServerConfig *config = _listenFds[fd]; // config 8080
-				_clients.insert(std::make_pair(client_fd, new Client(client_fd, config))); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
+				_clients.insert(std::make_pair(client_fd, new Client(client_fd, config, new Request()))); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
 				//std::cout << "new client added to the _cliets map : " << _clients[fd]->getClientFd() << std::endl;
 				addToEpoll(epollFd, client_fd, EPOLLIN); // watch fd = 6
 

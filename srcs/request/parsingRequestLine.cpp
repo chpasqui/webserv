@@ -8,9 +8,9 @@
 static std::string decodeUrl(std::string url);
 static bool checkUnsafeChar(std::string url_decode);
 
-Request::Request() : _contentLength(-1), _statusCode(0){}
+Request::Request() : _contentLength(-1), _statusCode(0), _body("") {}
 
-Request::Request(std::string requestMessage) : _requestMessage(requestMessage), _contentLength(-1), _statusCode(0) {}
+Request::Request(std::string requestMessage) : _requestMessage(requestMessage), _contentLength(-1), _statusCode(0), _body("") {}
 
 Request::~Request(){}
 
@@ -144,6 +144,14 @@ void	Request::stockIfQuery(std::string url_decode){
 	}
 	else
 		_path = _url;
+}
+
+int	Request::getStatusCode(void) const{
+	return (_statusCode);
+}
+
+int	Request::getContentLength(void) const{
+	return (_contentLength);
 }
 
 

@@ -14,20 +14,22 @@ Client::Client() :
 	_bytesRead(-1),
 	_buffer(""),
 	_config(NULL),
-	_clientStatus(PARSING_REQUEST_LINE)
+	_clientStatus(PARSING_REQUEST_LINE),
+	_request(NULL)
 {
 	std::cout << "Client default constructor called" << std::endl;
 	time(&(this)->_timestamp);
 }
 
-Client::Client(int fd, ServerConfig* config) :
+Client::Client(int fd, ServerConfig* config, Request *request) :
 	_clientFd(fd),
 	_bytesRead(-1),
 	_buffer(""), \
 	_config(config),
-	_clientStatus(PARSING_REQUEST_LINE)
+	_clientStatus(PARSING_REQUEST_LINE),
+	_request(request)
 {
-	std::cout << "Client with fd" << fd << std::endl;
+	std::cout << "Client with fd" << fd << " created" << std::endl;
 	time(&(this)->_timestamp);
 }
 
@@ -40,38 +42,55 @@ Client::Client(const Client& other) :
 	_timestamp(other._timestamp)
 {}
 
+bool Client::bodyRead(std::string& buffer){
+	size_t pos = buffer.find("\r\n\r\n");
+	buffer = buffer.substr(pos + 4);
+	
+	if (buffer.size() < (size_t)_request->getContentLength())
+		return false;
+	return true;
+}
+
 void	Client::handleRequest()
 {
-	char buffer[1024];
+	char buffer[1024]; //check garbage value when buffer size is small (10 for instance)
 	// IF timeout is not -1
 		// TIMEOUT VALUE INITIAISED 
-	this->_bytesRead = recv(_clientFd, buffer, sizeof(_buffer), MSG_DONTWAIT);
+	this->_bytesRead = recv(_clientFd, buffer, sizeof(buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0 || _bytesRead  == -1)
 	{
 		this->_clientStatus = CLOSEFD;
 		return ;
 	}
-	if (this->_clientStatus == PARSING_REQUEST_LINE && this->_buffer.find("\r\n"))
-	{
-		//parseRequestLine(_buffer);
-		std::cout << "entered parseRequestLine" << std::endl;
+	_buffer += std::string(buffer);
+	if (this->_clientStatus == PARSING_REQUEST_LINE && this->_buffer.find("\r\n") != std::string::npos)
+	{	
+		std::cout << "parsing request line" << std::endl;
+		std::cout << _buffer << std::endl;
+		if (!_request->parseRequestLine(_buffer)){
+			this->_clientStatus	= COMPLETE;
+			return ;
+		}
 		this->_clientStatus = PARSING_HEADERS;
 	}
-	if (this->_clientStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n"))
+	if (this->_clientStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
 	{
-		//partseHeaders(_buffer);
+		std::cout << "parsing header" << std::endl;
+		if (!_request->parseHeader(_buffer)){
+			this->_clientStatus	= COMPLETE;
+			return ;
+		}
 		std::cout << "entered parseHeaders" << std::endl;
 		this->_clientStatus = PARSING_BODY;
 	}
-	if (this->_clientStatus == PARSING_BODY)
+	if (this->_clientStatus == PARSING_BODY && bodyRead(_buffer))
 	{
-		//timeout = 0
-		//parseBody();
+		_request->parseBody(_buffer, 1024); //faire peut etre une fonction qui definit si on a lu tout le body
 		std::cout << "entered parseBody" << std::endl;
 		this->_clientStatus = COMPLETE;
 	}
 	// CHECK TIMEOUT because we never entered the conitions
-	_buffer += std::string(buffer);
+	std::cout << "end of function" << std::endl;
 	return ;
 }
 

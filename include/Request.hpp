@@ -5,6 +5,9 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <cstdlib>
+#include <string>
+#
 
 class Request
 {
@@ -31,17 +34,22 @@ class Request
 
 		bool validateHeader();
 
-		bool parseBody(const std::string &request, int maxBodySize);
+		void parseBody(const std::string &request, int maxBodySize);
 		bool unchunkedBody(const std::string &body);
+
+		int	getStatusCode(void) const;
+		int	getContentLength(void) const;
+
+
 
 	private:
 		std::string _method;
 		std::string _version;
 		std::string _url;
 		std::string _path;
+		std::string _requestMessage;
 		std::string _body;
 		std::string _query;
-		std::string _requestMessage;
 		int			_contentLength;
 		int			_statusCode;
 	
