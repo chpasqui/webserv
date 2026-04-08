@@ -3,14 +3,14 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <iostream>
+
 
 static std::string decodeUrl(std::string url);
 static bool checkUnsafeChar(std::string url_decode);
 
-Request::Request() : _contentLength(0), _statusCode(OK){}
+Request::Request() : _contentLength(-1), _statusCode(0){}
 
-Request::Request(std::string requestMessage) : _requestMessage(requestMessage), _contentLength(0), _statusCode(OK) {}
+Request::Request(std::string requestMessage) : _requestMessage(requestMessage), _contentLength(-1), _statusCode(0) {}
 
 Request::~Request(){}
 
@@ -36,21 +36,20 @@ bool Request::parseRequestLine(const std::string &message){
 
 bool Request::validSynthax(const std::string &message){
 
-	size_t end = message.find("\0"); //pour le moment "\0" pour tester mais sinon ca doit etre "\r\n"
+	size_t end = message.find("\r\n"); //pour le moment "\0" pour tester mais sinon ca doit etre "\r\n"
     if (end == std::string::npos){
-        _statusCode = BAD_REQUEST;
 		std::cout << "error find >> error : " << _statusCode << std::endl;
-        return false;
+        return (setError(BAD_REQUEST));
     }
 	std::string line = message.substr(0, end);
+	std::cout << line << std::endl;
 	char splitChar = ' ';
-	std::istringstream split(message);
+	std::istringstream split(line);
 	std::vector<std::string> tokens;
 	for (std::string each; std::getline(split, each, splitChar); tokens.push_back(each));
 	if (tokens.size() != 3){
-		_statusCode = BAD_REQUEST;
 		std::cout << "error tokens >> error : " << _statusCode << std::endl;
-		return false;
+		return (setError(BAD_REQUEST));
 	}
 	_method = tokens[0];
 	_url = tokens[1];
@@ -61,9 +60,8 @@ bool Request::validSynthax(const std::string &message){
 bool Request::validMethod(){
 
 	if (_method != "GET" && _method != "POST" && _method != "DELETE"){
-        _statusCode = NOT_IMPLEMENTED;
 		std::cout << "error method >> error : " << _statusCode << std::endl;
-        return false;
+        return (setError(NOT_IMPLEMENTED));
     }
 	return true;
 }
@@ -71,9 +69,8 @@ bool Request::validMethod(){
 //Step 1 : check version, for CGI chunk request needs to have HTTP/1.1
 bool Request::validVersion(){
 	if (_version != "HTTP/1.0" && _version != "HTTP/1.1"){
-        _statusCode = WRONG_HTTP;
 		std::cout << "error version error : " << _statusCode << std::endl;
-        return false;
+        return (setError(WRONG_HTTP));
     }
 	return true ;
 }
@@ -86,25 +83,21 @@ bool Request::validVersion(){
 bool Request::validUrl(){
 
     if (_url.empty() || _url[0] != '/'){
-        _statusCode = BAD_REQUEST;
 		std::cout << "error url empty || doesnt start with / >> error : " << _statusCode << std::endl;
-        return false;
+        return (setError(BAD_REQUEST));
     }
 	if (_url.size() > 2000){
-		_statusCode = URL_TOOLONG;
 		std::cout << "error URL too long >> error :" << _statusCode << std::endl;
-		return false;
+		return (setError(URL_TOOLONG));
 	}
 	if (_url.find(' ') != std::string::npos){
-		_statusCode = BAD_REQUEST;
 		std::cout << "error url space >> error :" << _statusCode << std::endl;
-		return false;
+		return (setError(BAD_REQUEST));
 	}
 	std::string url_decode = decodeUrl(_url);
 	if (!checkUnsafeChar(url_decode)){
-		_statusCode = BAD_REQUEST;
 		std::cout << "error unsafe after decoded >> error :" << _statusCode << std::endl;
-		return false;
+		return (setError(BAD_REQUEST));
 	}
 
 	stockIfQuery(url_decode);
@@ -149,6 +142,8 @@ void	Request::stockIfQuery(std::string url_decode){
 		_query = url_decode.substr(queryPos + 1);
 		_path = url_decode.substr(0, queryPos);
 	}
+	else
+		_path = _url;
 }
 
 
@@ -159,5 +154,7 @@ int main(int argc, char *argv[]){
 	if (argc != 2)
 		return 1;
 	data.parseRequestLine(argv[1]);
+	data.parseHeader(argv[1]);
+	data.parseBody(argv[1], 1024);
 	return (0);
 }
