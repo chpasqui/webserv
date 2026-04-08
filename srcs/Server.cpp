@@ -17,7 +17,6 @@
 #include "../include/color.hpp"
 
 
-#define BACKLOG 20
 #define MAX_EVENTS 1024
 #define TIMEOUT 10
 
