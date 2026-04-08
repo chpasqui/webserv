@@ -11,8 +11,6 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-#define BACKLOG 20
-
 /**
  * @brief Creates the epoll instance used to monitor all file descriptors (listening
  * sockets and client connections) throughout the server's lifetime. Sets the 
