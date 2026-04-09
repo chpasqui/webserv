@@ -53,8 +53,12 @@ Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
 		if (i == 1)
 		{
 			close(this->epollFd);
-			close(listenFd);
-			std::cout << "fd closed at this moment is " << listenFd << std::endl;
+			std::map<int, ServerConfig*>::iterator it = this->_listenFds.begin();
+			for ( ; it != this->_listenFds.end(); ++it)
+			{
+				std::cout << "fd " << it->first << " is closed" << std::endl;
+				close(it->first);
+			}
 			std::string errorMsg = std::string("test memory closing") + strerror(errno);
 			throw (std::runtime_error(errorMsg));
 		}
