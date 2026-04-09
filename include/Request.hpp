@@ -14,30 +14,14 @@ class Request
 		Request();
 		~Request();
 
+		//Getter
 		int	getStatusCode(void) const;
 		int	getContentLength(void) const;
 
+		//Parsing
 		bool parseRequestLine(const std::string &message);
-		bool validSynthax(const std::string &line);
-		bool validMethod();
-		bool validVersion();
-		bool validUrl();
-		std::string decodeUrl(std::string url);
-		bool checkUnsafeChar(std::string url_decode);
-		void stockIfQuery(std::string url_decode);
-
 		bool parseHeader(const std::string &request);
-		bool isTokenChar(unsigned char c);
-		bool validateCRLF(const std::string &line);
-		bool validateObsFold(const std::string &line);
-		bool validateFieldName(const std::string &line, size_t colonPos);
-		std::string extractFieldName(const std::string &line, size_t colonPos);
-		std::string extractValue(const std::string &line, size_t colonPos);
-		bool validateFieldValue(const std::string &fieldname, const std::string &value);
-		bool setError(int code, const std::string &context);
-
 		bool validateHeader();
-
 		bool parseBody(const std::string &request, int maxBodySize);
 		bool unchunkedBody(const std::string &body);
 
@@ -53,7 +37,7 @@ class Request
 
 		bool extractChunkData(const std::string &body, size_t &pos, long chunkSize);
 
-		private:
+	private:
 		std::string _method;
 		std::string _version;
 		std::string _url;
