@@ -7,7 +7,7 @@
  * @param url The raw URL string.
  * @return Decoded string, or "-1" if control character detected.
  */
-std::string Request::decodeUrl(std::string url){
+std::string decodeUrl(const std::string& url){
 
 	std::string decoded;
 	for (size_t i = 0; i < url.size(); i++){
@@ -31,7 +31,7 @@ std::string Request::decodeUrl(std::string url){
  * @param url_decode The decoded URL string.
  * @return true if safe, false otherwise.
  */
-bool Request::checkUnsafeChar(std::string url_decode){
+bool checkUnsafeChar(const std::string& url_decode){
 
 	if (url_decode == "-1" || url_decode.find('%') != std::string::npos ||
 		url_decode.find('#') != std::string::npos || url_decode.find('<') != std::string::npos || 
@@ -45,7 +45,7 @@ bool Request::checkUnsafeChar(std::string url_decode){
  * @param c Character to check.
  * @return true if valid, false otherwise.
  */
-bool Request::isTokenChar(unsigned char c){
+bool isTokenChar(unsigned char c){
 	if(isalnum(c))
 		return true;
 	std::string special = "!#$%&'*+-.^_`|~";
