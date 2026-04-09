@@ -32,6 +32,8 @@ void Response::handleStaticRequest(Request& request, ServerConfig *config){
         handleDeleteMethod(request);
 }
 
+//Step1: define type of uri (is it a directory or a file)
+//Step2: if it is a dir but doesnt end with / ??? -> error
 void Response::handleGetMethod(Request& request){
 // if (url type == file)
     //returnRequestedFile()
@@ -39,7 +41,7 @@ void Response::handleGetMethod(Request& request){
     //if (!request.geturl.end == '/')
         //buildError(301);
     //else
-        //if index ? (i dont understand)
+        //if index ? (i dont understand) --> check root
             //returnindex
         //else
             //if(config->location->autoindex == "off")
@@ -57,4 +59,14 @@ void Response::handlePostMethod(Request& request){
 
 void Response::handleDeleteMethod(Request& request){}
 
-void Response::buildError(){}
+std::string findLocation(){
+    //trouver si le URI correspond a une des locations
+    //mettre cette fonction dans ServerConfig
+    //renvoyer le nom de la location qui correpond le plus a la URI
+    //est ce quil faut que jaggrege le root path ici 
+}
+
+void Response::buildError(){
+    //renvoie la page html en fonction de la map 
+    //mais est ce que jutilise cette fonction pour 
+}
