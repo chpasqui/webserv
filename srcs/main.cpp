@@ -1,11 +1,18 @@
+#include "../include/webServ.hpp"
 #include "../include/Server.hpp"
 #include "../include/ServerConfig.hpp"
 
 #include <vector>
 #include <iostream>
 
-int main() {
+int main(int ac, char **av) {
+	if (ac != 2)
+		return 1;
+	
 	std::vector<ServerConfig> configs;
+	configs = parseConfigFile(std::string(av[1]));
+	return 0;
+
 	ServerConfig config1;
 	config1.setPort(8080);
 	config1.setRoute("/var/www");
