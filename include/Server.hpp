@@ -38,7 +38,8 @@ class Server
 		void	run(void);
 		bool	acceptNewConnection(int listeningFd);
 		void	timeoutCheck(void);
-
+		
+		void	closeAndRemoveFromEpoll(int fd);
 		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static void	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static void	delFromEpoll(int epollFd, int fdToModify);

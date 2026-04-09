@@ -40,15 +40,21 @@ void	Server::createEpollInstance(void) {
 int Server::createListeningSocket() {
 	int listenFd = socket(PF_INET, SOCK_STREAM, 0);
 	if (listenFd == -1)
+	{
+		close(this->epollFd);
 		throw std::runtime_error("Server: socket() failed.");
-
+	}
 	if (fcntl(listenFd, F_SETFL, O_NONBLOCK) == -1)
+	{
+		close(this->epollFd);
+		close(listenFd);
 		throw std::runtime_error("Server: fcntl() failed.");
-
+	}
 	int optval = 1;									// 1 is set to enable option
 	socklen_t optlen = sizeof(optval);
 	if (setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &optval, optlen) == -1)
 	{
+		close(this->epollFd);
 		close(listenFd);
 		throw std::runtime_error("Server: setsockopt() failed.");
 	}
@@ -76,13 +82,14 @@ void	Server::bindAndListen(int &listenFd, int port) const {
 
 	if (bind(listenFd, (struct sockaddr*)&server_addr, addrlen) == -1)
 	{
+		close(this->epollFd);
 		close(listenFd);
 		throw std::runtime_error("Server: bind() failed.");
 	}
-
 	if (listen(listenFd, BACKLOG) == -1) // 1156 listen system call marks as passive socket
 	{
-		close(listenFd); //safe close
+		close(this->epollFd);
+		close(listenFd);
 		throw std::runtime_error("Server: listen() failed.");
 	}
 	return ;
@@ -93,7 +100,7 @@ bool	Server::acceptNewConnection(int listeningFd)
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(client_addr);
 	int clientFd = accept(listeningFd, (struct sockaddr *)&client_addr, &client_len);
-	if (clientFd == -1)
+	if (clientFd == -1) // here we did a perror and not a try catch?
 	{
 		perror("accept error");
 		return false;

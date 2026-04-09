@@ -22,6 +22,7 @@ void	Server::addToEpoll(int epollFd, int fdToModify, uint32_t flag)
 	event.data.fd = fdToModify;
 	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fdToModify, &event) == -1)
 	{
+		close(fdToModify);
 		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
@@ -39,6 +40,7 @@ void	Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
 	event.data.fd = fdToModify;
 	if (epoll_ctl(epollFd, EPOLL_CTL_MOD, fdToModify, &event) == -1)
 	{
+		close(fdToModify);
 		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
@@ -57,6 +59,7 @@ void	Server::delFromEpoll(int epollFd, int fdToModify)
 	{
 		//WARN: if (errno == ENOENT) //don't close an inexistant file (Double close);
 		//			return; 
+		close(fdToModify);
 		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));

@@ -20,7 +20,6 @@
 #define MAX_EVENTS 1024
 #define TIMEOUT 10
 
-// CONSTRUCTOR AND DESTRUCTOR
 int serverSignal = 0;
 
 /**
@@ -51,6 +50,14 @@ Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
 		bindAndListen(listenFd, serverConfigsVec[i]->getPort());
 		this->_listenFds[listenFd] = serverConfigsVec[i];
 		addToEpoll(epollFd, listenFd, EPOLLIN);
+		if (i == 1)
+		{
+			close(this->epollFd);
+			close(listenFd);
+			std::cout << "fd closed at this moment is " << listenFd << std::endl;
+			std::string errorMsg = std::string("test memory closing") + strerror(errno);
+			throw (std::runtime_error(errorMsg));
+		}
 	}
 }
 
@@ -136,52 +143,3 @@ int		Server::getEpollFd(void) const
 {
 	return (this->epollFd);
 }
-
-// TIME CHECKING UTILS
-
-
-/**
- * @brief the Server() constructor does not need to receive anything, for now it is void because the server 
- * instance has access to the properties of the server class. 
- * 
- */
-// Server::run(void )
-
-// kind of the same logic but it will have to be adapted 
-//  The fds have already been added in the constructor of the server. so we do not need to add them
-
-	// then we enter the infinity loop of while 1 which will continuously run. 
-	// epoll_wait call which will return the number of file descriptor which havee I/O activity on them
-
-	// lets say a client connects on the port to a server, if the fd in the events structure = to a listening socket in the map
-		// we accept the connection into a new socket represneint the conneciton with the client 
-		// we go and search for the config based on the fd in the map <int, ServerConfig> config = _listentocongid[fd]
-		// Once we have found the corresponding configuration to the fd, we give it to the client
-		// we create a new client sending it the  config and we give it the address of config 
-		// client[fd] = Client(fd, config)
-
-	// otherwise there is an error 
-		// treat the error
-	
-	// We have not received a listenfd, but we fall on a clientfd meaning there is i/o activity on it
-
-
-	// if it is EPOLIN 
-	// client = client[fd] (in the map strucutre) // for practical reaons easier to work with.
-	// client.recv() // and logic according to that
-	// if we receive all the message 
-		// parse requesttline(client.buffer) && parsingStatus =  REQUESTLINE
-		// parse header(buffer) && parsingStatus =  HEADER// request will be filled but the body is not read yet
-		// definebody(client[fd].request) && parsingStatus =  BODY to find the content length and without or body, no body
-			// internal 3 possibilities
-
-	// if request completely read status && && parsingStatus =  COMPLETE
-		// build response(instance of client) so that we have access to the configuration of the server and the request sent by client
-		// change the flag to watch to EPOLLOUT in epoll_ctl()
-
-
-	// else if it is EPOLLOUT then we do something
-	// send(send the response on the client fd)
-	// epoll_ctl delete
-	// close()
-	// client.buffer.empty();

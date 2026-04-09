@@ -32,13 +32,11 @@ void	Server::run()
 			std::cout << "Server::run epollwait: current fd we are working on is " << fd << std::endl;
 			if (_listenFds.count(fd))
 			{
-				if (!acceptNewConnection(fd)) continue ;
+				if (!acceptNewConnection(fd)) continue ; // 
 			}
 			else if (events[i].events & (EPOLLERR | EPOLLHUP))
 			{
-				delFromEpoll(epollFd, fd);
-				close(fd);
-				_clients.erase(fd);
+				closeAndRemoveFromEpoll(fd);
 			}
 			// Now the fd is the clientfd and it had activity so 6
 			else if (events[i].events & EPOLLIN) // now in this case we would receive the fd = 6, its a client, and ready for EPOLIN
@@ -50,11 +48,7 @@ void	Server::run()
 				client.handleRequest();
 				if (client.getClientStatus() == CLOSEFD)
 				{
-					delFromEpoll(epollFd, fd);
-					close(fd);
-					std::cout << "Server::run in EPOLIN ,fd " << fd << " was closed because its status was CLOSEFD" << std::endl;
-					delete _clients[fd];
-					_clients.erase(fd);
+					closeAndRemoveFromEpoll(fd);
 				}
 				if (client.getClientStatus() == COMPLETE)
 				{
@@ -67,13 +61,18 @@ void	Server::run()
 			{
 				std::cout << "sending response now :)" << std::endl;
 				//send(response);
-				delFromEpoll(epollFd, fd);
-				close(fd);
-				std::cout << "After sending the response, fd " << fd << "is closed" << std::endl;
-				delete(_clients[fd]);
-				_clients.erase(fd);
+				closeAndRemoveFromEpoll(fd);
 			}
 		}
 	}
 	std::cout << "end of the loop" << std::endl;
+}
+
+void	Server::closeAndRemoveFromEpoll(int fd)
+{
+	delFromEpoll(epollFd, fd);
+	if (close(fd) == -1)
+		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
+	delete _clients[fd];
+	_clients.erase(fd);
 }
