@@ -70,7 +70,6 @@ void	Server::run()
 
 void	Server::closeAndRemoveFromEpoll(int fd)
 {
-	delFromEpoll(this->epollFd, fd);
 	if (close(fd) == -1)
 		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
 	delete _clients[fd];

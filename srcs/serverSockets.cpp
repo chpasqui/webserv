@@ -45,12 +45,9 @@ int Server::createListeningSocket() {
 	}
 	if (fcntl(listenFd, F_SETFL, O_NONBLOCK) == -1)
 	{
-		close(epollFd);
 		close(listenFd);
 		throw std::runtime_error("Server: fcntl() failed.");
 	}
-	// close(listenFd);
-	// throw std::runtime_error("FD TEST");
 	int optval = 1;									// 1 is set to enable option
 	socklen_t optlen = sizeof(optval);
 	if (setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &optval, optlen) == -1)
@@ -105,6 +102,17 @@ bool	Server::acceptNewConnection(int listeningFd)
 	}
 	ServerConfig *config = _listenFds[listeningFd];
 	_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
-	addToEpoll(this->epollFd, clientFd, EPOLLIN); // addtoEPoll and all the epoll functions send back an exception which doesnt work i need to fix that
+	try
+	{
+		addToEpoll(this->epollFd, clientFd, EPOLLIN); // addtoEPoll and all the epoll functions send back an exception which doesnt work i need to fix that
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		close(clientFd);
+		delete _clients[clientFd];
+		_clients.erase(clientFd);
+		return false;
+	}
 	return (true);
 }

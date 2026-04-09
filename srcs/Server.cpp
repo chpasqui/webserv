@@ -22,6 +22,14 @@
 
 int serverSignal = 0;
 
+Server::Server() : 
+		epollFd(-1),
+		_listenFds(),
+		_clients()
+{
+	std::cout << "Server default constructor called" << std::endl;
+}
+
 /**
  * @brief Construct a new Server:: Server object by looping through 
  * the @param serverConfigsVec and for each configuration, it will:
@@ -35,7 +43,7 @@ int serverSignal = 0;
  * 
  * @param serverConfigsVec (loop through)
  */
-Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
+void Server::configureVirtualServers(std::vector<ServerConfig> serverConfigsVec) {
 	
 	std::cout << "\n SETTING UP THE SERVERS \n" << std::endl;
 	createEpollInstance();
@@ -65,25 +73,29 @@ Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
 	}
 }
 
-Server::~Server() {}
-
-
-// SOCKET CREATION FOR SEVERS, BINDING
-
-/**
- * @brief Create a new listeningSocket and set its options to non blocking. 
- * It sets the private attribute epollFd to the single fd (3)
- */
-void	Server::createEpollInstance(void) {
-	std::string errorMsg;
-
-	this->epollFd = epoll_create(1);
-	if (this->epollFd == -1)
+Server::~Server() {
+	std::cout << "Server destructor called" << std::endl;
+	std::map<int, Client*>::iterator it = this->_clients.begin();
+	for ( ; it != this->_clients.end(); ++it)
 	{
-		errorMsg = std::string("Epoll_create() error: ") + strerror(errno);
-		throw (std::runtime_error(errorMsg));
+		close(it->first);
+		delete(it->second);
 	}
-	std::cout << "Server::createEpollInstance epollFd " << epollFd << " is created" << std::endl; 
+	_clients.clear();
+
+	std::map<int, ServerConfig*>::iterator secondIt = this->_listenFds.begin();
+	for ( ; secondIt != this->_listenFds.end(); ++it)
+	{
+		close(secondIt->first);
+		delete(secondIt->second);
+	}
+	if (this->epollFd != -1)
+	{
+		std::cout << "closing epollFd" << epollFd << std::endl;
+		close(this->epollFd);
+		this->epollFd = -1;
+	}
+
 }
 
 int Server::createListeningSocket() {
