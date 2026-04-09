@@ -54,7 +54,7 @@ void	Server::run()
 				{
 					std::cout << "building response..." << std::endl;
 					///buildResponse()
-					modifyEpoll(epollFd, fd, EPOLLOUT);
+					modifyEpoll(this->epollFd, fd, EPOLLOUT);
 				} 
 			}
 			else if(events[i].events & EPOLLOUT)
@@ -70,7 +70,7 @@ void	Server::run()
 
 void	Server::closeAndRemoveFromEpoll(int fd)
 {
-	delFromEpoll(epollFd, fd);
+	delFromEpoll(this->epollFd, fd);
 	if (close(fd) == -1)
 		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
 	delete _clients[fd];

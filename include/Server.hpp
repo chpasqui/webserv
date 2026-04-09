@@ -24,7 +24,7 @@ extern int serverSignal;
 class Server
 {
 	private:
-		int epollFd;
+		int	epollFd;
 		std::map<int, ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 		std::map<int, Client*> _clients;
 

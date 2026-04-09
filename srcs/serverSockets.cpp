@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "../include/Server.hpp"
 
 #include <iostream>
 #include <string>
@@ -41,20 +41,20 @@ int Server::createListeningSocket() {
 	int listenFd = socket(PF_INET, SOCK_STREAM, 0);
 	if (listenFd == -1)
 	{
-		close(this->epollFd);
 		throw std::runtime_error("Server: socket() failed.");
 	}
 	if (fcntl(listenFd, F_SETFL, O_NONBLOCK) == -1)
 	{
-		close(this->epollFd);
+		close(epollFd);
 		close(listenFd);
 		throw std::runtime_error("Server: fcntl() failed.");
 	}
+	// close(listenFd);
+	// throw std::runtime_error("FD TEST");
 	int optval = 1;									// 1 is set to enable option
 	socklen_t optlen = sizeof(optval);
 	if (setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &optval, optlen) == -1)
 	{
-		close(this->epollFd);
 		close(listenFd);
 		throw std::runtime_error("Server: setsockopt() failed.");
 	}
@@ -82,13 +82,11 @@ void	Server::bindAndListen(int &listenFd, int port) const {
 
 	if (bind(listenFd, (struct sockaddr*)&server_addr, addrlen) == -1)
 	{
-		close(this->epollFd);
 		close(listenFd);
 		throw std::runtime_error("Server: bind() failed.");
 	}
 	if (listen(listenFd, BACKLOG) == -1) // 1156 listen system call marks as passive socket
 	{
-		close(this->epollFd);
 		close(listenFd);
 		throw std::runtime_error("Server: listen() failed.");
 	}
@@ -107,6 +105,6 @@ bool	Server::acceptNewConnection(int listeningFd)
 	}
 	ServerConfig *config = _listenFds[listeningFd];
 	_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
-	addToEpoll(epollFd, clientFd, EPOLLIN); // addtoEPoll and all the epoll functions send back an exception which doesnt work i need to fix that
+	addToEpoll(this->epollFd, clientFd, EPOLLIN); // addtoEPoll and all the epoll functions send back an exception which doesnt work i need to fix that
 	return (true);
 }
