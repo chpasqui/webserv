@@ -23,6 +23,10 @@ int	Request::getContentLength(void) const{
 	return (_contentLength);
 }
 
+std::string Request::getMethod(void) const{
+    return (_method);
+}
+
 /**
  * @brief Sets _statusCode and returns false, used to propagate errors.
  * @param code HTTP status code to set.
