@@ -28,23 +28,11 @@ void	Server::run()
 		//this->timeoutCheck(); //WARN:: We may need to move it and only perform a timeout test when a request is made. 
 		for (int i = 0; i < nFd; i++)
 		{
-			int fd = events[i].data.fd; // for example fd = 5 (the listening socket we added earlier)
+			int fd = events[i].data.fd;
 			std::cout << "Server::run epollwait: current fd we are working on is " << fd << std::endl;
 			if (_listenFds.count(fd))
 			{
-				struct sockaddr_in client_addr;
-				socklen_t client_len = sizeof(client_addr);
-				int client_fd = accept(fd, (struct sockaddr *)&client_addr, &client_len);
-				if (client_fd == -1)
-				{
-					perror("accept error");
-					continue;
-				}
-				ServerConfig *config = _listenFds[fd]; // config 8080
-				_clients.insert(std::make_pair(client_fd, new Client(client_fd, config, new Request()))); //_clients[6] = Client(fd of 6 created, address of ServerConfig for port 8080)
-				//std::cout << "new client added to the _cliets map : " << _clients[fd]->getClientFd() << std::endl;
-				addToEpoll(epollFd, client_fd, EPOLLIN); // watch fd = 6
-
+				if (!acceptNewConnection(fd)) continue ;
 			}
 			else if (events[i].events & (EPOLLERR | EPOLLHUP))
 			{

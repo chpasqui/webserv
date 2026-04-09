@@ -36,7 +36,9 @@ int serverSignal = 0;
  * 
  * @param serverConfigsVec (loop through)
  */
-Server::Server(std::vector<ServerConfig*> serverConfigsVec) : _clients() {
+Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
+	
+	std::cout << "\n SETTING UP THE SERVERS \n" << std::endl;
 	createEpollInstance();
 	std::string errorMsg;
 	

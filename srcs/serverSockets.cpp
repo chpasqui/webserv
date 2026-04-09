@@ -87,3 +87,19 @@ void	Server::bindAndListen(int &listenFd, int port) const {
 	}
 	return ;
 }
+
+bool	Server::acceptNewConnection(int listeningFd)
+{
+	struct sockaddr_in client_addr;
+	socklen_t client_len = sizeof(client_addr);
+	int clientFd = accept(listeningFd, (struct sockaddr *)&client_addr, &client_len);
+	if (clientFd == -1)
+	{
+		perror("accept error");
+		return false;
+	}
+	ServerConfig *config = _listenFds[listeningFd];
+	_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
+	addToEpoll(epollFd, clientFd, EPOLLIN); // addtoEPoll and all the epoll functions send back an exception which doesnt work i need to fix that
+	return (true);
+}

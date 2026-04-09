@@ -36,6 +36,7 @@ class Server
 		int		createListeningSocket(void);
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
+		bool	acceptNewConnection(int listeningFd);
 		void	timeoutCheck(void);
 
 		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
