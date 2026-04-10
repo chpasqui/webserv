@@ -30,7 +30,7 @@ class Server
 
 	public:
 		Server();
-		void configureVirtualServers(std::vector<ServerConfig> serverConfigsVec);
+		void configureVirtualServers(std::vector<ServerConfig>& serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);
 		int		getEpollFd(void) const;

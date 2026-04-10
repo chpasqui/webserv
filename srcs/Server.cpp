@@ -43,7 +43,7 @@ Server::Server() :
  * 
  * @param serverConfigsVec (loop through)
  */
-void Server::configureVirtualServers(std::vector<ServerConfig> serverConfigsVec) {
+void Server::configureVirtualServers(std::vector<ServerConfig>& serverConfigsVec) {
 	
 	std::cout << "\n SETTING UP THE SERVERS \n" << std::endl;
 	createEpollInstance();
