@@ -23,7 +23,7 @@ class Client
 		Client();
 
 		int						_clientFd;
-		ssize_t					_bytesRead; // ssize so that it can be compared to -1 
+		ssize_t					_bytesRead;
 		std::string				_buffer;
 		ServerConfig*			_config;
 		id_t					_clientStatus;

@@ -32,11 +32,11 @@ void	Server::run()
 			std::cout << "Server::run epollwait: current fd we are working on is " << fd << std::endl;
 			if (_listenFds.count(fd))
 			{
-				if (!acceptNewConnection(fd)) continue ; // 
+				if (!addNewConnection(fd)) continue ; // 
 			}
 			else if (events[i].events & (EPOLLERR | EPOLLHUP))
 			{
-				closeAndRemoveFromEpoll(fd);
+				removeConnection(fd);
 			}
 			// Now the fd is the clientfd and it had activity so 6
 			else if (events[i].events & EPOLLIN) // now in this case we would receive the fd = 6, its a client, and ready for EPOLIN
@@ -48,30 +48,34 @@ void	Server::run()
 				client.handleRequest();
 				if (client.getClientStatus() == CLOSEFD)
 				{
-					closeAndRemoveFromEpoll(fd);
+					removeConnection(fd);
 				}
 				if (client.getClientStatus() == COMPLETE)
 				{
 					std::cout << "building response..." << std::endl;
 					///buildResponse()
 					modifyEpoll(this->epollFd, fd, EPOLLOUT);
+					// deal with error return
 				} 
 			}
 			else if(events[i].events & EPOLLOUT)
 			{
 				std::cout << "sending response now :)" << std::endl;
 				//send(response);
-				closeAndRemoveFromEpoll(fd);
+				removeConnection(fd);
 			}
 		}
 	}
 	std::cout << "end of the loop" << std::endl;
 }
 
-void	Server::closeAndRemoveFromEpoll(int fd)
+void	Server::removeConnection(int fd)
 {
 	if (close(fd) == -1)
 		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
-	delete _clients[fd];
-	_clients.erase(fd);
+	if (_clients.count(fd))
+	{
+		delete _clients[fd];
+		_clients.erase(fd);
+	}
 }

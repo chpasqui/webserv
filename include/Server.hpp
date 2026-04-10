@@ -37,10 +37,10 @@ class Server
 		int		createListeningSocket(void);
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
-		bool	acceptNewConnection(int listeningFd);
+		bool	addNewConnection(int listeningFd);
 		void	timeoutCheck(void);
 		
-		void	closeAndRemoveFromEpoll(int fd);
+		void	removeConnection(int fd);
 		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static void	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static void	delFromEpoll(int epollFd, int fdToModify);
