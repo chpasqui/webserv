@@ -139,6 +139,6 @@ int		Client::getClientStatus() const
 
 Client::~Client() 
 {
-	
+	delete this->_request;
 	std::cout << "Client destructor called" << std::endl;
 }

@@ -79,23 +79,24 @@ Server::~Server() {
 	for ( ; it != this->_clients.end(); ++it)
 	{
 		close(it->first);
-		delete(it->second);
+		//delete(it->second);
 	}
 	_clients.clear();
 
 	std::map<int, ServerConfig*>::iterator secondIt = this->_listenFds.begin();
-	for ( ; secondIt != this->_listenFds.end(); ++it)
+	for ( ; secondIt != this->_listenFds.end(); ++secondIt)
 	{
 		close(secondIt->first);
-		delete(secondIt->second);
+		//delete(secondIt->second);
 	}
+	_listenFds.clear();
 	if (this->epollFd != -1)
 	{
 		std::cout << "closing epollFd" << epollFd << std::endl;
 		close(this->epollFd);
 		this->epollFd = -1;
 	}
-
+	std::cout << "done destroying the server" << std::endl;
 }
 
 int Server::createListeningSocket() {
