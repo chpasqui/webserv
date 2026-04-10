@@ -12,32 +12,13 @@
 #include <unistd.h>
 
 /**
- * @brief Creates the epoll instance used to monitor all file descriptors (listening
- * sockets and client connections) throughout the server's lifetime. Sets the 
- * Server private attribute _epollFd to the returned file descriptor
- * 
- * @throws std::runtime_error if epoll_create() fails
- */
-void	Server::createEpollInstance(void) {
-	std::string errorMsg;
-
-	this->epollFd = epoll_create(1);
-	if (this->epollFd == -1)
-	{
-		errorMsg = std::string("Epoll_create() error: ") + strerror(errno);
-		throw (std::runtime_error(errorMsg));
-	}
-	std::cout << "Server::createEpollInstance epollFd " << epollFd << " is created" << std::endl; 
-}
-
-/**
  * @brief Creates a TCP listening socket, sets it to non blocking mode via fcntl()
  * and enables the SO_REUSEADDR to alllow the rebinding to another port in the 
  * TIME_WAIT state
  * 
  * @return the listenfd socket fd, ready to be bound to a port
  */
-int Server::createListeningSocket() {
+int Server::openListeningSocket() {
 	int listenFd = socket(PF_INET, SOCK_STREAM, 0);
 	if (listenFd == -1)
 	{

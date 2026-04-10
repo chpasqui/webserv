@@ -36,7 +36,7 @@ int main(int ac, char **av) {
 		 * 2. bind the listening fd to the corresponding port in the configuration file. The port number is used by the kernel to match an incoming packet to a certin process's socket descriptotr
 		 * 3. set it to listen to incoming connecitons on a specific port. Backllog says how many connections are allower to queue up
 		 */
-		server.configureVirtualServers(configs);
+		server.setupListeningSockets(configs);
 		/**
 		 * @brief server.run is the main multiplexer loop though which everything passes. 
 		 * 1. a client (someone) will try to connect on your machine or port and that we are 

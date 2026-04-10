@@ -43,10 +43,9 @@ Server::Server() :
  * 
  * @param serverConfigsVec (loop through)
  */
-void Server::configureVirtualServers(std::vector<ServerConfig>& serverConfigsVec) {
-	
-	std::cout << "\n SETTING UP THE SERVERS \n" << std::endl;
+void Server::setupListeningSockets(std::vector<ServerConfig>& serverConfigsVec) {
 	createEpollInstance();
+	std::cout << "\n SETTING UP THE SERVERS \n" << std::endl;
 	std::string errorMsg;
 	
 	signal(SIGINT, Server::signalHandler);
@@ -54,22 +53,10 @@ void Server::configureVirtualServers(std::vector<ServerConfig>& serverConfigsVec
 	
 	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
 	{
-		int listenFd = createListeningSocket();
-		bindAndListen(listenFd, serverConfigsVec[i]->getPort());
-		this->_listenFds[listenFd] = serverConfigsVec[i];
-		addToEpoll(epollFd, listenFd, EPOLLIN);
-		if (i == 1)
-		{
-			close(this->epollFd);
-			std::map<int, ServerConfig*>::iterator it = this->_listenFds.begin();
-			for ( ; it != this->_listenFds.end(); ++it)
-			{
-				std::cout << "fd " << it->first << " is closed" << std::endl;
-				close(it->first);
-			}
-			std::string errorMsg = std::string("test memory closing") + strerror(errno);
-			throw (std::runtime_error(errorMsg));
-		}
+		int listenFd = openListeningSocket();
+		bindAndListen(listenFd, serverConfigsVec[i].getPort());
+		this->_listenFds[listenFd] = &serverConfigsVec[i];
+		addToInterestList(this->epollFd, listenFd, EPOLLIN);
 	}
 }
 

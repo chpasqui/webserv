@@ -21,11 +21,12 @@ bool	Server::addNewConnection(int listeningFd)
 		perror("accept error");
 		return false;
 	}
-	ServerConfig *config = _listenFds[listeningFd];
-	_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
+
 	try
 	{
-		addToEpoll(this->epollFd, clientFd, EPOLLIN); // addtoEPoll and all the epoll functions send back an exception which doesnt work i need to fix that
+		addToInterestList(this->epollFd, clientFd, EPOLLIN);
+		ServerConfig *config = _listenFds[listeningFd];
+		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
 	}
 	catch(const std::exception& e)
 	{
@@ -34,4 +35,46 @@ bool	Server::addNewConnection(int listeningFd)
 		return false;
 	}
 	return (true);
+}
+
+
+void	Server::readFromSocket(int fd)
+{
+	std::cout << "Server::run inside EPOLIN : existing connection " << fd << " is sending a request." << std::endl;
+	//timeout
+	Client& client = *(_clients[fd]); // _clients[6] will give us the Client class at fd = 6
+
+	client.handleRequest();
+	if (client.getClientStatus() == CLOSEFD)
+	{
+		removeConnection(fd);
+	}
+	if (client.getClientStatus() == COMPLETE)
+	{
+		std::cout << "building response..." << std::endl;
+		///buildResponse()
+		if (!modifyFdFlag(this->epollFd, fd, EPOLLOUT))
+		{
+			removeConnection(fd);
+			// not sure about how to react to this ? 
+		}
+	}
+}
+
+void	Server::writeToSocket(int fd)
+{
+	std::cout << "sending response now :)" << std::endl;
+	//send(response);
+	removeConnection(fd);
+}
+
+void	Server::removeConnection(int fd)
+{
+	if (close(fd) == -1)
+		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
+	if (_clients.count(fd))
+	{
+		delete _clients[fd];
+		_clients.erase(fd);
+	}
 }

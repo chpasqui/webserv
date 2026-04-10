@@ -111,27 +111,6 @@ time_t	Client::getTimestamp(void) const
 	return (this->_timestamp);
 }
 
-// void	Client::requestComplete()
-// {
-// 	size_t pos = this->_buffer.find("\r\n\r\n");
-// 	if (pos == std::string::npos) // npos indicates the not found state
-// 	{
-// 		return;
-// 	}
-
-
-// 	// getline with the delimiter
-
-// 	// if (_ParsingStatus == REQUESTLINE)
-// 	// 	parseRequestLine(); // set to header
-	
-// 	// if (_ParsingStatus = HEADER)
-// 	// 	parseHEadeers(); // set to body
-
-// 	// if (_ParsingStatus == BODY)
-// 	// 	defineBody(); // set bool _isdone
-// }
-
 int		Client::getClientStatus() const
 {
 	return (this->_clientStatus);

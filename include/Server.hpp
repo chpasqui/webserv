@@ -30,20 +30,22 @@ class Server
 
 	public:
 		Server();
-		void configureVirtualServers(std::vector<ServerConfig>& serverConfigsVec);
+		void setupListeningSockets(std::vector<ServerConfig>& serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);
 		int		getEpollFd(void) const;
-		int		createListeningSocket(void);
+		int		openListeningSocket(void);
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
 		bool	addNewConnection(int listeningFd);
+		void	readFromSocket(int fd);
+		void	writeToSocket(int fd);
 		void	timeoutCheck(void);
 		
 		void	removeConnection(int fd);
-		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
-		static void	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
-		static void	delFromEpoll(int epollFd, int fdToModify);
+		static void	addToInterestList(int epollFd, int fdToModify, uint32_t flag);
+		static bool	modifyFdFlag(int epollFd, int fdToModify, uint32_t flag);
+		static void	removeFromInterestList(int epollFd, int fdToModify);
 		static void	signalHandler(int signal);
 };
 

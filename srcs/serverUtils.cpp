@@ -25,7 +25,7 @@ void	Server::timeoutCheck(void) {
 		{
 			std::cout << "Timeout on socket " << it->first << std::endl;
 			//buildReponse();
-			//this->modifyEpoll(it->first, EPOLLOUT);
+			//this->modifyFdFlag(it->first, EPOLLOUT);
 			//sendResponse();
 			this->_clients.erase(it->first);
 		}

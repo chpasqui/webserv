@@ -11,11 +11,31 @@
 #include <unistd.h>
 #include <signal.h>
 
+
+/**
+ * @brief Creates the epoll instance used to monitor all file descriptors (listening
+ * sockets and client connections) throughout the server's lifetime. Sets the 
+ * Server private attribute _epollFd to the returned file descriptor
+ * 
+ * @throws std::runtime_error if epoll_create() fails
+ */
+void	Server::createEpollInstance(void) {
+	std::string errorMsg;
+
+	this->epollFd = epoll_create(1);
+	if (this->epollFd == -1)
+	{
+		errorMsg = std::string("Epoll_create() error: ") + strerror(errno);
+		throw (std::runtime_error(errorMsg));
+	}
+	std::cout << "Server::createEpollInstance epollFd " << epollFd << " is created" << std::endl; 
+}
+
 /**
  * @brief Registers fdToModify with the epoll instance to monitor it for the
  * events specified by flag (e.g. EPOLLIN, EPOLLOUT).
  */
-void	Server::addToEpoll(int epollFd, int fdToModify, uint32_t flag)
+void	Server::addToInterestList(int epollFd, int fdToModify, uint32_t flag)
 {
 	struct epoll_event	event;
 	event.events = flag;
@@ -32,7 +52,7 @@ void	Server::addToEpoll(int epollFd, int fdToModify, uint32_t flag)
 /**
  * @brief Modifies fdToModify's existing flag with the new flag (e.g. EPOLIN or EPOLLOUT)
  */
-void	Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
+bool	Server::modifyFdFlag(int epollFd, int fdToModify, uint32_t flag)
 {
 
 	struct epoll_event	event;
@@ -43,14 +63,15 @@ void	Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
 		close(fdToModify);
 		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
-		throw (std::runtime_error(errorMsg));
+		return false;
 	}
+	return true;
 }
 
 /**
  * @brief Removes the fd from the epoll instance to stop monitoring it.
  */
-void	Server::delFromEpoll(int epollFd, int fdToModify)
+void	Server::removeFromInterestList(int epollFd, int fdToModify)
 {
 	struct epoll_event	event;
 	event.events = 0;
