@@ -12,6 +12,7 @@ class Location
 		std::string path;
 		int redirCode;
 		std::string newPath;
+		std::string dictionary;
 };
 
 #endif
