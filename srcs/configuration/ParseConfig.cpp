@@ -4,9 +4,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string>
-#include <vector>
 #include "../../include/color.hpp"
-#include "../../include/ServerConfig.hpp"
 
 static void	openConfigFile(std::string &file, std::ifstream &fileStream);
 static void	readParsingFile(std::ifstream &fileStream);
@@ -18,13 +16,21 @@ ParseConfig::ParseConfig()
 
 ParseConfig::ParseConfig(std::string filename)
 {
-	std::ifstream				fileStream;
-	std::vector<ServerConfig>	serversConfigs;
-	
+	std::cout << "ParseConfig: Normal construtor called" << std::endl;
+}
+
+int		ParseConfig::openFile(std::string &filename)
+{
+	std::ifstream	fileStream;
+
 	fileStream.open(filename.c_str());
 	if (!fileStream.is_open())
-		throw std::invalid_argument("Unable to open the file " + filename + " :" + strerror(errno));
-	
+	{
+		std::cerr << C_RED << "Unable to open the file " << filename << " :" << strerror(errno) << RESET << std::endl;
+		return (errno);
+	}
+	fileStream >> this->_configFile;
+
 }
 
 

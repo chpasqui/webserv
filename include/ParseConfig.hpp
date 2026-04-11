@@ -18,9 +18,11 @@ class ParseConfig {
 
 		void	getNextTocken(void);
 	private:
-		std::string	configFile;
-		std::string	currentToken;
-		int			level;
+		int	openFile(std::string &filename);
+
+		std::string	_configFile;
+		std::string	_currentToken;
+		int			_level;
 };
 
 #endif
