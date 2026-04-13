@@ -1,4 +1,5 @@
-#include "../include/webServ.hpp"
+#include "../include/color.hpp"
+#include "../include/ParseConfig.hpp"
 #include "../include/Server.hpp"
 #include "../include/ServerConfig.hpp"
 
@@ -9,20 +10,21 @@ int main(int ac, char **av) {
 	if (ac != 2)
 		return 1;
 	
-	std::vector<ServerConfig> configs;
-	configs = parseConfigFile(std::string(av[1]));
+	std::vector<ServerConfig*> configs;
+	ParseConfig pc(av[1]);
+	pc.parsingConfigFile(configs);
 	return 0;
 
-	ServerConfig config1;
-	config1.setPort(8080);
-	config1.setRoute("/var/www");
-
-	ServerConfig config2;
-	config2.setPort(9090);
-	config2.setRoute("/api");
-
-	configs.push_back(config1);
-	configs.push_back(config2);
+	//ServerConfig config1;
+	// config1.setPort(8080);
+	// config1.setRoute("/var/www");
+	//
+	// ServerConfig config2;
+	// config2.setPort(9090);
+	// config2.setRoute("/api");
+	//
+	// configs.push_back(config1);
+	// configs.push_back(config2);
 	
 	try
 	{

@@ -2,12 +2,15 @@
 # define PARSECONFIG_HPP
 
 #include <string>
+#include <vector>
+
+class ServerConfig;
 
 enum level {
 	NONE,
 	HTTP,
 	SERVER,
-	LOCATION
+	LOCATION,
 };
 
 class ParseConfig {
@@ -15,13 +18,15 @@ class ParseConfig {
 		ParseConfig();
 		ParseConfig(std::string filename);
 		~ParseConfig();
-
-		void	getNextTocken(void);
+		
+		int		parsingConfigFile(std::vector<ServerConfig*> &serversConfigs);
 	private:
-		int	openFile(std::string &filename);
-
+		int			openFile(void);
+		std::string	getNextToken(void);
+		int			processToken(ServerConfig &ServerConfig);
+		
+		std::string	_filename;
 		std::string	_configFile;
-		std::string	_currentToken;
 		int			_level;
 };
 
