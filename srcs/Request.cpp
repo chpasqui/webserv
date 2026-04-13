@@ -23,6 +23,10 @@ int	Request::getContentLength(void) const{
 	return (_contentLength);
 }
 
+std::string Request::getPath(void) const{
+    return (_path);
+}
+
 std::string Request::getMethod(void) const{
     return (_method);
 }

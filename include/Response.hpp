@@ -3,6 +3,7 @@
 
 #include "Request.hpp"
 #include "ServerConfig.hpp"
+#include "Location.hpp"
 
 #include <map>
 #include <iostream>
@@ -21,15 +22,19 @@ class Response {
 		Response();
 		~Response();
 
+		//responseBuild.cpp
 		void build(Request& request, ServerConfig *config);
-		std::string buildFileSystemPath(Location* loc, std::string& url, ServerConfig* config);
+		Location* findLocation(const std::string& url, ServerConfig* config); // serait mieux dans serverConfig ou location
+		std::string buildFileSystemPath(Location* loc, const std::string& url, ServerConfig* config);
+		bool MethodAllowed(Location* loc, const std::string& method);
 
 
-		void handleStaticRequest(Request& request, ServerConfig *config);
+		void handleMethod(Request& request, ServerConfig *config);
 		void handleGetMethod(Request& request);
 		void handlePostMethod(Request& request);
 		void handleDeleteMethod(Request& request);
 		void buildError();
+		void handleCGI();
 };
 
 #endif
