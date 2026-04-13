@@ -21,7 +21,7 @@ Client::Client() :
 	time(&(this)->_timestamp);
 }
 
-Client::Client(int fd, ServerConfig* config, Request *request) :
+Client::Client(int fd, const ServerConfig* config, Request *request) :
 	_clientFd(fd),
 	_bytesRead(-1),
 	_buffer(""), \

@@ -1,18 +1,17 @@
-#include "Request.hpp"
-#include "Cgi.hpp"
+#include "../include/Cgi.hpp"
+#include "../include/Request.hpp"
 
+#include <unistd.h>
+#include <string>
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
-/**
- * @file cgiHandler.cpp
- * @author your name (you@domain.com)
- * @brief 
- * @version 0.1
- * @date 2026-04-13
- * 
- * @copyright Copyright (c) 2026
- * 
- */
+
+
+
+// void	Cgi::buildCgiEnv(Request *request)
+// {
+// 	//this->_env["CONTENT_LENGTH"] = request.
+// } I need getters! :() ask charlotte
 
 //  The server acts as an application gateway.  It receives the request
 //    from the client, selects a CGI script to handle the request, converts
@@ -38,7 +37,9 @@
 
 void	Cgi::handleCgi(Request *request, std::string cgiPath) // charlotte needs to send this and then the path 
 {
-	
+	(void)request;
+	if (!access(cgiPath.c_str(), X_OK)) { std::cout << "no access to the file!" << std::endl; }
+	//buildCgiEnv(request);
 
 	// get the response information 
 	// locate the program corresponding to the request

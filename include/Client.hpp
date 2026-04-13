@@ -25,13 +25,13 @@ class Client
 		int						_clientFd;
 		ssize_t					_bytesRead;
 		std::string				_buffer;
-		ServerConfig*			_config;
+		const ServerConfig*			_config;
 		id_t					_clientStatus;
 		time_t					_timestamp;
 		Request*				_request;
 		
 	public:
-		Client(int fd, ServerConfig* config, Request *request);
+		Client(int fd, const ServerConfig* config, Request *request);
 		Client(const Client& other);
 		~Client();
 

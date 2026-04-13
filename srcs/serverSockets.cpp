@@ -25,7 +25,7 @@
  * 
  * @param serverConfigsVec (loop through)
  */
-void Server::setupListeningSockets(std::vector<ServerConfig>& serverConfigsVec) {
+void Server::setupListeningSockets(const std::vector<ServerConfig>& serverConfigsVec) {
 	createEpollInstance();
 	std::cout << "\n SETTING UP THE SERVERS \n" << std::endl;
 	std::string errorMsg;

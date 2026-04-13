@@ -25,7 +25,7 @@ bool	Server::addNewConnection(int listeningFd)
 	try
 	{
 		addToInterestList(this->epollFd, clientFd, EPOLLIN);
-		ServerConfig *config = _listenFds[listeningFd];
+		const ServerConfig *config = _listenFds[listeningFd];
 		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
 	}
 	catch(const std::exception& e)

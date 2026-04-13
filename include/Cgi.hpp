@@ -13,6 +13,7 @@ public:
 	Cgi();
 	~Cgi();
 	void	handleCgi(Request *request, std::string cgiPath);
+	void	buildCgiEnv();
 };
 
 #endif

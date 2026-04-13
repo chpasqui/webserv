@@ -40,7 +40,7 @@ Server::~Server() {
 	}
 	_clients.clear();
 
-	std::map<int, ServerConfig*>::iterator secondIt = this->_listenFds.begin();
+	std::map<int, const ServerConfig*>::iterator secondIt = this->_listenFds.begin();
 	for ( ; secondIt != this->_listenFds.end(); ++secondIt)
 	{
 		close(secondIt->first);
