@@ -33,4 +33,5 @@ void	Server::run()
 			else if(events[i].events & EPOLLOUT) writeToSocket(fd);
 		}
 	}
+	std::cout << "signal to stop received" << std::endl;
 }
