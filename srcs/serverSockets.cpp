@@ -45,7 +45,8 @@ void Server::setupListeningSockets(std::vector<ServerConfig>& serverConfigsVec) 
 /**
  * @brief Creates a TCP listening socket, sets it to non blocking mode via fcntl()
  * and enables the SO_REUSEADDR to alllow the rebinding to another port in the 
- * TIME_WAIT state
+ * TIME_WAIT state if ever we close the server and wnt to reconnect (avoids
+ * )
  * 
  * @return the listenfd socket fd, ready to be bound to a port
  */
@@ -60,7 +61,7 @@ int Server::openListeningSocket() {
 		close(listenFd);
 		throw std::runtime_error("Server: fcntl() failed.");
 	}
-	int optval = 1;									// 1 is set to enable option
+	int optval = 1;
 	socklen_t optlen = sizeof(optval);
 	if (setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &optval, optlen) == -1)
 	{
@@ -94,7 +95,7 @@ void	Server::bindAndListen(int &listenFd, int port) const {
 		close(listenFd);
 		throw std::runtime_error("Server: bind() failed.");
 	}
-	if (listen(listenFd, BACKLOG) == -1) // 1156 listen system call marks as passive socket
+	if (listen(listenFd, BACKLOG) == -1)
 	{
 		close(listenFd);
 		throw std::runtime_error("Server: listen() failed.");

@@ -36,7 +36,6 @@ Server::~Server() {
 	for ( ; it != this->_clients.end(); ++it)
 	{
 		close(it->first);
-		//delete(it->second);
 	}
 	_clients.clear();
 
@@ -44,7 +43,6 @@ Server::~Server() {
 	for ( ; secondIt != this->_listenFds.end(); ++secondIt)
 	{
 		close(secondIt->first);
-		//delete(secondIt->second);
 	}
 	_listenFds.clear();
 	if (this->epollFd != -1)
