@@ -2,6 +2,7 @@
 #include "../include/ParseConfig.hpp"
 #include "../include/Server.hpp"
 #include "../include/ServerConfig.hpp"
+#include "../include/Cgi.hpp"
 
 #include <vector>
 #include <iostream>

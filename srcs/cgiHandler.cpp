@@ -36,8 +36,10 @@
 // new process is created, inherits from its parent
 // 	environment is passed from the parent to the child, its the way to send it 
 
-void	Cgi::handleCgi(Request *request, std::string cgiPath)
+void	Cgi::handleCgi(Request *request, std::string cgiPath) // charlotte needs to send this and then the path 
 {
+	
+
 	// get the response information 
 	// locate the program corresponding to the request
 	// starts up the handling program (fork pipe, etc.)

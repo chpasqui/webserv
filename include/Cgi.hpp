@@ -12,7 +12,7 @@ private:
 public:
 	Cgi();
 	~Cgi();
-	void	handleCgi(Request *request, std::string cgiPath)
+	void	handleCgi(Request *request, std::string cgiPath);
 };
 
 #endif

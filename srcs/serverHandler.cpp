@@ -52,7 +52,7 @@ void	Server::readFromSocket(int fd)
 	if (client.getClientStatus() == COMPLETE)
 	{
 		std::cout << "building response..." << std::endl;
-		///buildResponse()
+		//buildResponse(this->env) // I need the environment varibale to be able to work witht he CGI
 		if (!modifyFdFlag(this->epollFd, fd, EPOLLOUT))
 		{
 			removeConnection(fd);

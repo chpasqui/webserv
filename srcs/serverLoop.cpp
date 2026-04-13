@@ -22,7 +22,8 @@ void	Server::run()
 
 	while (!serverSignal) //WARN: Becareful with CGI signal too
 	{
-		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, 0);
+		std::cout << "hi!" << std::endl;
+		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, -1);
 		if (nFd == -1) break ;
 		for (int i = 0; i < nFd; i++) {
 			int fd = events[i].data.fd;

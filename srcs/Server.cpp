@@ -22,10 +22,11 @@
 
 int serverSignal = 0;
 
-Server::Server() : 
+Server::Server(char **env) : 
 		epollFd(-1),
 		_listenFds(),
-		_clients()
+		_clients(),
+		env(env)
 {
 	std::cout << "Server default constructor called" << std::endl;
 }

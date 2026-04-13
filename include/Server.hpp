@@ -27,9 +27,10 @@ class Server
 		int	epollFd;
 		std::map<int, ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 		std::map<int, Client*> _clients;
+		char	**env;
 
 	public:
-		Server();
+		Server(char **env);
 		void setupListeningSockets(std::vector<ServerConfig>& serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);

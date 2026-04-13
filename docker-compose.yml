@@ -10,5 +10,20 @@ services:
     networks:
       - docknet
 
+  webserv:
+    build: .
+    container_name: webserv_dev
+    volumes:
+      - .:/webserv          # mounts your local folder into /webserv
+    ports:
+      - "8080:8080"         # adjust to your webserv port(s)
+      - "8081:8081"
+    stdin_open: true
+    tty: true
+    ulimits:
+      core: -1              # allow core dumps for gdb post-mortem
+    cap_add:
+      - SYS_PTRACE          # needed for gdb to attach to processes
+
 networks:
   docknet:
