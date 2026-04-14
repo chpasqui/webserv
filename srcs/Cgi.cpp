@@ -7,6 +7,11 @@ Cgi::Cgi() : _env()
 	// intuitively lets pass it through server although not super clean...
 }
 
+Cgi::Cgi(char **env) : env(env)
+{
+	
+}
+
 Cgi::~Cgi()
 {
 

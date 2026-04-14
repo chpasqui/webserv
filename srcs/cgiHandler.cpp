@@ -6,19 +6,19 @@
 #include <map>
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
+//bool convertToCgiRequest(std::map<std::string, std::string> headers)
 
+
+// [1] does not distinguish between between zero length (NULL) values and missing values
+// --> if it is empty, then I need to send the variable to empty.
+// 
 
 
 void	Cgi::buildCgiEnv(Request *request)
 {
 	std::map<std::string, std::string> headers = request->getHeaders();
-	_env["CONTENT_LENGTH"] = request->getContentLength();
-	// if coutn 
-	if (headers.count("content-type"))
-	{
-		_env["CONTENT_TYPE"] = headers["content-type"];
-		std::cout << _env["CONTENT_TYPE"] << std::endl;
-	}
+	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+		std::cout << it->first << "|" << it->second << std::endl;
 }
 
 //  The server acts as an application gateway.  It receives the request
@@ -46,8 +46,8 @@ void	Cgi::buildCgiEnv(Request *request)
 void	Cgi::handleCgi(Request *request, std::string cgiPath) // charlotte needs to send this and then the path 
 {
 	(void)request;
-	if (!access(cgiPath.c_str(), X_OK)) { std::cout << "no access to the file!" << std::endl; }
-	buildCgiEnv(request);
+	if (!access(cgiPath.c_str(), X_OK)) { return; }
+	std::cout << "the file at " << cgiPath << " exits!" << std::endl;
 
 	// get the response information 
 	// locate the program corresponding to the request

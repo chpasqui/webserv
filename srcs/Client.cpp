@@ -116,6 +116,10 @@ int		Client::getClientStatus() const
 	return (this->_clientStatus);
 }
 
+Request* Client::getRequest(void) const {
+	return (this->_request);
+}
+
 Client::~Client() 
 {
 	delete this->_request;

@@ -23,12 +23,6 @@ extern int serverSignal;
 
 class Server
 {
-	private:
-		int	epollFd;
-		std::map<int, const ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
-		std::map<int, Client*> _clients;
-		char	**env;
-
 	public:
 		Server(char **env);
 		void setupListeningSockets(const std::vector<ServerConfig>& serverConfigsVec);
@@ -48,6 +42,13 @@ class Server
 		static bool	modifyFdFlag(int epollFd, int fdToModify, uint32_t flag);
 		static void	removeFromInterestList(int epollFd, int fdToModify);
 		static void	signalHandler(int signal);
+
+
+	private:
+		int	epollFd;
+		std::map<int, const ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
+		std::map<int, Client*> _clients;
+		char	**env;
 };
 
 #endif

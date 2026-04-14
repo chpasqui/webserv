@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include "../include/Cgi.hpp"
 
 #include <iostream>
 #include <string>
@@ -64,7 +65,11 @@ void	Server::writeToSocket(int fd)
 {
 	Client& client = *(_clients[fd]);
 	std::cout << "sending response now :)" << std::endl;
-	//send(response);
+
+	// Code block for the cgi TEMPORARY
+	Cgi cgi(this->env);
+	cgi.handleCgi(client.getRequest(), "./www/cgi-bin/hello.py");
+
 	removeConnection(fd);
 }
 

@@ -19,27 +19,29 @@ enum ParsingStatus
 
 class Client
 {
-	private:
-		Client();
-
-		int						_clientFd;
-		ssize_t					_bytesRead;
-		std::string				_buffer;
-		const ServerConfig*			_config;
-		id_t					_clientStatus;
-		time_t					_timestamp;
-		Request*				_request;
-		
 	public:
 		Client(int fd, const ServerConfig* config, Request *request);
 		Client(const Client& other);
 		~Client();
 
-		int		getClientFd() const;
-		int		getClientStatus() const;
-		void	handleRequest();
-		time_t	getTimestamp(void) const;
-		bool	bodyRead(std::string& buffer);
+		void		handleRequest();
+		bool		bodyRead(std::string& buffer);
+
+		int			getClientFd() const;
+		int			getClientStatus() const;
+		Request*	getRequest(void) const;
+		time_t		getTimestamp(void) const;
+
+
+	private:
+		Client(); // client constructor is in private so that we never create a client out of nowhere
+		int					_clientFd;
+		ssize_t				_bytesRead;
+		std::string			_buffer;
+		const ServerConfig*	_config;
+		id_t				_clientStatus;
+		time_t				_timestamp;
+		Request*			_request;
 };
 
 #endif
