@@ -3,15 +3,23 @@
 
 #include <unistd.h>
 #include <string>
+#include <map>
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
 
 
 
-// void	Cgi::buildCgiEnv(Request *request)
-// {
-// 	//this->_env["CONTENT_LENGTH"] = request.
-// } I need getters! :() ask charlotte
+void	Cgi::buildCgiEnv(Request *request)
+{
+	std::map<std::string, std::string> headers = request->getHeaders();
+	_env["CONTENT_LENGTH"] = request->getContentLength();
+	// if coutn 
+	if (headers.count("content-type"))
+	{
+		_env["CONTENT_TYPE"] = headers["content-type"];
+		std::cout << _env["CONTENT_TYPE"] << std::endl;
+	}
+}
 
 //  The server acts as an application gateway.  It receives the request
 //    from the client, selects a CGI script to handle the request, converts
@@ -39,7 +47,7 @@ void	Cgi::handleCgi(Request *request, std::string cgiPath) // charlotte needs to
 {
 	(void)request;
 	if (!access(cgiPath.c_str(), X_OK)) { std::cout << "no access to the file!" << std::endl; }
-	//buildCgiEnv(request);
+	buildCgiEnv(request);
 
 	// get the response information 
 	// locate the program corresponding to the request
@@ -64,3 +72,12 @@ void	Cgi::handleCgi(Request *request, std::string cgiPath) // charlotte needs to
 // the clien t : these scripts profuce normal html as output which is fed back to the client if the clienn
 // has requested an ordinary page... (Not sure i understand this part)
 // javascript runs on the client side so it is not an exampe. 
+
+
+    // CONTENT_LENGTH : It specifies the length of URL encoded data in bytes. OK
+    // REMOTE_HOST : resolved host name of the client. OK
+    // CONTENT_TYPE : It specifies the type of data as a MIME header. OK
+    // QUERY_STRING : Gives information at the end of the URL after ? OK
+    // REMOTE_ADDR : IP address of the client making the request.
+    // METHOD: It gives the HTTP request method(GET or POST ). OK
+    // SCRIPT_NAME : Name of the CGI script which is being run. 

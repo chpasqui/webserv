@@ -25,10 +25,12 @@ int main(int ac, char **av) {
 	// ServerConfig config2;
 	// config2.setPort(9090);
 	// config2.setRoute("/api");
-	//
-	// configs.push_back(config1);
-	// configs.push_back(config2);
-	
+
+	configs.push_back(config1);
+	//configs.push_back(config2);
+
+	Server server(env);
+
 	try
 	{
 		/**

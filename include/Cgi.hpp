@@ -6,14 +6,14 @@
 
 class Cgi
 {
-private:
-	Response *response; // would be allocated on the stack and doesnt work
-	std::map<std::string, std::string> _env; // for now this is all I know
-public:
-	Cgi();
-	~Cgi();
-	void	handleCgi(Request *request, std::string cgiPath);
-	void	buildCgiEnv();
+	private:
+		//Response *response; // would be allocated on the stack and doesnt work
+		std::map<std::string, std::string> _env; // for now this is all I know
+	public:
+		Cgi();
+		~Cgi();
+		void	handleCgi(Request *request, std::string cgiPath);
+		void	buildCgiEnv(Request *request);
 };
 
 #endif

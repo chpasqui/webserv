@@ -23,6 +23,11 @@ class Request
 		bool parseHeader(const std::string &request);
 		bool validateHeader();
 		bool parseBody(const std::string &request, int maxBodySize);
+		std::string getMethod(void) const;
+		std::string getUrl(void) const;			// eventuellement faire une classe Request a part avec const
+		std::string getPath(void) const;		// dest et getters pour trouver facilement
+		std::string getQuery(void) const;
+		std::map<std::string, std::string> getHeaders() const;
 
 	private:
 		std::string _method;
