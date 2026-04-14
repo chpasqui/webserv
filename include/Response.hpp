@@ -26,7 +26,7 @@ class Response {
 		void build(Request& request, ServerConfig *config);
 		Location* findLocation(const std::string& url, ServerConfig* config); // serait mieux dans serverConfig ou location
 		std::string buildFileSystemPath(Location* loc, const std::string& url, ServerConfig* config);
-		bool MethodAllowed(Location* loc, const std::string& method);
+		bool methodAllowed(Location* loc, const std::string& method);
 
 
 		void handleMethod(Request& request, ServerConfig *config);
