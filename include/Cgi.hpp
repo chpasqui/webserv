@@ -23,8 +23,8 @@ class Cgi
 		Cgi(char **env);
 		~Cgi();
 
-		void	handleCgi(Request *request, std::string cgiPath);
-		void	buildCgiEnv(Request *request);
+		void	handleCgi(Request &request, std::string cgiPath);
+		void	buildCgiEnv(Request &request);
 
 
 	private:

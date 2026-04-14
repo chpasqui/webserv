@@ -3,7 +3,7 @@
 
 #include <unistd.h>
 #include <string>
-#include <map>
+#include <vector>
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
 //bool convertToCgiRequest(std::map<std::string, std::string> headers)
@@ -11,15 +11,28 @@
 
 // [1] does not distinguish between between zero length (NULL) values and missing values
 // --> if it is empty, then I need to send the variable to empty.
-// 
+//
 
-
-void	Cgi::buildCgiEnv(Request *request)
+std::string getHeaderVariable(const std::map<std::string, std::string>& header, std::string tofind)
 {
-	std::map<std::string, std::string> headers = request->getHeaders();
-	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
-		std::cout << it->first << "|" << it->second << std::endl;
+	std::map<std::string, std::string>::const_iterator it = header.begin();
+	for (; it != header.end(); ++it)
+	{
+		if (it->first == tofind)
+			return (it->second);
+	}
+	return ("");
 }
+
+void	buildCgiEnv(Request &request) {
+	std::vector<std::string> env;
+	const std::map<std::string, std::string>& header = request.getHeaders();
+	env.push_back("QUERY_STRING" + '=' + request.getQuery());
+	env.push_back("CONTENT_LENGTH" + '=' + getHeaderVariable(header, "content-length"));
+	env.push_back("CONTENT_TYPE" + '=' + getHeaderVariable(header, "content-type"));
+	env.push_back("REQUEST_METHOD" + '=' + request.getMethod());
+}
+
 
 //  The server acts as an application gateway.  It receives the request
 //    from the client, selects a CGI script to handle the request, converts
@@ -43,7 +56,7 @@ void	Cgi::buildCgiEnv(Request *request)
 // new process is created, inherits from its parent
 // 	environment is passed from the parent to the child, its the way to send it 
 
-void	Cgi::handleCgi(Request *request, std::string cgiPath) // charlotte needs to send this and then the path 
+void	Cgi::handleCgi(Request &request, std::string cgiPath) // charlotte needs to send this and then the path 
 {
 	(void)request;
 	if (!access(cgiPath.c_str(), X_OK)) { return; }
