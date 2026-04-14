@@ -48,7 +48,7 @@ void	Cgi::handleCgi(Request *request, std::string cgiPath) // charlotte needs to
 	(void)request;
 	if (!access(cgiPath.c_str(), X_OK)) { return; }
 	std::cout << "the file at " << cgiPath << " exits!" << std::endl;
-
+	buildCgiEnv(request);
 	// get the response information 
 	// locate the program corresponding to the request
 	// starts up the handling program (fork pipe, etc.)
