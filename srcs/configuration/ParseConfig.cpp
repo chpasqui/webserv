@@ -85,23 +85,22 @@ int	ParseConfig::processToken(ServerConfig &serverConfig) {
 		std::cout << "token } find" << std::endl;
 		this->_level -= 1;
 		return (0);
+		//TODO: Send "Location" or ServerConfig" classes to respective Vector
 	}
 	
 	nextToken = getNextToken();
-	std::cout << C_CORAL << "currentToken is \"" << currentToken << "\" nextToken is \"" << nextToken << "\"" << RESET << std::endl;
-	if (currentToken == "http") {
-		std::cout << C_CORAL << "Inside HTTP block" << RESET << std::endl;
+	if (currentToken == "server") {
+		std::cout << C_CORAL << "Inside server block" << RESET << std::endl;
 		if (nextToken != "{" || this->_level != NONE) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
 		this->_level = HTTP;
-		//TODO: Create Http Class
+		//TODO::	Create Server Class (insie a vector)
 	}
 
-	else if (currentToken == "server") {
+	if (currentToken == "server") {
 		std::cout << C_CORAL << "Inside server block" << RESET << std::endl;
 		if (nextToken != "{" || this->_level != HTTP) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
 		this->_level = SERVER;
 		//TODO::	Create Server Class (insie a vector)
-		//			Create a default Location (inise a another vector)
 	}
 
 	else if (currentToken == "location") {
@@ -118,7 +117,6 @@ int	ParseConfig::processToken(ServerConfig &serverConfig) {
 			return (1);
 		}
 		serverConfig.setRoute(nextToken);
-		//TODO:: Add root to ServerConfig Class
 	}
 
 	else if (currentToken == "listen") {
@@ -138,14 +136,12 @@ int	ParseConfig::processToken(ServerConfig &serverConfig) {
 			return (1);
 		}
 		serverConfig.setPort(port);
-		//TODO: Add "Port" to ServerConfig Class
 	}
 	
 	else {
-		std::cerr << C_RED << "Unknow token" << RESET << std::endl;
+		std::cerr << C_RED << currentToken << ": Unknow token" << RESET << std::endl;
 		return (1);
 	}
-
 	
 	return (0);
 }

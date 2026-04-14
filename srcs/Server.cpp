@@ -34,7 +34,7 @@ static int serverSignal = 0;
  * 
  * @param serverConfigsVec (loop through)
  */
-Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
+Server::Server(std::vector<ServerConfig*> serverConfigsVec) : _clients() {
 	createEpollInstance();
 	std::string errorMsg;
 
@@ -44,8 +44,8 @@ Server::Server(std::vector<ServerConfig> serverConfigsVec) : _clients() {
 	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
 	{
 		int listenFd = createListeningSocket();
-		bindAndListen(listenFd, serverConfigsVec[i].getPort());
-		this->_listenFds[listenFd] = &serverConfigsVec[i];
+		bindAndListen(listenFd, serverConfigsVec[i]->getPort());
+		this->_listenFds[listenFd] = serverConfigsVec[i];
 		addToEpoll(epollFd, listenFd, EPOLLIN);
 	}
 }

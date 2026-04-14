@@ -22,7 +22,7 @@ class Server
 		std::map<int, Client*> _clients;
 
 	public:
-		Server(std::vector<ServerConfig> serverConfigsVec);
+		Server(std::vector<ServerConfig*> serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);
 		int		getEpollFd(void) const;

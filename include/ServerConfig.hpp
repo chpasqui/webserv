@@ -2,16 +2,26 @@
 # define SERVERCONFIG_HPP
 
 #include <string>
+#include <vector>
+
+class Location;
 
 class ServerConfig
 {
 	private:
-		int			_port;
-		std::string	_route;
+		bool						_autoindex;
+		int							_port;
+		std::string					_route;
+		std::string					_allowedMethods;
+		std::vector<Location *>		_locations;
+		std::vector<std::string>	_index;
 	public:
 		ServerConfig();
 		~ServerConfig();
-		int getPort(void);
+		bool getAutoIndex(void) const;
+		int getPort(void); //WARN: "const"" here ?
+		std::string getAllowedMethods(void) const;
+		std::string getRoute(void) const;
 		void setPort(const int port);
 		void setRoute(const std::string& route);
 };
