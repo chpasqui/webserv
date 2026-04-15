@@ -8,21 +8,39 @@
 #include <fstream>
 #include <dirent.h>
 
+
+//CE QU'IL TE RESTE A FAIRE :
+//-finir POST METHOD
+//-faire DELETE METHOD
+//- build error (regarder les rfc) - on est daccord que cest la qu'on ajoute les pages html ?
+//- ajouter les reasons phrases
+//- creer la fonction de responses formats
+//- mettre fonction findLocation dans ServerConfig
+
+//-----------------------
+
 //Step1: verifier que le request status code soit != 0, if yes buildError(statusCode) -- OK
 //Step2 : findlocation verifier quil existe ? if not utilise le root du server -- OK
 //Step3: y a t il une redirection ? if yes stop et buildError(300); -- OK
 //Step4: la methode est elle authorise ? if no stop buildError(405) -- OK;
-//Step5: est ce que c'est un CGI ? if yes execute CGI et return;
-//Step6: gerer les requests en fonction de la methode
-void Response::build(Request& request, ServerConfig *config){
+//Step5: est ce que c'est un CGI ? if yes execute CGI et return; -- OK
+//Step6: gerer les requests en fonction de la methode -- EN COURS
+void Response::build(Request& request, ServerConfig *config, char **envp){
     if (request.getStatusCode() != 0){
         _statusCode = request.getStatusCode();
         buildError();
         return ;
     }
-    //a regarder avec Hayden
     Location* loc = findLocation(request.getPath(), config); //si on met dans serverConfig config->findLocation
-    _internalPath = buildFileSystemPath(loc, request.getPath(), config);
+    _internalPath = buildFileSystemPath(loc, request.getPath());
+    struct stat sb;
+    //prendre la fonction de Josephine = extractserverpath(internalPath) et remplacer dans stat et isCGI
+    //voir dans quel ordre faire ca
+    if (stat(_internalPath.c_str(), &sb) != 0){
+        setSyscallError();
+        return;
+    }
+    _isDir = S_ISDIR(sb.st_mode);
     if (loc->getRedirectCode() != 0){
         _statusCode = loc->getRedirectCode();
         _headers["Location"] = loc->getNewPath();
@@ -33,32 +51,31 @@ void Response::build(Request& request, ServerConfig *config){
         buildError();
         return ;
     }
-    //voir avec Josephine
     if (isCGI(_internalPath, loc)){
-        handleCGI(); // check how errors must be handled 
+        handleCGI(request, envp);
         return;
     }
-    handleMethod(request, config); //est ce que jai besoin de location ???
+    handleMethod(request, loc);
 }
 
-void Response::handleMethod(Request& request, ServerConfig *config){
+void Response::handleMethod(Request& request, Location* loc){
     if (request.getMethod() == "GET")
-        handleGetMethod(request);
+        handleGetMethod(request, loc);
     else if (request.getMethod() == "POST")
-        handlePostMethod(request);
+        handlePostMethod(request, loc);
     else
-        handleDeleteMethod(request, config->location);
+        handleDeleteMethod(request, loc);
 }
 
-//Step1: trouver si le URI correspond a une des locations
-//Step2: mettre cette fonction dans ServerConfig
+//Step1: trouver si le URI correspond a une des locations -- OK
+//Step2: mettre cette fonction dans ServerConfig 
 //Step3: renvoyer le nom de la location qui correpond le plus a la URI
 //Step4: est ce quil faut que jaggrege le root path ici 
 Location* Response::findLocation(const std::string& url, ServerConfig* config){
     Location *best = NULL;
     size_t bestLen = 0;
 
-    std::vector<Location>& locs = config->getLocations(); // vir ac hayden cette histoire de vecteur
+    std::vector<Location>& locs = config->getLocations();
     std::vector<Location>::iterator it = locs.begin();
     for (; it != locs.end(); it++){
         const std::string& prefix = it->getPath();
@@ -72,7 +89,7 @@ Location* Response::findLocation(const std::string& url, ServerConfig* config){
 
 std::string Response::buildFileSystemPath(Location* loc, const std::string& url){    
     std::string remain = url.substr(loc->getPath().size());
-    return loc->getRootPath() + "/" + remain; 
+    return loc->getRoot() + "/" + remain; 
 }
 
 bool Response::methodAllowed(Location *loc, const std::string& method){
@@ -82,15 +99,18 @@ bool Response::methodAllowed(Location *loc, const std::string& method){
     return false;
 }
 
-//regarder avec Hayden comment est stocker l attribut CGI
-bool Response::isCGI(const std::string& path, Location* loc){}
-
-
-
-void Response::handleCGI(){
-    CGI cgi;
-    int _statusCode = cgi.execute();
-    return ;
+bool Response::isCGI(const std::string& path, Location* loc){
+    if (loc->getCgiEnabled()){
+        std::vector<std::string>::iterator it = loc->getCgiExtensions().begin();
+        
+        for (; it != loc->getCgiExtensions().end(); it++){
+            size_t pos = path.find(*it) + (*it).size();
+            if (pos != std::string::npos && (path[pos] == *path.end() || path[pos] == '/'))
+                return true;
+        }
+        return false;
+    }
+    return false;
 }
 
 void Response::setSyscallError(){
@@ -110,28 +130,17 @@ void Response::setSyscallError(){
 //Step4: si aucun index trouv;, je regarde si autoindex est on ou off -> off : 403 forbidden / -- OK
 //Step5: si oui on, genere une page html qui liste le contenu du directory (opendir/readdir) -- OK
 void Response::handleGetMethod(Request& request, Location* loc){
-
-    struct stat sb;
-
-    const char* path = _internalPath.c_str();
-
-    if (stat(path, &sb) != 0){
-        setSyscallError();
-        return;
-    }
-    else if (!(S_ISDIR(sb.st_mode))){
-        std::ifstream file(path);
-        if (!file.is_open()){
-            setSyscallError();
-            return ;
-        }
+    if (!_isDir){
+        std::ifstream file(_internalPath.c_str());
+        if (!file.is_open())
+            return (setSyscallError());
         std::ostringstream ss;
         ss << file.rdbuf();
         _body = ss.str();
         _statusCode = OK;
         return ;
     }
-    else if (S_ISDIR(sb.st_mode)){
+    else if (_isDir){
         if (request.getPath()[request.getPath().size() - 1] != '/'){
             _statusCode = MOVED_PERMANENTLY;
             _headers["Location"] = request.getPath() + "/";
@@ -146,20 +155,17 @@ void Response::handleGetMethod(Request& request, Location* loc){
                 return ;
             }
         }
-        if (!loc->getAutoIndex()){
-            setSyscallError();
-            return ;
-        }
+        if (!loc->getAutoIndex())
+            return (setSyscallError());
         displayAutoIndex();
     }
     else {
         _statusCode = FORBIDDEN;
-        buildError();
-        return ;
+        return (buildError());
     }
 }
 
-void Response::displayAutoIndex() {
+void Response::displayAutoIndex(){
     DIR *dir = opendir(_internalPath.c_str());
     if (dir == NULL){
         setSyscallError();
@@ -178,14 +184,30 @@ void Response::displayAutoIndex() {
     _statusCode = OK;
 }
 
-void Response::handlePostMethod(Request& request){
-//if location->allowedmethod.find("POST")
-    //uploadfile;
-//else
-    //buildError(403);
+//Step 1: define if it is a DIR or a FILE
+//Step 2: DIR : verify if i can open it and create a file containing the body of the request
+//Step 3: FILE : add the body to the file
+//Step 4: return ;
+
+//dire a Hayden que jai besoin de bool _upload_alllowed et le lieu de lupload
+void Response::handlePostMethod(Request& request, Location* loc){
+    if (!loc->getUploadAllowed()){
+        _statusCode = FORBIDDEN;
+        buildError();
+        return ;
+    }
+    if (_isDir){
+        DIR *dir = opendir(_internalPath.c_str());
+        if (dir == NULL){
+            setSyscallError();
+            return ;
+        }
+
+    }
+    
 }
 
-void Response::handleDeleteMethod(Request& request){}
+void Response::handleDeleteMethod(Request& request, Location* loc){}
 
 void Response::buildError(){
     //renvoie la page html en fonction de la map 

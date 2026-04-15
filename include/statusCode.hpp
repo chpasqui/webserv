@@ -3,6 +3,7 @@
 
 typedef enum e_statusCode {
 	OK = 200,
+	CREATED = 201,
 	MOVED_PERMANENTLY = 301,
 	
 	BAD_REQUEST = 400,

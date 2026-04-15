@@ -8,8 +8,6 @@
 #include <map>
 #include <iostream>
 
-
-
 class Response {
 	private :
 		int _statusCode;
@@ -17,25 +15,33 @@ class Response {
 		std::string _reasonPhrase;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
+		bool _isDir;
+
+		//regarder pour les reasons phrases comment les integrer au mieux
 
 	public:
 		Response();
 		~Response();
 
-		//responseBuild.cpp
-		void build(Request& request, ServerConfig *config);
+		void build(Request& request, ServerConfig *config, char **envp;
 		Location* findLocation(const std::string& url, ServerConfig* config); // serait mieux dans serverConfig ou location
 		std::string buildFileSystemPath(Location* loc, const std::string& url);
 		bool methodAllowed(Location* loc, const std::string& method);
-		void setSyscallError();
+		bool isCGI(const std::string& path, Location* loc);
 
-		void handleMethod(Request& request, ServerConfig *config);
+		void handleMethod(Request& request, Location* loc);
+
 		void handleGetMethod(Request& request, Location* loc);
 		void displayAutoIndex(); 
-		void handlePostMethod(Request& request);
-		void handleDeleteMethod(Request& request);
+
+		void handlePostMethod(Request& request, Location* loc);
+
+		void handleDeleteMethod(Request& request, Location* loc);
 		void buildError();
-		void handleCGI();
+
+		void handleCGI(Request& request, char **envp);
+
+		void setSyscallError();
 };
 
 #endif
