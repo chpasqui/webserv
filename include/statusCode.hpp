@@ -4,6 +4,8 @@
 typedef enum e_statusCode {
 	OK = 200,
 	CREATED = 201,
+	NO_CONTENT = 204,
+	
 	MOVED_PERMANENTLY = 301,
 	
 	BAD_REQUEST = 400,
@@ -12,6 +14,7 @@ typedef enum e_statusCode {
     NOT_FOUND = 404,
 	METHOD_NOT_ALLOWED = 405,
 	REQUEST_TIMEOUT = 408,
+	CONFLICT = 409,
 	LENGTH_REQUIRED = 411,
 	PAYLOAD_TOO_LARGE = 413,
 	URL_TOOLONG = 414,

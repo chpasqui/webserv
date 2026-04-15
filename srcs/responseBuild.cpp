@@ -154,13 +154,16 @@ void Response::handleGetMethod(Request& request, Location* loc){
                 return ;
             }
         }
-        if (!loc->getAutoIndex())
-            return (setSyscallError());
+        if (!loc->getAutoIndex()){
+            setSyscallError();
+            return ;
+        }
         displayAutoIndex();
     }
     else {
         _statusCode = FORBIDDEN;
-        return (buildError());
+        buildError();
+        return ;
     }
 }
 
@@ -183,13 +186,24 @@ void Response::displayAutoIndex(){
     _statusCode = OK;
 }
 
+
+// A DISCUTER :
+// - directive upload_store ou upload ?
+// - upload store obligatoire ?
+// - si l url est un dossier qui se terminer par / -> est ce quon accepte ou genere un nom automatiquement ou a partir de content-disposition ?
+// - si url contient des sous dossier non existant est ce qu on les cree ou on retourne une erreur ?
+// - si cest un fichier sans extension on le cree tel quel ? -- voir NGINX
+// - si le fichier existe deja, est ce quon ecrase le contenu ou on refuse --> conflit 409
+// - est ce qu on gere le multipart ? a voir avec le sujet pas tres clair, 
+// car si on uploads depuis un vrai navigateur on est oblige mais via curl et telnet cest okay sans
+
+
 //Step 1: check if upload allowed in location
 //Step 2: define if it is a DIR or a FILE
 //Step 3: DIR create a file containing the body of the request, generate name of the file according to content-disposition if existing
 //Step 4: EXISTING FILE : add the body to the file or replace it 
 //Step 5: NON-EXISTING FILE : create file and body to the file
 //Step 6: return ;
-
 //dire a Hayden que jai besoin de bool _upload_alllowed et le lieu de lupload
 void Response::handlePostMethod(Request& request, Location* loc){
     if (!loc->getUploadAllowed()){
@@ -197,13 +211,43 @@ void Response::handlePostMethod(Request& request, Location* loc){
         buildError();
         return ;
     }
-
-
+    std::string uploadDir = loc->getUploadStore();
+    struct stat sb;
+    if (stat(uploadDir.c_str(), & sb) != 0){
+        setSyscallError();
+        return ;
     }
-    
+    if (!S_ISDIR(sb.st_mode)){
+        _statusCode = INTERNAL_SERVER_ERROR;
+        buildError();
+        return ;
+    }
+    //std::string filename = extractFilename(request);
 }
 
-void Response::handleDeleteMethod(Request& request, Location* loc){}
+//Step1 : define if file ou directory is available
+//Step2: if directory but ambiguous url that doesnt end wiht / -> 409
+//Step3: try to remove if no -> syscall if yes -> 204 : no content action succesful 
+
+void Response::handleDeleteMethod(Request& request, Location* loc){
+    struct stat sb;
+   
+    if (stat(_internalPath.c_str(), &sb) != 0){
+        setSyscallError();
+        return;
+    }
+    if (S_ISDIR(sb.st_mode)){
+        if (request.getPath()[request.getPath().size() - 1] != '/'){
+            _statusCode = CONFLICT;
+            return ;
+        }
+    }
+    if (remove(_internalPath.c_str()) != 0){
+        setSyscallError();
+        return;
+    }
+    _statusCode = NO_CONTENT;
+}
 
 void Response::buildError(){
     //renvoie la page html en fonction de la map 
