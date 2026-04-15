@@ -106,9 +106,9 @@ void Response::setSyscallError(){
 //Step1: define type of uri (is it a directory or a file) (fonction stat) -- OK
 //Step1.1: si cest un file, statuscode : 200 et on buildResponse() -- OK
 //Step2: if it is a dir but doesnt end with / ??? -> error 301 on redirige vers URI/ (on rajoute donc le /) -- OK
-//Step3: si cest bien un dir, je cherche le fichier index defini dans la config et je tente le path
-//Step4: si aucun index trouv;, je regarde si autoindex est on ou off -> off : 403 forbidden /
-//Step5: si on, genere une page html qui liste le contenu du directory (opendir/readdir)
+//Step3: si cest bien un dir, je cherche le fichier index defini dans la config et je tente le path -- OK
+//Step4: si aucun index trouv;, je regarde si autoindex est on ou off -> off : 403 forbidden / -- OK
+//Step5: si oui on, genere une page html qui liste le contenu du directory (opendir/readdir) -- OK
 void Response::handleGetMethod(Request& request, Location* loc){
 
     struct stat sb;
@@ -116,10 +116,8 @@ void Response::handleGetMethod(Request& request, Location* loc){
     const char* path = _internalPath.c_str();
 
     if (stat(path, &sb) != 0){
-        if (errno == ENOENT){
-            setSyscallError();
-            return;
-        }
+        setSyscallError();
+        return;
     }
     else if (!(S_ISDIR(sb.st_mode))){
         std::ifstream file(path);
@@ -153,7 +151,6 @@ void Response::handleGetMethod(Request& request, Location* loc){
             return ;
         }
         displayAutoIndex();
-
     }
     else {
         _statusCode = FORBIDDEN;
@@ -163,11 +160,22 @@ void Response::handleGetMethod(Request& request, Location* loc){
 }
 
 void Response::displayAutoIndex() {
-    DIR* dir = opendir(_internalPath.c_str());
+    DIR *dir = opendir(_internalPath.c_str());
+    if (dir == NULL){
+        setSyscallError();
+        return ;
+    }
+    std::string html = "<html><body><h1>Index of " + _internalPath + "</h1><ul>";
     struct dirent *entry;
-    while ((entry = readdir()) != NULL )
-
-
+    while ((entry = readdir(dir)) != NULL ){
+        std::string name = entry->d_name;
+        if (name == ".") continue;
+        html += "<li><a href=\"" + name + "\">" + name + "</a></li>";
+    }
+    closedir(dir);
+    html += "</ul></body></html>";
+    _body = html;
+    _statusCode = OK;
 }
 
 void Response::handlePostMethod(Request& request){
