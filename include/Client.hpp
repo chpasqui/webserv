@@ -30,6 +30,7 @@ class Client
 		int			getClientFd() const;
 		int			getClientStatus() const;
 		Request*	getRequest(void) const;
+		const ServerConfig* getServerConfig(void) const;
 		time_t		getTimestamp(void) const;
 
 

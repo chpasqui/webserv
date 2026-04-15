@@ -53,7 +53,10 @@ void	Server::readFromSocket(int fd)
 	if (client.getClientStatus() == COMPLETE)
 	{
 		std::cout << "building response..." << std::endl;
-		if (!modifyFdFlag(this->epollFd, fd, EPOLLOUT))
+		Cgi cgi(this->env);
+		cgi.handleCgi(client.getRequest(), "/var/www/cgi-bin/foo.py/user/42", client.getServerConfig());
+		// build response --> in here Cgi 
+		if (!modifyEpoll(this->epollFd, fd, EPOLLOUT))
 		{
 			removeConnection(fd);
 			// not sure about how to react to this ? 
@@ -63,12 +66,7 @@ void	Server::readFromSocket(int fd)
 
 void	Server::writeToSocket(int fd)
 {
-	Client& client = *(_clients[fd]);
 	std::cout << "sending response now :)" << std::endl;
-
-	// Code block for the cgi TEMPORARY
-	Cgi cgi(this->env);
-	cgi.handleCgi(client.getRequest(), "./www/cgi-bin/hello.py");
 
 	removeConnection(fd);
 }

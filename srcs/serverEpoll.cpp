@@ -52,7 +52,7 @@ void	Server::addToInterestList(int epollFd, int fdToModify, uint32_t flag)
 /**
  * @brief Modifies fdToModify's existing flag with the new flag (e.g. EPOLIN or EPOLLOUT)
  */
-bool	Server::modifyFdFlag(int epollFd, int fdToModify, uint32_t flag)
+bool	Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
 {
 
 	struct epoll_event	event;

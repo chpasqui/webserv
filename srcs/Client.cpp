@@ -125,3 +125,7 @@ Client::~Client()
 	delete this->_request;
 	std::cout << "Client destructor called" << std::endl;
 }
+
+const ServerConfig* Client::getServerConfig(void) const {
+	return this->_config;
+}

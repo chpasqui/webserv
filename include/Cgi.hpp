@@ -1,6 +1,7 @@
 #ifndef CGI_HPP
 # define CGI_HPP
 
+#include "ServerConfig.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
 
@@ -23,14 +24,21 @@ class Cgi
 		Cgi(char **env);
 		~Cgi();
 
-		void	handleCgi(Request &request, std::string cgiPath);
-		void	buildCgiEnv(Request &request);
-
+		void		handleCgi(Request *request, std::string pathInfo, const ServerConfig *config);
+		void		buildCgiEnv(Request &request, const std::string& pathInfo, const ServerConfig *config);
+		// std::string extractScriptPath(const std::string& internalPath);
+		// std::string getPathInfo(const std::string& internalPath, size_t endScriptName);
 
 	private:
 		//Response *response; // would be allocated on the stack and doesnt work
 		std::map<std::string, std::string> _env; // for now this is all I know
 		char	**env;
+		std::string scriptname;
+		std::string pathinfo;
 };
+
+std::string getHeaderVariable(const std::map<std::string, std::string>& header, const std::string& tofind);
+std::string getSciptName(const std::string& internalPath);
+std::string getPathInfo(const std::string& internalPath);
 
 #endif
