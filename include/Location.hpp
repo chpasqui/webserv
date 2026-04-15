@@ -8,6 +8,8 @@ class Location{
 		int getRedirectCode() const;
 		std::string getNewPath() const;
 		std::string getMethodAllowed() const;
+		std::vector<std::string> getIndexes() const;
+		bool getAutoIndex() const;
 
 };
 

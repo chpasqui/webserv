@@ -25,12 +25,13 @@ class Response {
 		//responseBuild.cpp
 		void build(Request& request, ServerConfig *config);
 		Location* findLocation(const std::string& url, ServerConfig* config); // serait mieux dans serverConfig ou location
-		std::string buildFileSystemPath(Location* loc, const std::string& url, ServerConfig* config);
+		std::string buildFileSystemPath(Location* loc, const std::string& url);
 		bool methodAllowed(Location* loc, const std::string& method);
-
+		void setSyscallError();
 
 		void handleMethod(Request& request, ServerConfig *config);
-		void handleGetMethod(Request& request);
+		void handleGetMethod(Request& request, Location* loc);
+		void displayAutoIndex(); 
 		void handlePostMethod(Request& request);
 		void handleDeleteMethod(Request& request);
 		void buildError();

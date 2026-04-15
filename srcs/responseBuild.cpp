@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <fstream>
+#include <dirent.h>
 
 //Step1: verifier que le request status code soit != 0, if yes buildError(statusCode) -- OK
 //Step2 : findlocation verifier quil existe ? if not utilise le root du server -- OK
@@ -46,7 +47,7 @@ void Response::handleMethod(Request& request, ServerConfig *config){
     else if (request.getMethod() == "POST")
         handlePostMethod(request);
     else
-        handleDeleteMethod(request);
+        handleDeleteMethod(request, config->location);
 }
 
 //Step1: trouver si le URI correspond a une des locations
@@ -69,13 +70,9 @@ Location* Response::findLocation(const std::string& url, ServerConfig* config){
     return best;
 }
 
-std::string Response::buildFileSystemPath(Location* loc, const std::string& url, ServerConfig* config){
-    std::string root;
-    if (loc == NULL) // est ce que y a root dans location oui ou non
-        return config->getRootPath() + path;
-    
+std::string Response::buildFileSystemPath(Location* loc, const std::string& url){    
     std::string remain = url.substr(loc->getPath().size());
-    return config->getRootPath() + "/" + remain; 
+    return loc->getRootPath() + "/" + remain; 
 }
 
 bool Response::methodAllowed(Location *loc, const std::string& method){
@@ -96,28 +93,38 @@ void Response::handleCGI(){
     return ;
 }
 
+void Response::setSyscallError(){
+    if (errno == ENOENT || errno == ENOTDIR)
+        _statusCode = NOT_FOUND;
+    else if (errno == EACCES)
+        _statusCode = FORBIDDEN;
+    else
+        _statusCode = INTERNAL_SERVER_ERROR;
+    buildError();
+}
+
 //Step1: define type of uri (is it a directory or a file) (fonction stat) -- OK
 //Step1.1: si cest un file, statuscode : 200 et on buildResponse() -- OK
 //Step2: if it is a dir but doesnt end with / ??? -> error 301 on redirige vers URI/ (on rajoute donc le /) -- OK
 //Step3: si cest bien un dir, je cherche le fichier index defini dans la config et je tente le path
-//Step4: si aucun index trouv;, je regarde si autoindex est on ou off -> off : 403 forbidden // si y a pas dans location regarder dans serverConfig ?
+//Step4: si aucun index trouv;, je regarde si autoindex est on ou off -> off : 403 forbidden /
 //Step5: si on, genere une page html qui liste le contenu du directory (opendir/readdir)
-void Response::handleGetMethod(Request& request){
+void Response::handleGetMethod(Request& request, Location* loc){
 
     struct stat sb;
 
     const char* path = _internalPath.c_str();
 
     if (stat(path, &sb) != 0){
-        _statusCode = NOT_FOUND;
-        buildError();
-        return;
+        if (errno == ENOENT){
+            setSyscallError();
+            return;
+        }
     }
     else if (!(S_ISDIR(sb.st_mode))){
         std::ifstream file(path);
         if (!file.is_open()){
-            _statusCode = FORBIDDEN;
-            buildError();
+            setSyscallError();
             return ;
         }
         std::ostringstream ss;
@@ -132,7 +139,21 @@ void Response::handleGetMethod(Request& request){
             _headers["Location"] = request.getPath() + "/";
             return ;
         }
-        
+        std::vector<std::string> indexes = loc->getIndexes();
+        std::vector<std::string>::iterator it = indexes.begin();
+        for (; it != indexes.end(); it++){
+            std::ifstream file(*it);
+            if (file.is_open()){
+                _statusCode = OK;
+                return ;
+            }
+        }
+        if (!loc->getAutoIndex()){
+            setSyscallError();
+            return ;
+        }
+        displayAutoIndex();
+
     }
     else {
         _statusCode = FORBIDDEN;
@@ -141,8 +162,16 @@ void Response::handleGetMethod(Request& request){
     }
 }
 
+void Response::displayAutoIndex() {
+    DIR* dir = opendir(_internalPath.c_str());
+    struct dirent *entry;
+    while ((entry = readdir()) != NULL )
+
+
+}
+
 void Response::handlePostMethod(Request& request){
-//if config->location->allowedmethod.find("POST")
+//if location->allowedmethod.find("POST")
     //uploadfile;
 //else
     //buildError(403);

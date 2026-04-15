@@ -15,6 +15,7 @@ typedef enum e_statusCode {
 	REQUEST_TIMEOUT = 408,
 	LENGTH_REQUIRED = 411,
 	PAYLOAD_TOO_LARGE = 413,
+	INTERNAL_SERVER_ERROR = 500;
 } statusCode;
 
 
