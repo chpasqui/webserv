@@ -4,17 +4,17 @@
 #include <string>
 #include <vector>
 
-class HTTP
+class Http
 {
 	public:
-		HTTP();
-		~HTTP();
-
+		Http();
+		~Http();
+		//----Setter----//
 		bool						getAutoIndex(void) const;
 		std::string					getRoot(void) const;
 		std::string					getAllowedMethods(void) const;
-		std::vector<std::string>	getIndex(void) const;
-
+		std::vector<std::string>	getIndexs(void) const;
+		//----Getter----//
 		void						setAutoIndex(bool autoindex);
 		void						setRoot(std::string root);
 		void						setAllowedMethods(std::string allowedMethods);

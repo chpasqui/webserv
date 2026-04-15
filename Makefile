@@ -6,7 +6,7 @@ CXX			=	c++
 CXXFLAGS	=	-std=c++98 -Wall -Werror -Wextra -g
 LDINCLUDE	=	-I$(DIR_INCLUDE)
 
-SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp configuration/ParseConfig.cpp
+SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp
 SRCS_NAME	=	$(basename $(SRCS))
 OBJS		=	$(addsuffix .o, $(addprefix $(DIR_BUILD)/, $(SRCS_NAME)))
 

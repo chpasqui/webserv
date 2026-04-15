@@ -6,7 +6,7 @@
 
 class ServerConfig;
 
-enum level {
+enum context {
 	NONE,
 	HTTP,
 	SERVER,
@@ -27,7 +27,7 @@ class ParseConfig {
 		
 		std::string	_filename;
 		std::string	_configFile;
-		int			_level;
+		int			_context;
 };
 
 #endif

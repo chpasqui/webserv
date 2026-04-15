@@ -1,36 +1,58 @@
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
 
+
 #include <string>
+#include <vector>
 
 class ServerConfig;
 
 class Location
 {
 	public:
-		Location(ServerConfig serverConfig);
+		Location();
+		Location(const ServerConfig &serverConfig);
 		~Location();
-
-		void	setRoot(std::string root);
-		void	getAllowedMethods(std::string allowedMethods);
-		void	setPath(std::string path);
-		void	setredirePath(std::string redirePath);
-		void	setAutoindex(bool autoindex);
-		void	setCgiEnable(bool cgiEnable);
-		void	setRedireCode(int redireCode);
+		//----Setter----//
+		void						setRedireCode(const int redireCode);
+		void						setCgiEnable(const bool cgiEnable);
+		void						setPath(const std::string path);
+		void						setredirePath(const std::string redirePath);
+		void						addCgiExtension(const std::string extension);
+		void						setPort(const int port);
+		void						setAutoindex(const bool autoindex);
+		void						setRoot(const std::string root);
+		void						setAllowedMethods(const std::string allowedMethods);
+		void						addIndex(const std::string index);
+		//----Getter----//
+		int							getRedirCode(void) const;
+		bool						getCgiEnable(void) const;
+		std::string					getPath(void) const;
+		std::string					getRedirPath(void) const;
+		std::vector<std::string>	getCgiExtensions(void) const;
+		int 						getPort(void) const;
+		bool 						getAutoIndex(void) const;
+		std::string					getServerName(void) const;
+		std::string 				getRoot(void) const;
+		std::string 				getAllowedMethods(void) const;
+		std::vector<std::string> 	getIndexs(void) const;
 
 	private:
-		Location();
+		int							_redireCode;
+		bool						_cgiEnable;
+		std::string					_path;
+		std::string					_redirePath;
+		std::vector<std::string>	_cgiExtension;
 
-		std::string	_root;
-		std::string	_allowedMethods;
-		bool		_autoindex;
-
-//INFO: only in location
-		std::string	_path;
-		bool		_cgiEnable;
-		int			_redireCode;
-		std::string	_redirePath;
+		// int							_headerTimeout;
+		// int							_bodyTimeout;
+		// int							_maxBodysize;
+		int							_port; //OPTIM: Location probably doesn't need that
+		bool						_autoindex;
+		std::string					_serverName; //OPTIM: Location probably doesn't need that
+		std::string					_root;
+		std::string					_allowedMethods;
+		std::vector<std::string>	_indexs;
 };
 
 #endif

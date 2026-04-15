@@ -8,14 +8,16 @@
 #include <unistd.h>
 #include <vector>
 #include <sstream>
+#include "../../include/HTTP.hpp"
 #include "../../include/ServerConfig.hpp"
+#include "../../include/Location.hpp"
 #include "../../include/color.hpp"
 
-ParseConfig::ParseConfig() :_level(0) {
+ParseConfig::ParseConfig() : _context(0) {
 	std::cout << "ParseConfig: Default constructor called" << std::endl;
 }
 
-ParseConfig::ParseConfig(std::string filename) : _filename(filename), _level(0){
+ParseConfig::ParseConfig(std::string filename) : _filename(filename), _context(0){
 	std::cout << "ParseConfig: Normal construtor called" << std::endl;
 }
 
@@ -24,7 +26,7 @@ ParseConfig::~ParseConfig() {
 }
 
 int	ParseConfig::parsingConfigFile(std::vector<ServerConfig*> &serversConfigs) {
-	ServerConfig *serverConfig = new ServerConfig();
+	ServerConfig *serverConfig = 0;
 	this->openFile();
 	while (processToken(*serverConfig) == 0)
 		;
@@ -83,30 +85,31 @@ int	ParseConfig::processToken(ServerConfig &serverConfig) {
 	currentToken = this->getNextToken();
 	if (currentToken == "}") {
 		std::cout << "token } find" << std::endl;
-		this->_level -= 1;
+		this->_context -= 1;
 		return (0);
 		//TODO: Send "Location" or ServerConfig" classes to respective Vector
 	}
 	
 	nextToken = getNextToken();
-	if (currentToken == "server") {
-		std::cout << C_CORAL << "Inside server block" << RESET << std::endl;
-		if (nextToken != "{" || this->_level != NONE) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
-		this->_level = HTTP;
+	if (currentToken == "http") {
+		std::cout << C_CORAL << "Inside HTTP block" << RESET << std::endl;
+		if (nextToken != "{" || this->_context!= NONE) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
+		Http http;
+		this->_context = HTTP;
 		//TODO::	Create Server Class (insie a vector)
 	}
 
 	if (currentToken == "server") {
 		std::cout << C_CORAL << "Inside server block" << RESET << std::endl;
-		if (nextToken != "{" || this->_level != HTTP) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
-		this->_level = SERVER;
+		if (nextToken != "{" || this->_context != HTTP) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
+		this->_context = SERVER;
 		//TODO::	Create Server Class (insie a vector)
 	}
 
 	else if (currentToken == "location") {
 		std::cout << C_CORAL << "Inside location block" << RESET << std::endl;
-		if (nextToken != "{" || this->_level != SERVER) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
-		this->_level = LOCATION;
+		if (nextToken != "{" || this->_context!= SERVER) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
+		this->_context = LOCATION;
 		//TODO: Create Location class
 	}
 
@@ -122,8 +125,7 @@ int	ParseConfig::processToken(ServerConfig &serverConfig) {
 	else if (currentToken == "listen") {
 		int 	port;
 		
-		std::cout << C_MAGENTA << this->_level << RESET << std::endl;
-		if (this->_level != SERVER)
+		if (this->_context != SERVER)
 		{
 			std::cerr << C_RED << "listen can only be called in a server context" << RESET << std::endl;
 			return (1);

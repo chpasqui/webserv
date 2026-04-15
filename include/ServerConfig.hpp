@@ -4,27 +4,44 @@
 #include <string>
 #include <vector>
 
+class Http;
 class Location;
 
 class ServerConfig
 {
 	private:
-		bool						_autoindex;
+		ServerConfig();
+
 		int							_port;
+		std::string					_serverName; //WARN: Only for virtual server ?
+		std::vector<Location *>		_locations;
+
+		// int							_headerTimeout;
+		// int							_bodyTimeout;
+		// int							_maxBodysize;
+		bool						_autoindex;
 		std::string					_route;
 		std::string					_allowedMethods;
-		std::vector<Location *>		_locations;
-		std::vector<std::string>	_index;
+		std::vector<std::string>	_indexs;
 	public:
-		ServerConfig();
+		ServerConfig(const Http &http);
 		~ServerConfig();
-		bool getAutoIndex(void) const;
-		int getPort(void); //WARN: "const"" here ?
-		std::string getAllowedMethods(void) const;
-		std::string getRoute(void) const;
-		void setPort(const int port);
-		void setRoute(const std::string& route);
+		//----Setter----//
+		void						setPort(const int port);
+		void						setServerName(const std::string serverName);
+		void						addLocation(Location *location);
+		void						setAutoIndex(bool autoindex);
+		void						setRoute(const std::string& route);
+		void						setAllowedMethods(std::string allowedMethods);
+		void						addIndex(const std::string index);
+		//----Getter----//
+		int							getPort(void) const;
+		std::string					getServerName(void) const;
+		std::vector<Location *>		getLocations(void) const;
+		bool						getAutoIndex(void) const;
+		std::string					getRoute(void) const;
+		std::string					getAllowedMethods(void) const;
+		std::vector<std::string>	getIndexs(void) const;
 };
-
 
 #endif
