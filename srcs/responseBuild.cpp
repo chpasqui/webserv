@@ -33,14 +33,7 @@ void Response::build(Request& request, ServerConfig *config, char **envp){
     }
     Location* loc = findLocation(request.getPath(), config); //si on met dans serverConfig config->findLocation
     _internalPath = buildFileSystemPath(loc, request.getPath());
-    struct stat sb;
-    //prendre la fonction de Josephine = extractserverpath(internalPath) et remplacer dans stat et isCGI
-    //voir dans quel ordre faire ca
-    if (stat(_internalPath.c_str(), &sb) != 0){
-        setSyscallError();
-        return;
-    }
-    _isDir = S_ISDIR(sb.st_mode);
+    
     if (loc->getRedirectCode() != 0){
         _statusCode = loc->getRedirectCode();
         _headers["Location"] = loc->getNewPath();
@@ -130,7 +123,13 @@ void Response::setSyscallError(){
 //Step4: si aucun index trouv;, je regarde si autoindex est on ou off -> off : 403 forbidden / -- OK
 //Step5: si oui on, genere une page html qui liste le contenu du directory (opendir/readdir) -- OK
 void Response::handleGetMethod(Request& request, Location* loc){
-    if (!_isDir){
+    struct stat sb;
+   
+    if (stat(_internalPath.c_str(), &sb) != 0){
+        setSyscallError();
+        return;
+    }
+    if (!S_ISDIR(sb.st_mode)){
         std::ifstream file(_internalPath.c_str());
         if (!file.is_open())
             return (setSyscallError());
@@ -140,7 +139,7 @@ void Response::handleGetMethod(Request& request, Location* loc){
         _statusCode = OK;
         return ;
     }
-    else if (_isDir){
+    else if (S_ISDIR(sb.st_mode)){
         if (request.getPath()[request.getPath().size() - 1] != '/'){
             _statusCode = MOVED_PERMANENTLY;
             _headers["Location"] = request.getPath() + "/";
@@ -184,10 +183,12 @@ void Response::displayAutoIndex(){
     _statusCode = OK;
 }
 
-//Step 1: define if it is a DIR or a FILE
-//Step 2: DIR : verify if i can open it and create a file containing the body of the request
-//Step 3: FILE : add the body to the file
-//Step 4: return ;
+//Step 1: check if upload allowed in location
+//Step 2: define if it is a DIR or a FILE
+//Step 3: DIR create a file containing the body of the request, generate name of the file according to content-disposition if existing
+//Step 4: EXISTING FILE : add the body to the file or replace it 
+//Step 5: NON-EXISTING FILE : create file and body to the file
+//Step 6: return ;
 
 //dire a Hayden que jai besoin de bool _upload_alllowed et le lieu de lupload
 void Response::handlePostMethod(Request& request, Location* loc){
@@ -196,12 +197,7 @@ void Response::handlePostMethod(Request& request, Location* loc){
         buildError();
         return ;
     }
-    if (_isDir){
-        DIR *dir = opendir(_internalPath.c_str());
-        if (dir == NULL){
-            setSyscallError();
-            return ;
-        }
+
 
     }
     
