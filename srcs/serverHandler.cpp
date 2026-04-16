@@ -41,8 +41,6 @@ bool	Server::addNewConnection(int listeningFd)
 
 void	Server::readFromSocket(int fd)
 {
-	std::cout << "Server::run inside EPOLIN : existing connection " << fd << " is sending a request." << std::endl;
-	//timeout
 	Client& client = *(_clients[fd]); // _clients[6] will give us the Client class at fd = 6
 
 	client.handleRequest();
@@ -52,8 +50,7 @@ void	Server::readFromSocket(int fd)
 	}
 	if (client.getClientStatus() == COMPLETE)
 	{
-		std::cout << "building response..." << std::endl;
-		Cgi cgi(this->env);
+		Cgi cgi(this->originalEnv);
 		cgi.handleCgi(client.getRequest(), "/var/www/cgi-bin/foo.py/user/42", client.getServerConfig());
 		// build response --> in here Cgi 
 		if (!modifyEpoll(this->epollFd, fd, EPOLLOUT))
@@ -66,8 +63,6 @@ void	Server::readFromSocket(int fd)
 
 void	Server::writeToSocket(int fd)
 {
-	std::cout << "sending response now :)" << std::endl;
-
 	removeConnection(fd);
 }
 

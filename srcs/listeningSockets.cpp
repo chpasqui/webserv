@@ -27,7 +27,6 @@
  */
 void Server::setupListeningSockets(const std::vector<ServerConfig>& serverConfigsVec) {
 	createEpollInstance();
-	std::cout << "\n SETTING UP THE SERVERS \n" << std::endl;
 	std::string errorMsg;
 	
 	signal(SIGINT, Server::signalHandler);
@@ -68,7 +67,7 @@ int Server::openListeningSocket() {
 		close(listenFd);
 		throw std::runtime_error("Server: setsockopt() failed.");
 	}
-	std::cout << "Server::createlisteningSocket listenFd " << listenFd << " is created" <<  std::endl;
+	//std::cout << "Server::createlisteningSocket listenFd " << listenFd << " is created" <<  std::endl;
 	return listenFd;
 }
 

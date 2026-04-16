@@ -28,7 +28,6 @@ void	Server::createEpollInstance(void) {
 		errorMsg = std::string("Epoll_create() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
-	std::cout << "Server::createEpollInstance epollFd " << epollFd << " is created" << std::endl; 
 }
 
 /**

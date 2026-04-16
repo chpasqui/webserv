@@ -23,7 +23,6 @@ void	Server::timeoutCheck(void) {
 	{
 		if (std::difftime(currentTime, it->second->getTimestamp()) == TIMEOUT)
 		{
-			std::cout << "Timeout on socket " << it->first << std::endl;
 			//buildReponse();
 			//this->modifyEpoll(it->first, EPOLLOUT);
 			//sendResponse();

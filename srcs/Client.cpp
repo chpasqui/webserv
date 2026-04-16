@@ -17,7 +17,6 @@ Client::Client() :
 	_clientStatus(PARSING_REQUEST_LINE),
 	_request(NULL)
 {
-	std::cout << "Client default constructor called" << std::endl;
 	time(&(this)->_timestamp);
 }
 
@@ -29,7 +28,6 @@ Client::Client(int fd, const ServerConfig* config, Request *request) :
 	_clientStatus(PARSING_REQUEST_LINE),
 	_request(request)
 {
-	std::cout << "Client with fd" << fd << " created" << std::endl;
 	time(&(this)->_timestamp);
 }
 
@@ -69,8 +67,7 @@ void	Client::handleRequest()
 	_buffer += std::string(buffer, _bytesRead);
 	if (this->_clientStatus == PARSING_REQUEST_LINE && this->_buffer.find("\r\n") != std::string::npos)
 	{	
-		std::cout << "parsing request line" << std::endl;
-		//std::cout << _buffer << std::endl;
+		std::cout << _buffer << std::endl;
 		if (!_request->parseRequestLine(_buffer)){
 			this->_clientStatus	= COMPLETE;
 			return ;
@@ -79,12 +76,10 @@ void	Client::handleRequest()
 	}
 	if (this->_clientStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
 	{
-		std::cout << "parsing header" << std::endl;
 		if (!_request->parseHeader(_buffer)){
 			this->_clientStatus	= COMPLETE;
 			return ;
 		}
-		std::cout << "entered parseHeaders" << std::endl;
 		this->_clientStatus = PARSING_BODY;
 	}
 	if (this->_clientStatus == PARSING_BODY && bodyRead(_buffer))
@@ -97,7 +92,6 @@ void	Client::handleRequest()
 		this->_clientStatus = COMPLETE;
 	}
 	// CHECK TIMEOUT because we never entered the conitions
-	std::cout << "end of function" << std::endl;
 	return ;
 }
 
@@ -123,7 +117,6 @@ Request* Client::getRequest(void) const {
 Client::~Client() 
 {
 	delete this->_request;
-	std::cout << "Client destructor called" << std::endl;
 }
 
 const ServerConfig* Client::getServerConfig(void) const {

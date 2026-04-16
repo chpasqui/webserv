@@ -22,12 +22,12 @@ void	Server::run()
 
 	while (!serverSignal) //WARN: Becareful with CGI signal too
 	{
-		std::cout << "hi!" << std::endl;
+		//std::cout << "hi!" << std::endl;
 		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, -1);
 		if (nFd == -1) break ;
 		for (int i = 0; i < nFd; i++) {
 			int fd = events[i].data.fd;
-			std::cout << "Server::run epollwait: current fd we are working on is " << fd << std::endl;
+			//std::cout << "Server::run epollwait: current fd we are working on is " << fd << std::endl;
 			if (_listenFds.count(fd)) { if (!addNewConnection(fd)) continue ; }
 			else if (events[i].events & (EPOLLERR | EPOLLHUP)) removeConnection(fd);
 			else if (events[i].events & EPOLLIN) readFromSocket(fd);

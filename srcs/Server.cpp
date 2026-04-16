@@ -22,17 +22,15 @@
 
 int serverSignal = 0;
 
-Server::Server(char **env) : 
+Server::Server(char **originalEnv) : 
 		epollFd(-1),
 		_listenFds(),
 		_clients(),
-		env(env)
+		originalEnv(originalEnv)
 {
-	std::cout << "Server default constructor called" << std::endl;
 }
 
 Server::~Server() {
-	std::cout << "Server destructor called" << std::endl;
 	std::map<int, Client*>::iterator it = this->_clients.begin();
 	for ( ; it != this->_clients.end(); ++it)
 	{
@@ -48,11 +46,9 @@ Server::~Server() {
 	_listenFds.clear();
 	if (this->epollFd != -1)
 	{
-		std::cout << "closing epollFd" << epollFd << std::endl;
 		close(this->epollFd);
 		this->epollFd = -1;
 	}
-	std::cout << "done destroying the server" << std::endl;
 }
 
 int Server::createListeningSocket() {

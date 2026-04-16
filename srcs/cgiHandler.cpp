@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
+#include <stdlib.h>
+#include <string.h>
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
 std::string intToString(int number){
@@ -26,41 +28,62 @@ std::string getHeaderVariable(const std::map<std::string, std::string>& header, 
 	return "";
 }
 
-void	Cgi::buildCgiEnv(Request &request, const std::string& internalPath, const ServerConfig *config) {
-	std::vector<std::string> env;
+void	Cgi::buildEnv()
+{
+	int len;
+	for (len = 0; this->_originalEnv[len]; ++len) {}
+	int nbEnv = len;
+
+	// const int finalEnvColumns = 2;
+	const int finalNbEnv = nbEnv + this->_tempEnv.size();
+
+	this->_finalEnv = new char*[finalNbEnv + 1];
+	int index;
+	for (index = 0; index < nbEnv; ++index)
+	{
+		this->_finalEnv[index] = new char[strlen(this->_originalEnv[index]) + 1];
+		std::copy(this->_originalEnv[index], this->_originalEnv[index] + strlen(this->_originalEnv[index]), this->_finalEnv[index]);
+	}
+	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
+	{
+		this->_finalEnv[index] = new char[(*it).length()];
+		strcpy(this->_finalEnv[index], (*it).c_str());
+		index++;
+	}
+	this->_finalEnv[finalNbEnv] = NULL;
+}
+ 
+void	Cgi::setCgiEnvVariables(Request &request, const std::string& internalPath, const ServerConfig *config) {
 	const std::map<std::string, std::string>& header = request.getHeaders();
 
-	env.push_back("REQUEST_METHOD=" + request.getMethod()); // GET POST DELETE
-	env.push_back("QUERY_STRING=" + request.getQuery()); // query string must be defined as empty string if not found (treated by getHeaderVariable)
-	env.push_back("SERVER_PROTOCOL=" + request.getVersion());
-
-	env.push_back("CONTENT_TYPE=" + getHeaderVariable(header, "content-type"));
-	if (request.getContentLength() != 0)
-		env.push_back("CONTENT_LENGTH=" + getHeaderVariable(header, "content-length")); // if and onlf if body.. need to check with charlotte
-	env.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
-	this ->scriptname =  internalPath.substr(0, internalPath.find(".py") + 3);
-	env.push_back("SCRIPT_NAME=" + this->scriptname); // need to split? not sure how i willr eceive it.... see wiht charlotte today
-	env.push_back("PATH_INFO=" + internalPath.substr(scriptname.length())); // derived from the portion of the uri path following the part that identifies the script itself 
+	_tempEnv.push_back("REQUEST_METHOD=" + request.getMethod());
+	_tempEnv.push_back("QUERY_STRING=" + request.getQuery()); // query string must be defined as empty string if not found (treated by getHeaderVariable)
+	_tempEnv.push_back("SERVER_PROTOCOL=" + request.getVersion());
+	_tempEnv.push_back("CONTENT_TYPE=" + getHeaderVariable(header, "content-type"));
+	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
+	_tempEnv.push_back("PATH_INFO=" + internalPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself 
 	
+	if (request.getContentLength() != 0) { _tempEnv.push_back("CONTENT_LENGTH=" + getHeaderVariable(header, "content-length")); } // if and onlf if body.. need to check with charlotte
+	this ->_scriptName =  internalPath.substr(0, internalPath.find(".py") + 3);
+	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName); // need to split? not sure how i willr eceive it.... see wiht charlotte today
+	_tempEnv.push_back("SERVER_PORT=" + intToString(config->getPort()));
 	
-	std::string port = intToString(config->getPort());// I need the server port inside here 
-	env.push_back("SERVER_PORT=" + port);
 	char hostname[1024];
 	hostname[1023] = '\0';
 	gethostname(hostname, 1023);
-	env.push_back("SERVER_NAME=" + std::string(hostname));
-	for (size_t i = 0; i < env.size(); ++i)
-		std::cout << GREEN << env[i] << RESET << std::endl;
+	_tempEnv.push_back("SERVER_NAME=" + std::string(hostname));
 }
 
 
 void	Cgi::handleCgi(Request *request, std::string pathInfo, const ServerConfig *config) // charlotte needs to send this and then the path 
 {
-	std::cout << "ENTERED CGI FUNCTIOM" << std::endl;
+	std::cout << GREEN << "ENTERED CGI FUNCTIOM" << RESET << std::endl;
 	(void)request;
 	if (!access(pathInfo.c_str(), X_OK)) { return; }
-	std::cout << "the file at " << pathInfo << " exits!" << std::endl;
-	buildCgiEnv(*request, pathInfo, config);
+
+	setCgiEnvVariables(*request, pathInfo, config);
+	buildEnv();
+	
 	// get the response information 
 	// locate the program corresponding to the request
 	// starts up the handling program (fork pipe, etc.)
@@ -70,11 +93,11 @@ void	Cgi::handleCgi(Request *request, std::string pathInfo, const ServerConfig *
 	// tzpicallz a browser
 	// the child is over
 	
-	// in what can I coontain the env variable?
+	// in what can I coontain the originalEnv variable?
 	// 
 
 }
-//copy of env TO DO
+//copy of originalEnv TO DO
 
 // if the method is POST, then i need to pass on the body to the CGI stdin from server -> tell charlotte
 
@@ -96,7 +119,7 @@ void	Cgi::handleCgi(Request *request, std::string pathInfo, const ServerConfig *
 // If the request has a ./cgi-bin/ inside, then we identify the request as being CGI
 // it comes with MEHOD URI (inside the uri is the cgi) and
 // first I can check If i receive a directory or a file?
-// 1. I need to create a chid process which will handle this --> first before I fork with a child, i need the env varuables
+// 1. I need to create a chid process which will handle this --> first before I fork with a child, i need the originalEnv varuables
 // od I need to creat a class for CGI?
 
 // new process is created, inherits from its parent
@@ -105,7 +128,7 @@ void	Cgi::handleCgi(Request *request, std::string pathInfo, const ServerConfig *
 
 
 // 1. the server receives the request but the URL does not map to a flat file but to a scripting area
-//	server starts the script --> It creates a process and feeds it the information via the env
+//	server starts the script --> It creates a process and feeds it the information via the originalEnv
 // 
 
 // servrer scripts ar eprohrams that are run in the web server in response to request from 

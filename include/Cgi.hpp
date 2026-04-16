@@ -4,6 +4,8 @@
 #include "ServerConfig.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
+#include <string>
+#include <vector>
 
 #ifndef COLORS
 #define COLORS
@@ -21,20 +23,22 @@ class Cgi
 {
 	public:
 		Cgi();
-		Cgi(char **env);
+		Cgi(char **originalEnv);
 		~Cgi();
 
 		void		handleCgi(Request *request, std::string pathInfo, const ServerConfig *config);
-		void		buildCgiEnv(Request &request, const std::string& pathInfo, const ServerConfig *config);
+		void		setCgiEnvVariables(Request &request, const std::string& pathInfo, const ServerConfig *config);
+		void		buildEnv();
 		// std::string extractScriptPath(const std::string& internalPath);
 		// std::string getPathInfo(const std::string& internalPath, size_t endScriptName);
 
 	private:
-		//Response *response; // would be allocated on the stack and doesnt work
-		std::map<std::string, std::string> _env; // for now this is all I know
-		char	**env;
-		std::string scriptname;
-		std::string pathinfo;
+		std::vector<std::string>	_tempEnv;
+		char						**_originalEnv;
+		char						**_finalEnv;
+		int							_tempEnvLength;
+		std::string					_scriptName;
+		std::string					_pathInfo;
 };
 
 std::string getHeaderVariable(const std::map<std::string, std::string>& header, const std::string& tofind);
