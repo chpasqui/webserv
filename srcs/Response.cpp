@@ -3,6 +3,8 @@
 #include "../include/statusCode.hpp"
 
 Response::Response() :
+    _config(NULL),
+    _location(NULL),
     _statusCode(0),
     _reasonPhrase(""),
     _body("") {}

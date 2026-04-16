@@ -2,6 +2,8 @@
 #include "../include/statusCode.hpp"
 #include "../include/Debug.hpp"
 
+#include <vector>
+
 
 Request::Request() :
     _method(""),
@@ -23,12 +25,23 @@ int	Request::getContentLength(void) const{
 	return (_contentLength);
 }
 
-std::string Request::getPath(void) const{
+const std::string& Request::getPath(void) const{
     return (_path);
 }
 
-std::string Request::getMethod(void) const{
+const std::string& Request::getMethod(void) const{
     return (_method);
+}
+
+const std::string& Request::getBody(void) const{
+    return (_body);
+}
+
+const std::string& Request::getHeaders(std::string key) const{
+    std::map<std::string, std::string>::const_iterator it = _headers.begin();
+	for(; it != _headers.end(); it++)
+        if (it->first == key)
+            return it->second;
 }
 
 /**

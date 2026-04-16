@@ -17,8 +17,10 @@ class Request
 		//Getter
 		int	getStatusCode(void) const;
 		int	getContentLength(void) const;
-		std::string getPath(void) const;
-		std::string getMethod(void) const;
+		const std::string& getBody(void) const;
+		const std::string& getPath(void) const;
+		const std::string& getMethod(void) const;
+		const std::string& getHeaders(std::string key) const
 
 		//Parsing
 		bool parseRequestLine(const std::string &message);

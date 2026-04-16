@@ -27,38 +27,40 @@
 //Step5: est ce que c'est un CGI ? if yes execute CGI et return; -- OK
 //Step6: gerer les requests en fonction de la methode -- EN COURS
 void Response::build(Request& request, ServerConfig *config, char **envp){
+    _loc = findLocation(request.getPath(), config);
+    _config = config;
     if (request.getStatusCode() != 0){
         _statusCode = request.getStatusCode();
         buildError();
         return ;
     }
-    Location* loc = findLocation(request.getPath(), config); //si on met dans serverConfig config->findLocation
-    _internalPath = buildFileSystemPath(loc, request.getPath());
+     //si on met dans serverConfig config->findLocation
+    _internalPath = buildFileSystemPath(request.getPath());
     
-    if (loc->getRedirectCode() != 0){
-        _statusCode = loc->getRedirectCode();
-        _headers["Location"] = loc->getNewPath();
+    if (_loc->getRedirectCode() != 0){
+        _statusCode = _loc->getRedirectCode();
+        _headers["Location"] = _loc->getNewPath();
         return ;
     }
-    if (!methodAllowed(loc, request.getMethod())){
+    if (!methodAllowed(request.getMethod())){
         _statusCode = METHOD_NOT_ALLOWED;
         buildError();
         return ;
     }
-    if (isCGI(_internalPath, loc)){
+    if (isCGI()){
         handleCGI(request, envp);
         return;
     }
-    handleMethod(request, loc);
+    handleMethod(request);
 }
 
-void Response::handleMethod(Request& request, Location* loc){
+void Response::handleMethod(Request& request){
     if (request.getMethod() == "GET")
-        handleGetMethod(request, loc);
+        handleGetMethod(request, _loc);
     else if (request.getMethod() == "POST")
-        handlePostMethod(request, loc);
+        handlePostMethod(request, _loc);
     else
-        handleDeleteMethod(request, loc);
+        handleDeleteMethod(request, _loc);
 }
 
 //Step1: trouver si le URI correspond a une des locations -- OK
@@ -81,23 +83,24 @@ Location* Response::findLocation(const std::string& url, ServerConfig* config){
     return best;
 }
 
-std::string Response::buildFileSystemPath(Location* loc, const std::string& url){    
-    _remain = url.substr(loc->getPath().size());
-    return loc->getRoot() + "/" + _remain; 
+std::string Response::buildFileSystemPath(const std::string& url){    
+    _remain = url.substr(_loc->getPath().size());
+    return _loc->getRoot() + "/" + _remain; 
 }
 
-bool Response::methodAllowed(Location *loc, const std::string& method){
-    std::string methodAllowed = loc->getMethodAllowed();
+bool Response::methodAllowed(const std::string& method){
+    std::string methodAllowed = _loc->getMethodAllowed();
     if (methodAllowed.find(method) != std::string::npos)
         return true;
     return false;
 }
 
-bool Response::isCGI(const std::string& path, Location* loc){
-    if (loc->getCgiEnabled()){
-        std::vector<std::string>::iterator it = loc->getCgiExtensions().begin();
+bool Response::isCGI(const std::string& path){
+    if (_loc->getCgiEnabled()){
+        std::vector<std::string>::iterator it = _loc->getCgiExtensions().begin();
         
-        for (; it != loc->getCgiExtensions().end(); it++){
+        for (; it != _loc
+->getCgiExtensions().end(); it++){
             size_t pos = path.find(*it) + (*it).size();
             if (pos != std::string::npos && (path[pos] == *path.end() || path[pos] == '/'))
                 return true;
@@ -123,7 +126,7 @@ void Response::setSyscallError(){
 //Step3: si cest bien un dir, je cherche le fichier index defini dans la config et je tente le path -- OK
 //Step4: si aucun index trouv;, je regarde si autoindex est on ou off -> off : 403 forbidden / -- OK
 //Step5: si oui on, genere une page html qui liste le contenu du directory (opendir/readdir) -- OK
-void Response::handleGetMethod(Request& request, Location* loc){
+void Response::handleGetMethod(Request& request){
     struct stat sb;
    
     if (stat(_internalPath.c_str(), &sb) != 0){
@@ -146,7 +149,7 @@ void Response::handleGetMethod(Request& request, Location* loc){
             _headers["Location"] = request.getPath() + "/";
             return ;
         }
-        std::vector<std::string> indexes = loc->getIndexes();
+        std::vector<std::string> indexes = _loc->getIndexes();
         std::vector<std::string>::iterator it = indexes.begin();
         for (; it != indexes.end(); it++){
             std::ifstream file(*it);
@@ -155,7 +158,8 @@ void Response::handleGetMethod(Request& request, Location* loc){
                 return ;
             }
         }
-        if (!loc->getAutoIndex()){
+        if (!_loc
+->getAutoIndex()){
             setSyscallError();
             return ;
         }
@@ -194,45 +198,72 @@ void Response::displayAutoIndex(){
 // - si l url est un dossier qui se terminer par / -> ERREUR -- OK
 // - si url contient des sous dossier non existant -> TEST STAT UPLOADDIR -- OK
 // - si cest un fichier sans extension on le cree tel quel ? -> COMME LINUX CREER TELQUEL
-// - si le fichier existe deja, est ce quon ecrase le contenu ou on refuse --> ERREUR REFUSE : conflit 409
-// - est ce qu on gere le multipart ? -->
+// - si le fichier existe deja, on refuse --> ERREUR REFUSE : conflit 409 -- OK
+// - est ce qu on gere le multipart ? --> OUI MAIS UNIQUEMENT PAR CGI
 // car si on uploads depuis un vrai navigateur on est oblige mais via curl et telnet cest okay sans
 
 
 //Step 1: check if upload allowed in location -- OK
-//Step 2: define if it is a DIR or a FILE
+//Step 2: define if it is a DIR or a FILE -- OK
 //Step 3: DIR create a file containing the body of the request, generate name of the file according to content-disposition if existing
 //Step 4: EXISTING FILE : add the body to the file or replace it 
 //Step 5: NON-EXISTING FILE : create file and body to the file
 //Step 6: return ;
 
-void Response::handlePostMethod(Request& request, Location* loc){
-    if (!loc->getUploadStore().empty()){
+void Response::handlePostMethod(Request& request){
+    if (request.getHeaders("content-type").find("multipart/form-data") != std::string::npos){
         _statusCode = FORBIDDEN;
         buildError();
+        LOG(std::cout << "can't handle multipart without cgi" << std::endl);
         return ;
     }
-    std::string uploadPath = loc->getUploadStore() + _remain;
-    struct stat sb;
-    if (stat(uploadPath.c_str(), & sb) != 0){
-        setSyscallError();
-        return ;
-    }
-    if (S_ISDIR(sb.st_mode)){
+    if (!_loc->getUploadStore().empty()){
         _statusCode = FORBIDDEN;
-        LOG(std::cout << "can't upload without specifying the file in URL" << std::endl);
+        buildError();
+        LOG(std::cout << "can't upload, no upload store" << std::endl);
         return ;
     }
-    
-
-    //std::string filename = extractFilename(request);
+    std::string uploadDir = _loc->getUploadStore();
+    struct stat dirStat;
+    if (stat(uploadDir.c_str(), &dirStat) != 0 || !S_ISDIR(dirStat.st_mode)){
+        setSyscallError();
+        LOG(std::cout << "upload folder doesnt exist" << std::endl);
+        return ;
+    }
+    std::string uploadPath = _loc->getUploadStore() + "/" + _remain;
+    struct stat fileStat;
+    if (stat(uploadPath.c_str(), &fileStat) == 0){
+        _statusCode = CONFLICT;
+        buildError();
+        LOG(std::cout << "file already exist" << std::endl);
+        return ;
+    }
+    if (S_ISDIR(fileStat.st_mode)){
+        _statusCode = FORBIDDEN;
+        LOG(std::cout << "can't upload body without specifying the file in URL" << std::endl);
+        return ;
+    }
+    else {
+        std::string fileName = extractFileName(request.getPath());
+        std::ofstream file(fileName);
+        file << request.getBody();
+        file.close();
+        _body = request.getBody();
+        _statusCode = CREATED;
+    }
 }
+
+std::string extractFileName(std::string path){
+    std::string fileName;
+    return (fileName);
+}
+
 
 //Step1 : define if file ou directory is available
 //Step2: if directory but ambiguous url that doesnt end wiht / -> 409
 //Step3: try to remove if no -> syscall if yes -> 204 : no content action succesful 
 
-void Response::handleDeleteMethod(Request& request, Location* loc){
+void Response::handleDeleteMethod(Request& request){
     struct stat sb;
    
     if (stat(_internalPath.c_str(), &sb) != 0){
@@ -253,6 +284,7 @@ void Response::handleDeleteMethod(Request& request, Location* loc){
 }
 
 void Response::buildError(){
+
     //renvoie la page html en fonction de la map 
     //mais est ce que jutilise cette fonction pour 
 }
