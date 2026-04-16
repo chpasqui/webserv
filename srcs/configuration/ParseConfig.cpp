@@ -191,6 +191,9 @@ int	ParseConfig::processLocationToken(void) {
 }
 
 
+/**
+ * @detail client_header_timeout context: http, server
+ */
 int ParseConfig::processHeaderTimeoutToken(void) {
 	int			timeout;
 	std::string	nextToken;
@@ -211,6 +214,9 @@ int ParseConfig::processHeaderTimeoutToken(void) {
 	return (0);
 }
 
+/**
+ * @detail client_body_timeout context: http, server, location
+ */
 int ParseConfig::processBodyTimeoutToken(void) {
 	int			timeout;
 	std::string	nextToken;
@@ -234,6 +240,9 @@ int ParseConfig::processBodyTimeoutToken(void) {
 	return (0);
 }
 
+/**
+ * @detail client_max_body_size context: http, server, location
+ */
 int ParseConfig::processMaxBodySizeToken(void) {
 	int			maxBodySize;
 	std::string	nextToken;
@@ -257,6 +266,9 @@ int ParseConfig::processMaxBodySizeToken(void) {
 	return (0);
 }
 
+/**
+ * @detail root context: http, server, location
+ */
 int ParseConfig::processRootToken(void) {
 	std::string nextToken;
 
@@ -277,6 +289,9 @@ int ParseConfig::processRootToken(void) {
 	return (0);
 }
 
+/**
+ * @detail listen context: server
+ */
 int ParseConfig::processListenToken(void) {
 		int 		port;
 		std::string	nextToken;
@@ -293,6 +308,10 @@ int ParseConfig::processListenToken(void) {
 		return (0);
 }
 
+/**
+ * @detail autoindex context: http, server, location
+ * @detail only response possible on | off
+ */
 int ParseConfig::processAutoindexToken(void) {
 	bool		is_enable;
 	std::string value;
@@ -320,6 +339,9 @@ int ParseConfig::processAutoindexToken(void) {
 	return (0);
 }
 
+/**
+ * @detail error_page context: http, server, location
+ */
 int ParseConfig::processErrorPageToken(void) {
 	int			code;
 	std::string	codeToken, pageToken;
@@ -342,6 +364,11 @@ int ParseConfig::processErrorPageToken(void) {
 	return (0);
 }
 
+/**
+ * @brief transform a token to a usable int
+ * @param the token you want to convert
+ * @return the converted int or -1 if an error occurs 
+ */
 int	ParseConfig::transformTokenToInt(std::string token) {
 	int					nb;
 	std::stringstream	ss(token);
