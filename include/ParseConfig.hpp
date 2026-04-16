@@ -30,10 +30,16 @@ class ParseConfig {
 		int				processTokenHttp(void);
 		int				processServerToken(std::vector<ServerConfig *> &servers);
 		int				processLocationToken(void);
+		int				processHeaderTimeoutToken(void);
+		int				processBodyTimeoutToken(void);
+		int				processMaxBodySizeToken(void);
 		int				processRootToken(void);
 		int				processListenToken(void);
+		int 			processAutoindexToken(void);
 		int				processErrorPageToken(void);
-		
+		//----Static functions----//
+		static int		transformTokenToInt(std::string token);
+		//----Atributes----//
 		std::string		_filename;
 		std::string		_configFile;
 		int				_context;

@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <stdlib.h>
 #include <string>
 #include <cstring>
@@ -81,37 +82,54 @@ int	ParseConfig::processToken(std::vector<ServerConfig *> &serverConfigs) {
 
 	currentToken = this->getNextToken();
 	if (currentToken == "}") {
-		std::cout << "token } find" << std::endl;
 		this->_context -= 1;
-		return (0);
-		//TODO: Send "Location" or ServerConfig" classes to respective Vector
+		errorCode = 0;
 	}
 	
 	else if (currentToken == "http")
-		this->processTokenHttp();
+		errorCode = this->processTokenHttp();
 
 	else if (currentToken == "server") {
-		this->processServerToken(serverConfigs);
+		errorCode = this->processServerToken(serverConfigs);
 	}
 
 	else if (currentToken == "location") {
-		this->processLocationToken();
+		errorCode = this->processLocationToken();
+	}
+
+	else if (currentToken == "client_header_timeout") {
+		errorCode = this->processHeaderTimeoutToken();
+	}
+
+	else if (currentToken == "client_body_timeout") {
+		errorCode = this->processBodyTimeoutToken();
+	}
+
+	else if (currentToken == "client_max_body_size") {
+		errorCode = this->processMaxBodySizeToken();
 	}
 
 	else if (currentToken == "root") {
-		this->processRootToken();
+		errorCode = this->processRootToken();
 	}
 
 	else if (currentToken == "listen") {
-		this->processListenToken();
+		errorCode = this->processListenToken();
+	}
+
+	else if (currentToken == "autoindex") {
+		errorCode = this->processAutoindexToken();
+	}
+
+	else if (currentToken == "error_page") {
+		errorCode = this->processErrorPageToken();
 	}
 
 	else {
 		std::cerr << C_RED << currentToken << ": Unknow token" << RESET << std::endl;
-		return (1);
+		errorCode = 1;
 	}
-	
-	return (0);
+	return (errorCode);
 }
 
 int	ParseConfig::processTokenHttp(void) {
@@ -126,13 +144,13 @@ int	ParseConfig::processTokenHttp(void) {
 		this->_http = new Http();
 	}
 	catch (std::exception &e) {
-		std::cout << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
+		std::cerr << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
 	}
 	this->_context = HTTP;
 	return (0);
 }
 
-int ParseConfig::processServerToken(std::vector<ServerConfig *> servers) {
+int ParseConfig::processServerToken(std::vector<ServerConfig *> &servers) {
 		std::string	nextToken;
 
 		nextToken = getNextToken();
@@ -144,7 +162,7 @@ int ParseConfig::processServerToken(std::vector<ServerConfig *> servers) {
 			servers.push_back(new ServerConfig(*(this)->_http));
 		}
 		catch (std::exception &e) {
-			std::cout << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
+			std::cerr << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
 			return (1);
 		}
 		this->_context = SERVER;
@@ -165,10 +183,77 @@ int	ParseConfig::processLocationToken(void) {
 		this->_location = new Location(*(this)->_currentServer);
 	}
 	catch (std::exception &e) {
-		std::cout << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
+		std::cerr << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
 		return (1);
 	}
 	this->_context = LOCATION;
+	return (0);
+}
+
+
+int ParseConfig::processHeaderTimeoutToken(void) {
+	int			timeout;
+	std::string	nextToken;
+
+	nextToken = getNextToken();
+	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
+		return (1);
+	if (this->_context == HTTP) {
+		this->_http->setHeaderTimeout(timeout);
+	}
+	else if (this->_context == SERVER) {
+		this->_currentServer->setHeaderTimeout(timeout);
+	}
+	else {
+		std::cerr << C_RED << "Using token \"client_header_timeout\" in wrong context" << RESET << std::endl;
+		return (1);
+	}
+	return (0);
+}
+
+int ParseConfig::processBodyTimeoutToken(void) {
+	int			timeout;
+	std::string	nextToken;
+
+	nextToken = getNextToken();
+	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
+		return (1);
+	if (this->_context == HTTP) {
+		this->_http->setBodyTimeout(timeout);
+	}
+	else if (this->_context == SERVER) {
+		this->_currentServer->setBodyTimeout(timeout);
+	}
+	else if (this->_context == LOCATION) {
+		this->_location->setBodyTimeout(timeout);
+	}
+	else {
+		std::cerr << C_RED << "Using token \"client_body_timeout\" in wrong context" << RESET << std::endl;
+		return (1);
+	}
+	return (0);
+}
+
+int ParseConfig::processMaxBodySizeToken(void) {
+	int			maxBodySize;
+	std::string	nextToken;
+
+	nextToken = getNextToken();
+	if ((maxBodySize = ParseConfig::transformTokenToInt(nextToken)) == -1) //FIX: need to mutiplie this later
+		return (1);
+	if (this->_context == HTTP) {
+		this->_http->setMaxBodySize(maxBodySize);
+	}
+	else if (this->_context == SERVER) {
+		this->_currentServer->setMaxBodySize(maxBodySize);
+	}
+	else if (this->_context == LOCATION) {
+		this->_location->setMaxBodySize(maxBodySize);
+	}
+	else {
+		std::cerr << C_RED << "Using token \"client_body_timeout\" in wrong context" << RESET << std::endl;
+		return (1);
+	}
 	return (0);
 }
 
@@ -176,14 +261,17 @@ int ParseConfig::processRootToken(void) {
 	std::string nextToken;
 
 	nextToken = getNextToken();
-	if (this->_context == SERVER) {
+	if (this->_context == HTTP){
+		this->_http->setRoot(nextToken);
+	}
+	else if (this->_context == SERVER) {
 		this->_currentServer->setRoute(nextToken);
 	}
 	else if (this->_context == LOCATION) {
 		this->_location->setRoot(nextToken);
 	}
 	else {
-		std::cout << C_RED << "Using token \"root\" in wrong context" << RESET << std::endl;
+		std::cerr << C_RED << "Using token \"root\" in wrong context" << RESET << std::endl;
 		return (1);
 	}
 	return (0);
@@ -196,20 +284,75 @@ int ParseConfig::processListenToken(void) {
 		nextToken = getNextToken();
 		if (this->_context != SERVER)
 		{
-			std::cout << C_RED << "Using token \"listen\" in wrong context" << RESET << std::endl;
+			std::cerr << C_RED << "Using token \"listen\" in wrong context" << RESET << std::endl;
 			return (1);
 		}
-		std::stringstream	ss(nextToken);
-		ss >> port;
-		if (ss.fail() || !ss.eof())
-		{
-			std::cerr << C_RED << "listen need only nuber" << RESET << std::endl;
+		if ((port = ParseConfig::transformTokenToInt(nextToken)) == -1)
 			return (1);
-		}
 		this->_currentServer->setPort(port);
+		return (0);
+}
+
+int ParseConfig::processAutoindexToken(void) {
+	bool		is_enable;
+	std::string value;
+
+	value = getNextToken();
+	if (value == "on")
+		is_enable = true;
+	else if (value == "off")
+		is_enable = false;
+	else
+	{
+		std::cerr << C_RED << "value " << value << " unrecognized after autoindex" << RESET << std::endl;
 		return (1);
+	}
+	if (this->_context == HTTP)
+		this->_http->setAutoIndex(is_enable);
+	else if (this->_context == SERVER)
+		this->_currentServer->setAutoIndex(is_enable);
+	else if (this->_context == LOCATION)
+		this->_location->setAutoindex(is_enable);
+	else {
+		std::cout << C_RED << "Using token \"autoindex\" in wrong context" << RESET << std::endl;
+		return (1);
+	}
+	return (0);
 }
 
 int ParseConfig::processErrorPageToken(void) {
-	
+	int			code;
+	std::string	codeToken, pageToken;
+
+	codeToken = getNextToken();
+	pageToken = getNextToken();
+	std::stringstream ss(codeToken);
+	if ((code = ParseConfig::transformTokenToInt(codeToken) == -1))
+		return (1);
+	if (this->_context == HTTP)
+		this->_http->addErrorPage(code, pageToken);
+	else if (this->_context == SERVER)
+		this->_currentServer->addErrorPage(code, pageToken);
+	else if (this->_context == LOCATION)
+		this->_location->addErrorPage(code, pageToken);
+	else {
+		std::cout << C_RED << "Using token \"error_page\" in wrong context" << RESET << std::endl;
+		return (1);
+	}
+	return (0);
 }
+
+int	ParseConfig::transformTokenToInt(std::string token) {
+	int					nb;
+	std::stringstream	ss(token);
+	
+	ss >> nb;
+	if (ss.fail() || !ss.eof() || nb < 0)
+	{
+		std::cerr << C_RED << "invalid number in line x" << RESET << std::endl;
+		return (-1);
+	}
+	std::cout << C_PURPLE << "DEBUG: number is: " << nb << RESET << std::endl;
+	return (nb);
+}
+
