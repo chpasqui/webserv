@@ -11,6 +11,8 @@
 
 void Response::handleCGI(Request& request, char **envp){
     CGI cgi; //voir avec Josephine
+
+    stat()
     int _statusCode = cgi.execute();
     if (_statusCode != 200){
         buildError();

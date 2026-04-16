@@ -2,6 +2,7 @@
 #include "../include/ServerConfig.hpp"
 #include "../include/statusCode.hpp"
 #include "../include/Location.hpp"
+#include "../include/Debug.hpp"
 
 #include <sys/stat.h>
 #include <string.h>
@@ -81,8 +82,8 @@ Location* Response::findLocation(const std::string& url, ServerConfig* config){
 }
 
 std::string Response::buildFileSystemPath(Location* loc, const std::string& url){    
-    std::string remain = url.substr(loc->getPath().size());
-    return loc->getRoot() + "/" + remain; 
+    _remain = url.substr(loc->getPath().size());
+    return loc->getRoot() + "/" + _remain; 
 }
 
 bool Response::methodAllowed(Location *loc, const std::string& method){
@@ -188,40 +189,42 @@ void Response::displayAutoIndex(){
 
 
 // A DISCUTER :
-// - directive upload_store ou upload ?
-// - upload store obligatoire ?
-// - si l url est un dossier qui se terminer par / -> est ce quon accepte ou genere un nom automatiquement ou a partir de content-disposition ?
-// - si url contient des sous dossier non existant est ce qu on les cree ou on retourne une erreur ?
-// - si cest un fichier sans extension on le cree tel quel ? -- voir NGINX
-// - si le fichier existe deja, est ce quon ecrase le contenu ou on refuse --> conflit 409
-// - est ce qu on gere le multipart ? a voir avec le sujet pas tres clair, 
+// - directive upload_store ou upload ? -- OK
+// - upload store obligatoire ?  -- OUI -- OK
+// - si l url est un dossier qui se terminer par / -> ERREUR -- OK
+// - si url contient des sous dossier non existant -> TEST STAT UPLOADDIR -- OK
+// - si cest un fichier sans extension on le cree tel quel ? -> COMME LINUX CREER TELQUEL
+// - si le fichier existe deja, est ce quon ecrase le contenu ou on refuse --> ERREUR REFUSE : conflit 409
+// - est ce qu on gere le multipart ? -->
 // car si on uploads depuis un vrai navigateur on est oblige mais via curl et telnet cest okay sans
 
 
-//Step 1: check if upload allowed in location
+//Step 1: check if upload allowed in location -- OK
 //Step 2: define if it is a DIR or a FILE
 //Step 3: DIR create a file containing the body of the request, generate name of the file according to content-disposition if existing
 //Step 4: EXISTING FILE : add the body to the file or replace it 
 //Step 5: NON-EXISTING FILE : create file and body to the file
 //Step 6: return ;
-//dire a Hayden que jai besoin de bool _upload_alllowed et le lieu de lupload
+
 void Response::handlePostMethod(Request& request, Location* loc){
-    if (!loc->getUploadAllowed()){
+    if (!loc->getUploadStore().empty()){
         _statusCode = FORBIDDEN;
         buildError();
         return ;
     }
-    std::string uploadDir = loc->getUploadStore();
+    std::string uploadPath = loc->getUploadStore() + _remain;
     struct stat sb;
-    if (stat(uploadDir.c_str(), & sb) != 0){
+    if (stat(uploadPath.c_str(), & sb) != 0){
         setSyscallError();
         return ;
     }
-    if (!S_ISDIR(sb.st_mode)){
-        _statusCode = INTERNAL_SERVER_ERROR;
-        buildError();
+    if (S_ISDIR(sb.st_mode)){
+        _statusCode = FORBIDDEN;
+        LOG(std::cout << "can't upload without specifying the file in URL" << std::endl);
         return ;
     }
+    
+
     //std::string filename = extractFilename(request);
 }
 
@@ -242,7 +245,7 @@ void Response::handleDeleteMethod(Request& request, Location* loc){
             return ;
         }
     }
-    if (remove(_internalPath.c_str()) != 0){
+    if (std::remove(_internalPath.c_str()) != 0){
         setSyscallError();
         return;
     }

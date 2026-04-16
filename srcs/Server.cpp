@@ -233,7 +233,8 @@ void	Server::run()
 				if (client.getClientStatus() == COMPLETE)
 				{
 					std::cout << "building response..." << std::endl;
-					///buildResponse()
+					///buildResponse();
+					//formatResponse();
 					modifyEpoll(epollFd, fd, EPOLLOUT);
 				} 
 			}

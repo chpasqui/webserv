@@ -15,6 +15,7 @@ class Response {
 		std::string _reasonPhrase;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
+		std::string _remain;
 
 		//regarder pour les reasons phrases comment les integrer au mieux
 
