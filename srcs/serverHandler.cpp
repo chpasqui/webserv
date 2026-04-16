@@ -51,7 +51,7 @@ void	Server::readFromSocket(int fd)
 	if (client.getClientStatus() == COMPLETE)
 	{
 		Cgi cgi(this->originalEnv);
-		cgi.handleCgi(client.getRequest(), "/var/www/cgi-bin/foo.py/user/42", client.getServerConfig());
+		cgi.handleCgi(client, "/var/www/cgi-bin/foo.py/user/42");
 		// build response --> in here Cgi 
 		if (!modifyEpoll(this->epollFd, fd, EPOLLOUT))
 		{
@@ -63,6 +63,7 @@ void	Server::readFromSocket(int fd)
 
 void	Server::writeToSocket(int fd)
 {
+
 	removeConnection(fd);
 }
 

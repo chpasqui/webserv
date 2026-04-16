@@ -1,6 +1,7 @@
 #ifndef CGI_HPP
 # define CGI_HPP
 
+#include "Client.hpp"
 #include "ServerConfig.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
@@ -26,9 +27,10 @@ class Cgi
 		Cgi(char **originalEnv);
 		~Cgi();
 
-		void		handleCgi(Request *request, std::string pathInfo, const ServerConfig *config);
-		void		setCgiEnvVariables(Request &request, const std::string& pathInfo, const ServerConfig *config);
+		void		handleCgi(Client& client, std::string internalPath);
+		void		setCgiEnvVariables(const Client& client, std::string internalPath);
 		void		buildEnv();
+		void		executeCgi(std::string internalPath);
 		// std::string extractScriptPath(const std::string& internalPath);
 		// std::string getPathInfo(const std::string& internalPath, size_t endScriptName);
 
@@ -41,8 +43,7 @@ class Cgi
 		std::string					_pathInfo;
 };
 
+std::string intToString(int number);
 std::string getHeaderVariable(const std::map<std::string, std::string>& header, const std::string& tofind);
-std::string getSciptName(const std::string& internalPath);
-std::string getPathInfo(const std::string& internalPath);
 
 #endif

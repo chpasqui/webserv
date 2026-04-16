@@ -2,6 +2,7 @@
 # define CLIENT_HPP
 
 #include "../include/Request.hpp"
+#include "../include/Response.hpp"
 #include <ctime>
 #include <string>
 #include <sys/types.h>
@@ -32,6 +33,7 @@ class Client
 		Request*	getRequest(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t		getTimestamp(void) const;
+		
 
 
 	private:
@@ -43,6 +45,7 @@ class Client
 		id_t				_clientStatus;
 		time_t				_timestamp;
 		Request*			_request;
+		//Response*			_response;
 };
 
 #endif
