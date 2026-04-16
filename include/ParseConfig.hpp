@@ -28,7 +28,7 @@ class ParseConfig {
 		//----ProcessToken----//
 		int				processToken(std::vector<ServerConfig*> &serversConfigs);
 		int				processTokenHttp(void);
-		int				processServerToken(std::vector<ServerConfig *> servers);
+		int				processServerToken(std::vector<ServerConfig *> &servers);
 		int				processLocationToken(void);
 		int				processRootToken(void);
 		int				processListenToken(void);

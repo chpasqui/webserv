@@ -1,7 +1,5 @@
 #include "../../include/Location.hpp"
-
 #include <iostream>
-#include <string>
 #include "../../include/color.hpp"
 #include "../../include/ServerConfig.hpp"
 
@@ -15,6 +13,9 @@ Location::Location(const ServerConfig &serverConfig) :
 	_path("/"),
 	_redirePath(""),
 	_cgiExtension(0),
+	_headerTimeout(serverConfig.getHeaderTimeout()),
+	_bodyTimeout(serverConfig.getBodyTimeout()),
+	_maxBodysize(serverConfig.getMaxBodySize()),
 	_port(serverConfig.getPort()),
 	_autoindex(serverConfig.getAutoIndex()),
 	_serverName(serverConfig.getServerName()),
@@ -52,6 +53,18 @@ void Location::addCgiExtension(const std::string extension) {
 	this->_cgiExtension.push_back(extension);
 }
 
+void Location::setHeaderTimeout(int headerTimeout) {
+	this->_headerTimeout = headerTimeout;
+}
+
+void Location::setBodyTimeout(int bodyTimeout) {
+	this->_bodyTimeout = bodyTimeout;
+}
+
+void Location::setMaxBodySize(int maxBodySize) {
+	this->_maxBodysize = maxBodySize;
+}
+
 void Location::setPort(const int port) {
 	this->_port = port;
 }
@@ -70,6 +83,11 @@ void Location::setAllowedMethods(const std::string allowedMethods) {
 
 void Location::addIndex(const std::string index) {
 	this->_indexs.push_back(index);
+}
+
+std::map<int, std::string> Location::getErrorPages(void) const
+{
+	return (this->_errorPages);
 }
 
 //----Getter----//
@@ -94,6 +112,18 @@ std::vector<std::string> Location::getCgiExtensions(void) const {
 	return (this->_cgiExtension);
 }
 
+int Location::getHeaderTimeout(void) const {
+	return (this->_headerTimeout);
+}
+
+int Location::getBodyTimeout(void) const {
+	return (this->_bodyTimeout);
+}
+
+int Location::getMaxBodySize(void) const {
+	return (this->_maxBodysize);
+}
+
 int Location::getPort(void) const {
 	return (this->_port);
 }
@@ -116,5 +146,9 @@ std::string Location::getAllowedMethods(void) const {
 
 std::vector<std::string> Location::getIndexs(void) const {
 	return (this->_indexs);
+}
+
+void Location::addErrorPage(int code, std::string page) {
+	this->_errorPages.insert(std::map<int, std::string>::value_type(code, page));
 }
 
