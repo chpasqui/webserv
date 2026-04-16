@@ -1,6 +1,9 @@
 #include "../../include/Location.hpp"
-#include "../../include/ServerConfig.hpp"
+
+#include <iostream>
 #include <string>
+#include "../../include/color.hpp"
+#include "../../include/ServerConfig.hpp"
 
 Location::Location() {
 	return ;
@@ -18,10 +21,12 @@ Location::Location(const ServerConfig &serverConfig) :
 	_root(serverConfig.getRoute()),
 	_allowedMethods(serverConfig.getAllowedMethods()),
 	_indexs(serverConfig.getIndexs()) {
+	std::cout << C_CSTR << "Location: Normal constructor called" << RESET << std::endl;
 	return ;
 }
 
 Location::~Location() {
+	std::cout << C_DSTR << "Location: Destructor called" << RESET << std::endl;
 	return ;
 }
 

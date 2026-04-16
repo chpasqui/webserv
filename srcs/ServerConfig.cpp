@@ -1,4 +1,6 @@
 #include "../include/ServerConfig.hpp"
+#include <iostream>
+#include "../include/color.hpp"
 #include "../include/Http.hpp"
 
 ServerConfig::ServerConfig() :
@@ -9,6 +11,7 @@ ServerConfig::ServerConfig() :
 	_route(""),
 	_allowedMethods("GET|POST|DELETE"),
 	_indexs(0) { //WARN: add the default "index.html" if this is empty after parsing
+	std::cout << C_CSTR << "ServerConfig: Default constructor called" << RESET << std::endl;
 	return ;
 }
 
@@ -20,11 +23,13 @@ ServerConfig::ServerConfig(const Http &http) :
 	_route(http.getRoot()),
 	_allowedMethods(http.getAllowedMethods()),
 	_indexs(http.getIndexs()) {
+	std::cout << C_CSTR << "ServerConfig: Normal constructor called" << RESET << std::endl;
 	return ;
 }
 
 ServerConfig::~ServerConfig() {
-	
+	std::cout << C_DSTR << "ServerConfig: Destructor called" << RESET << std::endl;
+	return ;
 }
 
 //----Setter---//

@@ -13,8 +13,10 @@ int main(int ac, char **av) {
 	std::vector<ServerConfig*> configs;
 	ParseConfig pc(av[1]);
 	pc.parsingConfigFile(configs);
-	return 0;
 
+	ServerConfig *serverconfig = *(configs.begin());
+
+	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;
 	//ServerConfig config1;
 	// config1.setPort(8080);
 	// config1.setRoute("/var/www");

@@ -10,7 +10,6 @@ class ServerConfig;
 class Location
 {
 	public:
-		Location();
 		Location(const ServerConfig &serverConfig);
 		~Location();
 		//----Setter----//
@@ -38,11 +37,14 @@ class Location
 		std::vector<std::string> 	getIndexs(void) const;
 
 	private:
+		Location();
+
 		int							_redireCode;
 		bool						_cgiEnable;
 		std::string					_path;
 		std::string					_redirePath;
 		std::vector<std::string>	_cgiExtension;
+		std::string					_uploadStore;
 
 		// int							_headerTimeout;
 		// int							_bodyTimeout;

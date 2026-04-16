@@ -14,6 +14,7 @@
 #include <map>
 #include <csignal>
 #include <signal.h>
+#include "../include/color.hpp"
 
 
 #define BACKLOG 20
@@ -104,6 +105,8 @@ void	Server::bindAndListen(int &listenFd, int port) const {
 	server_addr.sin_port = htons(port);
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	socklen_t addrlen = sizeof(sockaddr_in);
+
+	std::cout << C_PURPLE << "DEBUG: PORT IS " << port << RESET << std::endl;
 
 	if (bind(listenFd, (struct sockaddr*)&server_addr, addrlen) == -1)
 	{

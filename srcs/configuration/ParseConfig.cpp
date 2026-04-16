@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <vector>
 #include <sstream>
-#include "../../include/HTTP.hpp"
+#include "../../include/Http.hpp"
 #include "../../include/ServerConfig.hpp"
 #include "../../include/Location.hpp"
 #include "../../include/color.hpp"
@@ -17,7 +17,7 @@ ParseConfig::ParseConfig() : _context(0) {
 	std::cout << "ParseConfig: Default constructor called" << std::endl;
 }
 
-ParseConfig::ParseConfig(std::string filename) : _filename(filename), _context(0){
+ParseConfig::ParseConfig(std::string filename) : _filename(filename), _context(0), _http(0), _currentServer(0){
 	std::cout << "ParseConfig: Normal construtor called" << std::endl;
 }
 
@@ -26,11 +26,9 @@ ParseConfig::~ParseConfig() {
 }
 
 int	ParseConfig::parsingConfigFile(std::vector<ServerConfig*> &serversConfigs) {
-	ServerConfig *serverConfig = 0;
 	this->openFile();
-	while (processToken(*serverConfig) == 0)
+	while (processToken(serversConfigs)  == 0)
 		;
-	serversConfigs.push_back(serverConfig);
 	return (0);
 }
 
@@ -58,7 +56,6 @@ std::string	ParseConfig::getNextToken(void) {
 	std::string					token;
 	std::vector<ServerConfig *>	servers;
 	size_t						pos;
-	//ssize_t						line;
 
 	pos = this->_configFile.find_first_not_of(" \n");
 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
@@ -71,10 +68,10 @@ std::string	ParseConfig::getNextToken(void) {
 	return (token);
 }
 
-int	ParseConfig::processToken(ServerConfig &serverConfig) {
-	std::string currentToken;
-	std::string nextToken;
-
+int	ParseConfig::processToken(std::vector<ServerConfig *> &serverConfigs) {
+	int			errorCode;
+	std::string	currentToken;
+	
 	errno = 0;
 	// if (currentToken == "")
 	// {
@@ -90,44 +87,116 @@ int	ParseConfig::processToken(ServerConfig &serverConfig) {
 		//TODO: Send "Location" or ServerConfig" classes to respective Vector
 	}
 	
-	nextToken = getNextToken();
-	if (currentToken == "http") {
-		std::cout << C_CORAL << "Inside HTTP block" << RESET << std::endl;
-		if (nextToken != "{" || this->_context!= NONE) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
-		Http http;
-		this->_context = HTTP;
-		//TODO::	Create Server Class (insie a vector)
-	}
+	else if (currentToken == "http")
+		this->processTokenHttp();
 
-	if (currentToken == "server") {
-		std::cout << C_CORAL << "Inside server block" << RESET << std::endl;
-		if (nextToken != "{" || this->_context != HTTP) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
-		this->_context = SERVER;
-		//TODO::	Create Server Class (insie a vector)
+	else if (currentToken == "server") {
+		this->processServerToken(serverConfigs);
 	}
 
 	else if (currentToken == "location") {
-		std::cout << C_CORAL << "Inside location block" << RESET << std::endl;
-		if (nextToken != "{" || this->_context!= SERVER) {std::cerr << C_RED << "TEST" << RESET << std::endl; return (1);}
-		this->_context = LOCATION;
-		//TODO: Create Location class
+		this->processLocationToken();
 	}
 
 	else if (currentToken == "root") {
-		if (access(nextToken.c_str(), F_OK) == -1)
-		{
-			std::cerr << C_RED << "Access() failed: " << strerror(errno) << RESET << std::endl;
-			return (1);
-		}
-		serverConfig.setRoute(nextToken);
+		this->processRootToken();
 	}
 
 	else if (currentToken == "listen") {
-		int 	port;
-		
+		this->processListenToken();
+	}
+
+	else {
+		std::cerr << C_RED << currentToken << ": Unknow token" << RESET << std::endl;
+		return (1);
+	}
+	
+	return (0);
+}
+
+int	ParseConfig::processTokenHttp(void) {
+	std::string	nextToken;
+
+	nextToken = getNextToken();
+	if (nextToken != "{" || this->_context!= NONE || this->_http) {
+		std::cerr << C_RED << "Unknow token after http" << RESET << std::endl; 
+		return (1);
+	}
+	try {
+		this->_http = new Http();
+	}
+	catch (std::exception &e) {
+		std::cout << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
+	}
+	this->_context = HTTP;
+	return (0);
+}
+
+int ParseConfig::processServerToken(std::vector<ServerConfig *> servers) {
+		std::string	nextToken;
+
+		nextToken = getNextToken();
+		if (nextToken != "{" || this->_context != HTTP || this->_currentServer) {
+			std::cerr << C_RED << "TEST" << RESET << std::endl;
+			return (1);
+		}
+		try {
+			servers.push_back(new ServerConfig(*(this)->_http));
+		}
+		catch (std::exception &e) {
+			std::cout << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
+			return (1);
+		}
+		this->_context = SERVER;
+		this->_currentServer = *(servers.rbegin());
+		return (0);
+}
+
+int	ParseConfig::processLocationToken(void) {
+	std::string	nextToken;
+
+	nextToken = getNextToken();
+	std::cout << C_CORAL << "Inside location block" << RESET << std::endl;
+	if (nextToken != "{" || this->_context!= SERVER || this->_location) {
+		std::cerr << C_RED << "TEST" << RESET << std::endl;
+		return (1);
+	}
+	try {
+		this->_location = new Location(*(this)->_currentServer);
+	}
+	catch (std::exception &e) {
+		std::cout << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
+		return (1);
+	}
+	this->_context = LOCATION;
+	return (0);
+}
+
+int ParseConfig::processRootToken(void) {
+	std::string nextToken;
+
+	nextToken = getNextToken();
+	if (this->_context == SERVER) {
+		this->_currentServer->setRoute(nextToken);
+	}
+	else if (this->_context == LOCATION) {
+		this->_location->setRoot(nextToken);
+	}
+	else {
+		std::cout << C_RED << "Using token \"root\" in wrong context" << RESET << std::endl;
+		return (1);
+	}
+	return (0);
+}
+
+int ParseConfig::processListenToken(void) {
+		int 		port;
+		std::string	nextToken;
+
+		nextToken = getNextToken();
 		if (this->_context != SERVER)
 		{
-			std::cerr << C_RED << "listen can only be called in a server context" << RESET << std::endl;
+			std::cout << C_RED << "Using token \"listen\" in wrong context" << RESET << std::endl;
 			return (1);
 		}
 		std::stringstream	ss(nextToken);
@@ -137,14 +206,10 @@ int	ParseConfig::processToken(ServerConfig &serverConfig) {
 			std::cerr << C_RED << "listen need only nuber" << RESET << std::endl;
 			return (1);
 		}
-		serverConfig.setPort(port);
-	}
-	
-	else {
-		std::cerr << C_RED << currentToken << ": Unknow token" << RESET << std::endl;
+		this->_currentServer->setPort(port);
 		return (1);
-	}
-	
-	return (0);
 }
 
+int ParseConfig::processErrorPageToken(void) {
+	
+}

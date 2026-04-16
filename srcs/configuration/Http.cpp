@@ -1,14 +1,19 @@
 #include "../../include/Http.hpp"
 
+#include <iostream>
+#include "../../include/color.hpp"
+
 Http::Http() :
 	_autoindex(true),
 	_root(""),
 	_allowedMethods("GET|POST|DELETE"),
 	_indexs(0) {
+	std::cout << C_CSTR << "Http: Default constructor called" << RESET << std::endl;
 	return ;
 }
 
 Http::~Http() {
+	std::cout << C_DSTR << "Http: Destructor called" << RESET << std::endl;
 	return ;
 }
 
