@@ -27,7 +27,7 @@
 //Step5: est ce que c'est un CGI ? if yes execute CGI et return; -- OK
 //Step6: gerer les requests en fonction de la methode -- EN COURS
 void Response::build(Request& request, ServerConfig *config, char **envp){
-    _loc = findLocation(request.getPath(), config);
+    _loc = findLocation(request.getPath());
     _config = config;
     if (request.getStatusCode() != 0){
         _statusCode = request.getStatusCode();
@@ -56,22 +56,22 @@ void Response::build(Request& request, ServerConfig *config, char **envp){
 
 void Response::handleMethod(Request& request){
     if (request.getMethod() == "GET")
-        handleGetMethod(request, _loc);
+        handleGetMethod(request);
     else if (request.getMethod() == "POST")
-        handlePostMethod(request, _loc);
+        handlePostMethod(request);
     else
-        handleDeleteMethod(request, _loc);
+        handleDeleteMethod(request);
 }
 
 //Step1: trouver si le URI correspond a une des locations -- OK
 //Step2: mettre cette fonction dans ServerConfig 
 //Step3: renvoyer le nom de la location qui correpond le plus a la URI
 //Step4: est ce quil faut que jaggrege le root path ici 
-Location* Response::findLocation(const std::string& url, ServerConfig* config){
+Location* Response::findLocation(const std::string& url){
     Location *best = NULL;
     size_t bestLen = 0;
 
-    std::vector<Location>& locs = config->getLocations();
+    std::vector<Location>& locs = _config->getLocations();
     std::vector<Location>::iterator it = locs.begin();
     for (; it != locs.end(); it++){
         const std::string& prefix = it->getPath();
@@ -99,8 +99,7 @@ bool Response::isCGI(const std::string& path){
     if (_loc->getCgiEnabled()){
         std::vector<std::string>::iterator it = _loc->getCgiExtensions().begin();
         
-        for (; it != _loc
-->getCgiExtensions().end(); it++){
+        for (; it != _loc->getCgiExtensions().end(); it++){
             size_t pos = path.find(*it) + (*it).size();
             if (pos != std::string::npos && (path[pos] == *path.end() || path[pos] == '/'))
                 return true;
@@ -158,8 +157,7 @@ void Response::handleGetMethod(Request& request){
                 return ;
             }
         }
-        if (!_loc
-->getAutoIndex()){
+        if (!_loc->getAutoIndex()){
             setSyscallError();
             return ;
         }
@@ -283,8 +281,29 @@ void Response::handleDeleteMethod(Request& request){
     _statusCode = NO_CONTENT;
 }
 
+
 void Response::buildError(){
 
-    //renvoie la page html en fonction de la map 
-    //mais est ce que jutilise cette fonction pour 
+    std::string errorPageFile;
+    if (_loc && !_loc->getErrorPages(_statusCode).empty())
+        errorPageFile = _loc->getRoot() + "/" + _loc->getErrorPages(_statusCode);
+    else if (!_config->getErrorPages(_statusCode).empty())
+        errorPageFile = _config->getRoot() + "/" + _config->getErrorPages(_statusCode);
+    if (!errorPageFile.empty()){
+        struct stat errorPath;
+        if (stat(errorPageFile.c_str(), &errorPath) == 0 && S_ISREG(errorPath.st_mode)){
+            std::ifstream file(errorPageFile.c_str());
+            if (file.is_open()){
+                std::ostringstream ss;
+                ss << file.rdbuf();
+                _body = ss.str();
+                return ;
+            }
+        }
+    }
+    generateErrorPage();
+}
+
+void Response::generateErrorPage(){
+    
 }

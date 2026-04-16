@@ -42,6 +42,7 @@ const std::string& Request::getHeaders(std::string key) const{
 	for(; it != _headers.end(); it++)
         if (it->first == key)
             return it->second;
+    return "";
 }
 
 /**

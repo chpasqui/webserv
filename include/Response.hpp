@@ -40,10 +40,13 @@ class Response {
 
 		void handleDeleteMethod(Request& request);
 		void buildError();
+		void generateErrorPage();
 
 		void handleCGI(Request& request, char **envp);
 
 		void setSyscallError();
+
+		
 };
 
 #endif
