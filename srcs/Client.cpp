@@ -11,33 +11,42 @@
 
 Client::Client() :
 	_clientFd(-1),
+	_writeCgiPipeEnd(-1),
+	_readCgiPipeEnd(-1),
 	_bytesRead(-1),
 	_buffer(""),
-	_config(NULL),
 	_clientStatus(PARSING_REQUEST_LINE),
-	_request(NULL)
+	_config(NULL),
+	_request(NULL),
+	_response(NULL)
 {
 	time(&(this)->_timestamp);
 }
 
 Client::Client(int fd, const ServerConfig* config, Request *request) :
 	_clientFd(fd),
+	_writeCgiPipeEnd(-1),
+	_readCgiPipeEnd(-1),
 	_bytesRead(-1),
-	_buffer(""), \
-	_config(config),
+	_buffer(""),
 	_clientStatus(PARSING_REQUEST_LINE),
-	_request(request)
+	_config(config),
+	_request(request),
+	_response(NULL)
 {
 	time(&(this)->_timestamp);
 }
 
 Client::Client(const Client& other) :
 	_clientFd(other._clientFd),
+	_writeCgiPipeEnd(other._writeCgiPipeEnd),
+	_readCgiPipeEnd(other._readCgiPipeEnd),
 	_bytesRead(other._bytesRead),
 	_buffer(other._buffer),
-	_config(other._config),
 	_clientStatus(other._clientStatus),
-	_timestamp(other._timestamp)
+	_config(other._config),
+	_request(other._request),
+	_response(NULL)
 {}
 
 bool Client::bodyRead(std::string& buffer){
@@ -53,11 +62,9 @@ bool Client::bodyRead(std::string& buffer){
 	return true;
 }
 
-void	Client::handleRequest()
-{
-	char buffer[1024]; //check garbage value when buffer size is small (10 for instance)
-	// IF timeout is not -1
-		// TIMEOUT VALUE INITIAISED 
+void	Client::parseRequest() {
+	char buffer[1024];
+
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0 || _bytesRead  == -1)
 	{
@@ -80,7 +87,7 @@ void	Client::handleRequest()
 			this->_clientStatus	= COMPLETE;
 			return ;
 		}
-		this->_clientStatus = PARSING_BODY;
+		this->_clientStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
 	if (this->_clientStatus == PARSING_BODY && bodyRead(_buffer))
 	{
@@ -91,22 +98,18 @@ void	Client::handleRequest()
 		}
 		this->_clientStatus = COMPLETE;
 	}
-	// CHECK TIMEOUT because we never entered the conitions
 	return ;
 }
 
-int		Client::getClientFd() const
-{
+int		Client::getClientFd() const {
 	return (this->_clientFd);
 }
 
-time_t	Client::getTimestamp(void) const
-{
+time_t	Client::getTimestamp(void) const {
 	return (this->_timestamp);
 }
 
-int		Client::getClientStatus() const
-{
+int		Client::getClientStatus() const {
 	return (this->_clientStatus);
 }
 
@@ -114,8 +117,7 @@ Request* Client::getRequest(void) const {
 	return (this->_request);
 }
 
-Client::~Client() 
-{
+Client::~Client() {
 	delete this->_request;
 }
 

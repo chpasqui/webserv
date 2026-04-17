@@ -25,7 +25,7 @@ class Client
 		Client(const Client& other);
 		~Client();
 
-		void		handleRequest();
+		void		parseRequest();
 		bool		bodyRead(std::string& buffer);
 
 		int			getClientFd() const;
@@ -39,13 +39,18 @@ class Client
 	private:
 		Client(); // client constructor is in private so that we never create a client out of nowhere
 		int					_clientFd;
+		int					_writeCgiPipeEnd;
+		int					_readCgiPipeEnd;
+
 		ssize_t				_bytesRead;
 		std::string			_buffer;
-		const ServerConfig*	_config;
 		id_t				_clientStatus;
+
 		time_t				_timestamp;
+
+		const ServerConfig*	_config;
 		Request*			_request;
-		//Response*			_response;
+		Response*			_response;
 };
 
 #endif

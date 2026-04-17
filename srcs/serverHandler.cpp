@@ -28,6 +28,7 @@ bool	Server::addNewConnection(int listeningFd)
 		addToInterestList(this->epollFd, clientFd, EPOLLIN);
 		const ServerConfig *config = _listenFds[listeningFd];
 		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
+		std::cout <<"new connection with " << clientFd << "." << std::endl;
 	}
 	catch(const std::exception& e)
 	{
@@ -43,7 +44,7 @@ void	Server::readFromSocket(int fd)
 {
 	Client& client = *(_clients[fd]); // _clients[6] will give us the Client class at fd = 6
 
-	client.handleRequest();
+	client.parseRequest();
 	if (client.getClientStatus() == CLOSEFD)
 	{
 		removeConnection(fd);
