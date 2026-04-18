@@ -29,7 +29,7 @@ class Client
 		bool		bodyRead(std::string& buffer);
 
 		int			getClientFd() const;
-		int			getClientStatus() const;
+		int			getParsingStatus() const;
 		Request*	getRequest(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t		getTimestamp(void) const;
@@ -44,13 +44,14 @@ class Client
 
 		ssize_t				_bytesRead;
 		std::string			_buffer;
-		id_t				_clientStatus;
+		id_t				_parsingStatus;
 
 		time_t				_timestamp;
 
 		const ServerConfig*	_config;
 		Request*			_request;
 		Response*			_response;
+		char				**_originalEnv;
 };
 
 #endif

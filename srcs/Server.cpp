@@ -22,14 +22,18 @@
 
 int serverSignal = 0;
 
-Server::Server(char **originalEnv) : 
+Server::Server(char **env) : 
 		epollFd(-1),
+		env(env),
 		_listenFds(),
-		_clients(),
-		originalEnv(originalEnv)
+		_clients()
 {
 }
 
+/**
+ * @brief Destroy the Server:: Server object
+ * 
+ */
 Server::~Server() {
 	std::map<int, Client*>::iterator it = this->_clients.begin();
 	for ( ; it != this->_clients.end(); ++it)

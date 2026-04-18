@@ -26,7 +26,7 @@ void	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs
 	
 	setCgiEnvVariables(client, internalPath);
 	buildEnv();
-	//executeCgi(internalPath);
+	executeCgi(client, internalPath);
 }
 
 void	Cgi::setCgiEnvVariables(const Client& client, std::string internalPath) {
@@ -77,30 +77,41 @@ void	Cgi::buildEnv()
 	this->_finalEnv[finalNbEnv] = NULL;
 }
 
-// void	Cgi::executeCgi(std::string internalPath)
-// {
-// 	int fd[2];
-// 	pid_t cpid;
+void	Cgi::executeCgi(Client& client, std::string internalPath)
+{
+	std::cout << GREEN << "enterex the executeCGI function" << RESET << std::endl;
+	Request *request = client.getRequest();
+	int fd[2];
+	(void)internalPath;
+	//const char *execFriendlyPath = internalPath.c_str();
+	const char *execFriendlyBuffer = request->getBody().c_str();
+	size_t	argSize = request->getBody().size();
+	//char	*args[] = { const_cast<char *>(execFriendlyPath), NULL };
+	
 
-// 	if (pipe(fd) == -1) {
-// 		perror("pipe");
-// 		// leave the function and handle error
-// 	}
-// 	switch (fork()) {
-// 		case -1:
-// 			//error exit 
-// 		case 0:                                                                                                                                                                                                                                                          
-// 			//dup2(fd[READ_END], fdclient);
-// 			dup2(fd[WRITE_END], STDOUT_FILENO);
-// 			close(fd[WRITE_END]);
-// 			close(fd[READ_END]);
-// 			if (execve(internalPath.c_str(), // send someting here, this->_finalEnv) == -1);
-// 		default: // parent process
-// 			close(fd[READ_END]);
-// 			return fd[WRITE+END]
-
-// 	}
-// }
+	if (pipe(fd) == -1) {
+		perror("pipe");
+		// leave the function and handle error
+	}
+	pid_t pid = fork();
+	if (pid < 0) {
+		std::cout << "error" << std::endl;
+	}
+	if (pid == 0) {                                                                                                                                                                                                                                                      
+		close(fd[WRITE_END]);
+		dup2(fd[READ_END], STDIN_FILENO);
+		close(fd[READ_END]);
+		std::cout << GREEN << "inside child all good" << RESET << std::endl;
+		exit(1);
+		//execve(execFriendlyPath, args, this->_finalEnv);
+		//if (execve(internalPath.c_str(), // send someting here, this->_finalEnv) == -1);
+	}
+	if (pid > 0) {
+		close(fd[READ_END]);
+		write(fd[WRITE_END], execFriendlyBuffer, argSize);
+		close(fd[WRITE_END]);
+	}
+}
 
 std::string intToString(int number){
 	std::stringstream ss;

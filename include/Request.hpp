@@ -28,6 +28,7 @@ class Request
 		std::string getPath(void) const;		// dest et getters pour trouver facilement
 		std::string getQuery(void) const;
 		std::string getVersion(void) const;
+		const std::string& getBody(void) const;
 		const std::map<std::string, std::string>& getHeaders() const;
 
 	private:

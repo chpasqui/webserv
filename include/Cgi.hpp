@@ -30,7 +30,7 @@ class Cgi
 		void		handleCgi(Client& client, std::string internalPath);
 		void		setCgiEnvVariables(const Client& client, std::string internalPath);
 		void		buildEnv();
-		void		executeCgi(std::string internalPath);
+		void		executeCgi(Client& client, std::string internalPath);
 		// std::string extractScriptPath(const std::string& internalPath);
 		// std::string getPathInfo(const std::string& internalPath, size_t endScriptName);
 

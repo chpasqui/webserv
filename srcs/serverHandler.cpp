@@ -39,32 +39,39 @@ bool	Server::addNewConnection(int listeningFd)
 	return (true);
 }
 
-
+/**
+ * @brief the fd ready for EPOLLIN is sent received here, and they are coninously send to parseheader
+ * until it is the entire request is treated (status changes to COMPLETE). Once the status
+ * changes to COMPLETE, then the epollctl() call is called and modifies the flag for the 
+ * monitored fd to EPOLLOUT. The server mulitplexer loop will then monitor EPOLLOUT. 
+ * 
+ * @param fd 
+ */
 void	Server::readFromSocket(int fd)
 {
 	Client& client = *(_clients[fd]); // _clients[6] will give us the Client class at fd = 6
-
 	client.parseRequest();
-	if (client.getClientStatus() == CLOSEFD)
-	{
+
+	if (client.getParsingStatus() == CLOSEFD) {
 		removeConnection(fd);
 	}
-	if (client.getClientStatus() == COMPLETE)
-	{
-		Cgi cgi(this->originalEnv);
+
+	if (client.getParsingStatus() == COMPLETE) {
+		// code for Response is here --> it will go to responseBuild which does the checks and then looks at the CGI
+		std::cout << GREEN << "entered the COMPLETE function" << RESET << std::endl;
+		Cgi cgi(this->env);
+		std::cout << "after the segfault" << std::endl;
 		cgi.handleCgi(client, "/var/www/cgi-bin/foo.py/user/42");
-		// build response --> in here Cgi 
-		if (!modifyEpoll(this->epollFd, fd, EPOLLOUT))
-		{
+		if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
 			removeConnection(fd);
-			// not sure about how to react to this ? 
 		}
 	}
 }
 
 void	Server::writeToSocket(int fd)
 {
-
+	// the response will be called here
+	// read the pipe end 
 	removeConnection(fd);
 }
 

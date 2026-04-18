@@ -1,5 +1,5 @@
 #include "../include/Client.hpp"
-#include "../include/Client.hpp"
+#include "../include/Cgi.hpp"
 #include "../include/ServerConfig.hpp"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -15,7 +15,7 @@ Client::Client() :
 	_readCgiPipeEnd(-1),
 	_bytesRead(-1),
 	_buffer(""),
-	_clientStatus(PARSING_REQUEST_LINE),
+	_parsingStatus(PARSING_REQUEST_LINE),
 	_config(NULL),
 	_request(NULL),
 	_response(NULL)
@@ -29,7 +29,7 @@ Client::Client(int fd, const ServerConfig* config, Request *request) :
 	_readCgiPipeEnd(-1),
 	_bytesRead(-1),
 	_buffer(""),
-	_clientStatus(PARSING_REQUEST_LINE),
+	_parsingStatus(PARSING_REQUEST_LINE),
 	_config(config),
 	_request(request),
 	_response(NULL)
@@ -43,7 +43,7 @@ Client::Client(const Client& other) :
 	_readCgiPipeEnd(other._readCgiPipeEnd),
 	_bytesRead(other._bytesRead),
 	_buffer(other._buffer),
-	_clientStatus(other._clientStatus),
+	_parsingStatus(other._parsingStatus),
 	_config(other._config),
 	_request(other._request),
 	_response(NULL)
@@ -68,35 +68,35 @@ void	Client::parseRequest() {
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0 || _bytesRead  == -1)
 	{
-		this->_clientStatus = CLOSEFD;
+		this->_parsingStatus = CLOSEFD;
 		return ;
 	}
 	_buffer += std::string(buffer, _bytesRead);
-	if (this->_clientStatus == PARSING_REQUEST_LINE && this->_buffer.find("\r\n") != std::string::npos)
+	if (this->_parsingStatus == PARSING_REQUEST_LINE && this->_buffer.find("\r\n") != std::string::npos)
 	{	
 		std::cout << _buffer << std::endl;
 		if (!_request->parseRequestLine(_buffer)){
-			this->_clientStatus	= COMPLETE;
+			this->_parsingStatus	= COMPLETE;
 			return ;
 		}
-		this->_clientStatus = PARSING_HEADERS;
+		this->_parsingStatus = PARSING_HEADERS;
 	}
-	if (this->_clientStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
+	if (this->_parsingStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
 	{
 		if (!_request->parseHeader(_buffer)){
-			this->_clientStatus	= COMPLETE;
+			this->_parsingStatus	= COMPLETE;
 			return ;
 		}
-		this->_clientStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
+		this->_parsingStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
-	if (this->_clientStatus == PARSING_BODY && bodyRead(_buffer))
+	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
 		std::cout << "entered parseBody" << std::endl;
 		if(!_request->parseBody(_buffer, 1024)){
-			this->_clientStatus = COMPLETE;
+			this->_parsingStatus = COMPLETE;
 			return;
 		}
-		this->_clientStatus = COMPLETE;
+		this->_parsingStatus = COMPLETE;
 	}
 	return ;
 }
@@ -109,18 +109,25 @@ time_t	Client::getTimestamp(void) const {
 	return (this->_timestamp);
 }
 
-int		Client::getClientStatus() const {
-	return (this->_clientStatus);
+int		Client::getParsingStatus() const {
+	return (this->_parsingStatus);
 }
 
 Request* Client::getRequest(void) const {
 	return (this->_request);
 }
 
-Client::~Client() {
-	delete this->_request;
-}
-
 const ServerConfig* Client::getServerConfig(void) const {
 	return this->_config;
+}
+
+
+
+/**
+ * @brief Destroy the Client:: Client object
+ * Client is the one who holds the *Request, it must delete it then.
+ * 
+ */
+Client::~Client() {
+	delete this->_request;
 }
