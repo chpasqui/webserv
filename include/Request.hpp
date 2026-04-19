@@ -17,6 +17,7 @@ class Request
 		//Getter
 		int	getStatusCode(void) const;
 		int	getContentLength(void) const;
+		const std::string& getVersion(void) const;
 		const std::string& getBody(void) const;
 		const std::string& getPath(void) const;
 		const std::string& getMethod(void) const;

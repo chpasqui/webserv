@@ -17,6 +17,7 @@ class Location{
 		bool getUploadAllowed() const;
 		std::string getUploadStore() const;
 		std::vector<std::string> getCgiExtensions() const;
+		const std::string& getErrorPage(int key) const;
 
 };
 

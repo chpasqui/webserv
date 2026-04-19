@@ -19,13 +19,14 @@ class Response {
 		std::string _body;
 		std::string _remain;
 
-		//regarder pour les reasons phrases comment les integrer au mieux
-
 	public:
 		Response();
 		~Response();
 
-		void build(Request& request, ServerConfig *config, char **envp;
+		std::string getReasonPhrase() const;
+		void setDefaultHeaders();
+
+		void build(Request& request, ServerConfig *config, char **envp);
 		Location* findLocation(const std::string& url); // serait mieux dans serverConfig ou location
 		std::string buildFileSystemPath(const std::string& url);
 		bool methodAllowed(const std::string& method);
@@ -45,6 +46,9 @@ class Response {
 		void handleCGI(Request& request, char **envp);
 
 		void setSyscallError();
+
+		std::string extractContentType();
+		std::string responseFormat(Request& request);
 
 		
 };

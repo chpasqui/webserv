@@ -37,6 +37,10 @@ const std::string& Request::getBody(void) const{
     return (_body);
 }
 
+const std::string& Request::getVersion(void) const {
+    return (_version);
+}
+
 const std::string& Request::getHeaders(std::string key) const{
     std::map<std::string, std::string>::const_iterator it = _headers.begin();
 	for(; it != _headers.end(); it++)

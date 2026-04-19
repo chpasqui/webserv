@@ -11,11 +11,11 @@
 
 
 //CE QU'IL TE RESTE A FAIRE :
-//-finir POST METHOD
-//-faire DELETE METHOD
-//- build error (regarder les rfc) - on est daccord que cest la qu'on ajoute les pages html ?
-//- ajouter les reasons phrases
-//- creer la fonction de responses formats
+//-finir POST METHOD -- OK
+//-faire DELETE METHOD -- OK
+//- build error (regarder les rfc) - on est daccord que cest la qu'on ajoute les pages html ? -- OK
+//- ajouter les reasons phrases -- OK
+//- creer la fonction de responses formats -- OK
 //- mettre fonction findLocation dans ServerConfig
 
 //-----------------------
@@ -25,7 +25,7 @@
 //Step3: y a t il une redirection ? if yes stop et buildError(300); -- OK
 //Step4: la methode est elle authorise ? if no stop buildError(405) -- OK;
 //Step5: est ce que c'est un CGI ? if yes execute CGI et return; -- OK
-//Step6: gerer les requests en fonction de la methode -- EN COURS
+//Step6: gerer les requests en fonction de la methode -- OK
 void Response::build(Request& request, ServerConfig *config, char **envp){
     _loc = findLocation(request.getPath());
     _config = config;
@@ -64,9 +64,9 @@ void Response::handleMethod(Request& request){
 }
 
 //Step1: trouver si le URI correspond a une des locations -- OK
-//Step2: mettre cette fonction dans ServerConfig 
-//Step3: renvoyer le nom de la location qui correpond le plus a la URI
-//Step4: est ce quil faut que jaggrege le root path ici 
+//Step2: mettre cette fonction dans ServerConfig -- OK
+//Step3: renvoyer le nom de la location qui correpond le plus a la URI -- OK
+//Step4: est ce quil faut que jaggrege le root path ici -- OK
 Location* Response::findLocation(const std::string& url){
     Location *best = NULL;
     size_t bestLen = 0;
@@ -140,6 +140,7 @@ void Response::handleGetMethod(Request& request){
         ss << file.rdbuf();
         _body = ss.str();
         _statusCode = OK;
+        _headers["Content-Type"] = extractContentType();
         return ;
     }
     else if (S_ISDIR(sb.st_mode)){
@@ -187,6 +188,7 @@ void Response::displayAutoIndex(){
     html += "</ul></body></html>";
     _body = html;
     _statusCode = OK;
+    _headers["Content-Type"] = "text/html";
 }
 
 
@@ -204,9 +206,8 @@ void Response::displayAutoIndex(){
 //Step 1: check if upload allowed in location -- OK
 //Step 2: define if it is a DIR or a FILE -- OK
 //Step 3: DIR create a file containing the body of the request, generate name of the file according to content-disposition if existing
-//Step 4: EXISTING FILE : add the body to the file or replace it 
+//Step 4: EXISTING FILE : add the body to the file or replace it -- OK
 //Step 5: NON-EXISTING FILE : create file and body to the file
-//Step 6: return ;
 
 void Response::handlePostMethod(Request& request){
     if (request.getHeaders("content-type").find("multipart/form-data") != std::string::npos){
@@ -248,6 +249,7 @@ void Response::handlePostMethod(Request& request){
         file.close();
         _body = request.getBody();
         _statusCode = CREATED;
+        _headers["Content-Type"] = request.getHeaders("content-type");
     }
 }
 
@@ -284,11 +286,12 @@ void Response::handleDeleteMethod(Request& request){
 
 void Response::buildError(){
 
+    _reasonPhrase = getReasonPhrase(_statusCode);
     std::string errorPageFile;
-    if (_loc && !_loc->getErrorPages(_statusCode).empty())
-        errorPageFile = _loc->getRoot() + "/" + _loc->getErrorPages(_statusCode);
-    else if (!_config->getErrorPages(_statusCode).empty())
-        errorPageFile = _config->getRoot() + "/" + _config->getErrorPages(_statusCode);
+    if (_loc && !_loc->getErrorPage(_statusCode).empty())
+        errorPageFile = _loc->getRoot() + "/" + _loc->getErrorPage(_statusCode);
+    else if (!_config->getErrorPage(_statusCode).empty())
+        errorPageFile = _config->getRoot() + "/" + _config->getErrorPage(_statusCode);
     if (!errorPageFile.empty()){
         struct stat errorPath;
         if (stat(errorPageFile.c_str(), &errorPath) == 0 && S_ISREG(errorPath.st_mode)){
@@ -297,6 +300,7 @@ void Response::buildError(){
                 std::ostringstream ss;
                 ss << file.rdbuf();
                 _body = ss.str();
+                _headers["Content-Type"] = extractContentType();
                 return ;
             }
         }
@@ -304,6 +308,18 @@ void Response::buildError(){
     generateErrorPage();
 }
 
-void Response::generateErrorPage(){
-    
+void Response::generateErrorPage()
+{
+    std::ostringstream body;
+
+    body << "<html>\n<head><title>" << _statusCode << " " << _reasonPhrase << "</title></head>\n"
+         << "<body>\n"
+         << "<h1>" << _statusCode << " " << _reasonPhrase << "</h1>\n"
+         << "<hr>\n"
+         << "<p>webserv</p>\n"
+         << "</body>\n</html>\n";
+
+    _body = body.str();
+    _headers["Content-Type"] = "text/html";
 }
+

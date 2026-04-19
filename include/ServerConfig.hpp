@@ -14,6 +14,7 @@ class ServerConfig
 		int getPort(void);
 		void setPort(const int port);
 		void setRoute(const std::string& route);
+		const std::string& getErrorPage(int key) const;
 };
 
 
