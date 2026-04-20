@@ -14,17 +14,13 @@ class Request
 		Request();
 		~Request();
 
-		//Getter
-		int	getStatusCode(void) const;
-		int	getContentLength(void) const;
-
 		//Parsing
 		bool parseRequestLine(const std::string &message);
 		bool parseHeader(const std::string &request);
 		bool validateHeader();
 		bool parseBody(const std::string &request, int maxBodySize);
-		bool unchunkedBody(const std::string &body);
 
+		//Getter
 		int	getStatusCode(void) const;
 		int	getContentLength(void) const;
 		std::string getMethod(void) const;
@@ -35,7 +31,6 @@ class Request
 		const std::string& getBody(void) const;
 		const std::map<std::string, std::string>& getHeaders() const;
 
-		bool extractChunkData(const std::string &body, size_t &pos, long chunkSize);
 
 	private:
 		std::string _method;
