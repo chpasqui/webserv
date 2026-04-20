@@ -85,11 +85,13 @@ void Location::addIndex(const std::string index) {
 	this->_indexs.push_back(index);
 }
 
-std::map<int, std::string> Location::getErrorPages(void) const
+std::string Location::getErrorPage(int code) const
 {
-	return (this->_errorPages);
+    std::map<int, std::string>::const_iterator it = _errorPages.find(code);
+    if (it != _errorPages.end())
+        return it->second;
+    return "";
 }
-
 //----Getter----//
 
 int Location::getRedirCode(void) const {
@@ -144,8 +146,12 @@ std::string Location::getAllowedMethods(void) const {
 	return (this->_allowedMethods);
 }
 
-std::vector<std::string> Location::getIndexs(void) const {
+std::vector<std::string> Location::getIndexes(void) const {
 	return (this->_indexs);
+}
+
+std::string Location::getUploadStore() const{
+	return (this->_uploadStore);
 }
 
 void Location::addErrorPage(int code, std::string page) {

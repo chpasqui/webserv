@@ -14,6 +14,7 @@
  * Resolves location, checks method, dispatches to handler or CGI.
  */
 void Response::build(Request& request, const ServerConfig *config, char **envp){
+    (void)envp;
     _config = config;
     _loc = findLocation(request.getPath());
     if (_loc == NULL) {
@@ -29,9 +30,9 @@ void Response::build(Request& request, const ServerConfig *config, char **envp){
      //si on met dans serverConfig config->findLocation
     _internalPath = buildFileSystemPath(request.getPath());
     
-    if (_loc->getRedirectCode() != 0){
-        _statusCode = _loc->getRedirectCode();
-        _headers["Location"] = _loc->getNewPath();
+    if (_loc->getRedirCode() != 0){
+        _statusCode = _loc->getRedirCode();
+        _headers["Location"] = _loc->getRedirPath();
         return ;
     }
     if (!methodAllowed(request.getMethod())){
@@ -39,10 +40,10 @@ void Response::build(Request& request, const ServerConfig *config, char **envp){
         buildError();
         return ;
     }
-    if (isCGI()){
-        handleCGI(request, envp);
-        return;
-    }
+    // if (isCGI()){
+    //     handleCGI(request, envp);
+    //     return;
+    // }
     handleMethod(request);
 }
 
@@ -57,7 +58,7 @@ Location* Response::findLocation(const std::string& url){
     std::vector<Location*> locs = _config->getLocations();
     std::vector<Location*>::iterator it = locs.begin();
     for (; it != locs.end(); it++){
-        const std::string& prefix = it->getPath();
+        const std::string& prefix = (*it)->getPath();
         if (url.substr(0, prefix.size()) == prefix && prefix.size() > bestLen){
             best = *it;
             bestLen = prefix.size();
@@ -79,7 +80,7 @@ std::string Response::buildFileSystemPath(const std::string& url){
  * @brief Checks if the method is allowed by the matched location.
  */
 bool Response::methodAllowed(const std::string& method){
-    std::string methodAllowed = _loc->getMethodAllowed();
+    std::string methodAllowed = _loc->getAllowedMethods();
     if (methodAllowed.find(method) != std::string::npos)
         return true;
     return false;
@@ -90,7 +91,7 @@ bool Response::methodAllowed(const std::string& method){
  * @brief Checks if the request targets a CGI resource by extension.
  */
 bool Response::isCGI(){
-    if (_loc->getCgiEnabled()){
+    if (_loc->getCgiEnable()){
         std::vector<std::string>::iterator it = _loc->getCgiExtensions().begin();
         
         for (; it != _loc->getCgiExtensions().end(); it++){
@@ -139,8 +140,8 @@ void Response::buildError(){
     std::string errorPageFile;
     if (_loc && !_loc->getErrorPage(_statusCode).empty())
         errorPageFile = _loc->getRoot() + "/" + _loc->getErrorPage(_statusCode);
-    else if (!_config->getErrorPage(_statusCode).empty())
-        errorPageFile = _config->getRoot() + "/" + _config->getErrorPage(_statusCode);
+    // else if (!_config->getErrorPage(_statusCode).empty())
+    //     errorPageFile = _config->getRoot() + "/" + _config->getErrorPage(_statusCode);
     if (!errorPageFile.empty()){
         struct stat errorPath;
         if (stat(errorPageFile.c_str(), &errorPath) == 0 && S_ISREG(errorPath.st_mode)){

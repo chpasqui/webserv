@@ -82,7 +82,7 @@ int Server::openListeningSocket() {
  */
 void	Server::bindAndListen(int &listenFd, int port) const {
 	struct sockaddr_in server_addr;
-	
+
 	memset(&server_addr, 0, sizeof(sockaddr_in));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(port);

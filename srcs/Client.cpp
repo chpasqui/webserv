@@ -17,8 +17,8 @@ Client::Client() :
 	_buffer(""),
 	_parsingStatus(PARSING_REQUEST_LINE),
 	_config(NULL),
-	_request(NULL)
-	//_response(NULL)
+	_request(NULL),
+	_response(NULL)
 {
 	time(&(this)->_timestamp);
 }
@@ -31,8 +31,8 @@ Client::Client(int fd, const ServerConfig* config, Request *request) :
 	_buffer(""),
 	_parsingStatus(PARSING_REQUEST_LINE),
 	_config(config),
-	_request(request)
-	//_response(NULL)
+	_request(request),
+	_response(NULL)
 {
 	time(&(this)->_timestamp);
 }
@@ -87,6 +87,11 @@ void	Client::parseRequest() {
 			this->_parsingStatus	= COMPLETE;
 			return ;
 		}
+		if (_request->getContentLength() <= 0)
+    	{
+        	this->_parsingStatus = COMPLETE;
+        	return ;
+    	}
 		this->_parsingStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
@@ -123,7 +128,7 @@ const ServerConfig* Client::getServerConfig(void) const {
 void Client::buildResponse(char **envp)
 {
     _response = new Response();
-    _response->build(*_request, const_cast<ServerConfig*>(_config), envp);
+    _response->build(*_request, _config, envp);
 }
 
 std::string Client::getResponse() const
@@ -139,4 +144,5 @@ std::string Client::getResponse() const
  */
 Client::~Client() {
 	delete this->_request;
+	delete this-> _response;
 }

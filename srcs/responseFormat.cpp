@@ -17,6 +17,6 @@ std::string Response::responseFormat(Request& request){
 					response << it->first << ": " << it->second << "\r\n";
 				}
 				response << "\r\n"
-				<< _body << "\n";
+				<< _body;
 	return response.str();
 }

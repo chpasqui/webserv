@@ -42,7 +42,8 @@ class Location
 		std::string 				getRoot(void) const;
 		std::string 				getAllowedMethods(void) const;
 		std::vector<std::string> 	getIndexs(void) const;
-		std::map<int, std::string>	getErrorPages(void) const;
+		std::string					getErrorPage(int code) const;
+		std::string					getUploadStore() const;
 
 	private:
 		Location();

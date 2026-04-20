@@ -95,7 +95,7 @@ void Response::handlePostMethod(Request& request){
         LOG(std::cout << "can't upload body without specifying the file in URL" << std::endl);
         return;
     }
-    if (request.getHeaders("content-type").find("multipart/form-data") != std::string::npos){
+    if (request.getHeader("content-type").find("multipart/form-data") != std::string::npos){
         _statusCode = FORBIDDEN;
         buildError();
         LOG(std::cout << "can't handle multipart without cgi" << std::endl);
@@ -131,7 +131,7 @@ void Response::handlePostMethod(Request& request){
     file.close();
     _body = request.getBody();
     _statusCode = CREATED;
-    _headers["Content-Type"] = request.getHeaders("content-type");
+    _headers["Content-Type"] = request.getHeader("content-type");
 }
 
 /**

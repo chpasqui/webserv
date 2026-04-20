@@ -58,8 +58,10 @@ void	Server::readFromSocket(int fd)
 
 	if (client.getParsingStatus() == COMPLETE) {
 		client.buildResponse(this->env);
-        if (!modifyEpoll(this->epollFd, fd, EPOLLOUT))
+        if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
             removeConnection(fd);
+			return ;
+		}
 		// code for Response is here --> it will go to responseBuild which does the checks and then looks at the CGI
 		std::cout << GREEN << "entered the COMPLETE function" << RESET << std::endl;
 		// Cgi cgi(this->env);
@@ -81,7 +83,7 @@ void	Server::writeToSocket(int fd)
 	// the response will be called here
 	// read the pipe end
 	Client& client = *(_clients[fd]);
-    std::string response = client.getResponseString();
+    std::string response = client.getResponse();
     send(fd, response.c_str(), response.size(), 0);
 	removeConnection(fd);
 }
