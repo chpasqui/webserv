@@ -6,7 +6,6 @@ Response::Response() :
     _config(NULL),
     _loc(NULL),
     _statusCode(0),
-    _reasonPhrase(""),
     _body("") {}
 
 Response::~Response(){}

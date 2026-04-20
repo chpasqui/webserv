@@ -4,13 +4,12 @@
 
 std::string Response::responseFormat(Request& request){
 	std::ostringstream response;
-	
-	_reasonPhrase = getReasonPhrase();
+
 	setDefaultHeaders();
 
 	std::map<std::string, std::string>::const_iterator it = _headers.begin();
 
-	response 	<< request.getVersion() << " " << _statusCode << " " << _reasonPhrase <<"\n";
+	response 	<< request.getVersion() << " " << _statusCode << " " << getReasonPhrase() <<"\r\n";
 				for (; it != _headers.end(); it++){
 					response << it->first << ": " << it->second << "\r\n";
 				}

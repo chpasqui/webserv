@@ -9,7 +9,6 @@
 #include <fstream>
 #include <dirent.h>
 
-
 //CE QU'IL TE RESTE A FAIRE :
 //- mettre fonction findLocation dans ServerConfig
 
@@ -22,13 +21,13 @@
 //Step5: est ce que c'est un CGI ? if yes execute CGI et return; -- OK
 //Step6: gerer les requests en fonction de la methode -- OK
 void Response::build(Request& request, ServerConfig *config, char **envp){
+    _config = config;
     _loc = findLocation(request.getPath());
     if (_loc == NULL) {
         _statusCode = NOT_FOUND;
         buildError();
         return;
     }
-    _config = config;
     if (request.getStatusCode() != 0){
         _statusCode = request.getStatusCode();
         buildError();
@@ -136,47 +135,27 @@ void Response::handleGetMethod(Request& request){
         return;
     }
     if (!S_ISDIR(sb.st_mode)){
-        std::ifstream file(_internalPath.c_str());
-        if (!file.is_open())
-            return (setSyscallError());
-        std::ostringstream ss;
-        ss << file.rdbuf();
-        _body = ss.str();
-        _statusCode = OK;
-        _headers["Content-Type"] = extractContentType();
+        serveFile();
         return ;
     }
-    else if (S_ISDIR(sb.st_mode)){
-        if (request.getPath()[request.getPath().size() - 1] != '/'){
-            _statusCode = MOVED_PERMANENTLY;
-            _headers["Location"] = request.getPath() + "/";
-            return ;
-        }
-        std::vector<std::string> indexes = _loc->getIndexes();
-        std::vector<std::string>::iterator it = indexes.begin();
-        for (; it != indexes.end(); it++){
-            std::ifstream file(*it);
-            if (file.is_open()){
-                std::ostringstream ss;
-                ss << file.rdbuf();
-                _body = ss.str();
-                _statusCode = OK;
-                _headers["Content-Type"] = extractContentType();
-                return ;
-            }
-        }
-        if (!_loc->getAutoIndex()){
-            _statusCode = FORBIDDEN;
-            buildError();
-            return ;
-        }
-        displayAutoIndex();
+    if (request.getPath()[request.getPath().size() - 1] != '/'){
+        _statusCode = MOVED_PERMANENTLY;
+        _headers["Location"] = request.getPath() + "/";
+        return ;
     }
-    else {
+    std::vector<std::string> indexes = _loc->getIndexes();
+    std::vector<std::string>::iterator it = indexes.begin();
+    for (; it != indexes.end(); it++){
+        _internalPath = *it;
+        if (serveFile())
+            return ;
+    }
+    if (!_loc->getAutoIndex()){
         _statusCode = FORBIDDEN;
         buildError();
         return ;
     }
+    displayAutoIndex();
 }
 
 void Response::displayAutoIndex(){
@@ -199,6 +178,19 @@ void Response::displayAutoIndex(){
     _headers["Content-Type"] = "text/html";
 }
 
+bool Response::serveFile() {
+    std::ifstream file(_internalPath.c_str());
+    if (!file.is_open()) {
+        setSyscallError();
+        return false;
+    }
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    _body = ss.str();
+    _statusCode = OK;
+    _headers["Content-Type"] = extractContentType();
+    return true;
+}
 
 // A DISCUTER :
 // - directive upload_store ou upload ? -- OK
@@ -249,24 +241,17 @@ void Response::handlePostMethod(Request& request){
         LOG(std::cout << "file already exist" << std::endl);
         return ;
     }
-    else {
-        std::string fileName = extractFileName(request.getPath());
-        std::ofstream file(fileName);
-        file << request.getBody();
-        file.close();
-        _body = request.getBody();
-        _statusCode = CREATED;
-        _headers["Content-Type"] = request.getHeaders("content-type");
+    std::ofstream file(uploadPath.c_str());
+    if (!file.is_open()) {
+        setSyscallError();
+        return;
     }
+    file << request.getBody();
+    file.close();
+    _body = request.getBody();
+    _statusCode = CREATED;
+    _headers["Content-Type"] = request.getHeaders("content-type");
 }
-
-std::string extractFileName(std::string path){
-    size_t pos = path.rfind('/');
-    if (pos == std::string::npos)
-        return path;
-    return (path.substr(pos + 1));
-}
-
 
 //Step1 : define if file ou directory is available
 //Step2: if directory but ambiguous url that doesnt end wiht / -> 409
@@ -292,7 +277,6 @@ void Response::handleDeleteMethod(Request& request){
     _statusCode = NO_CONTENT;
 }
 
-
 void Response::buildError(){
 
     std::string errorPageFile;
@@ -308,7 +292,7 @@ void Response::buildError(){
                 std::ostringstream ss;
                 ss << file.rdbuf();
                 _body = ss.str();
-                _headers["Content-Type"] = extractContentType();
+                _headers["Content-Type"] = "text/html";
                 return ;
             }
         }
@@ -320,9 +304,9 @@ void Response::generateErrorPage()
 {
     std::ostringstream body;
 
-    body << "<html>\n<head><title>" << _statusCode << " " << _reasonPhrase << "</title></head>\n"
+    body << "<html>\n<head><title>" << _statusCode << " " << getReasonPhrase() << "</title></head>\n"
          << "<body>\n"
-         << "<h1>" << _statusCode << " " << _reasonPhrase << "</h1>\n"
+         << "<h1>" << _statusCode << " " << getReasonPhrase() << "</h1>\n"
          << "<hr>\n"
          << "<p>webserv</p>\n"
          << "</body>\n</html>\n";

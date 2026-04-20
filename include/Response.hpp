@@ -14,7 +14,6 @@ class Response {
 		Location* _loc;
 		int _statusCode;
 		std::string _internalPath;
-		std::string _reasonPhrase;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
 		std::string _remain;
@@ -35,6 +34,7 @@ class Response {
 		void handleMethod(Request& request);
 
 		void handleGetMethod(Request& request);
+		bool serveFile();
 		void displayAutoIndex(); 
 
 		void handlePostMethod(Request& request);
