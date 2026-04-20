@@ -24,20 +24,15 @@ class Request
 		const std::string& 	getPath(void) const;
 		const std::string& 	getMethod(void) const;
 		const std::string& 	getHeaders(std::string key) const;
+		std::string getUrl(void) const;			// eventuellement faire une classe Request a part avec const
+		std::string getQuery(void) const;
+		const std::map<std::string, std::string>& getHeaders() const;
 
 		//Parsing
 		bool parseRequestLine(const std::string &message);
 		bool parseHeader(const std::string &request);
 		bool validateHeader();
 		bool parseBody(const std::string &request, int maxBodySize);
-
-		//Getter
-		int	getStatusCode(void) const;
-		int	getContentLength(void) const;
-		std::string getUrl(void) const;			// eventuellement faire une classe Request a part avec const
-		std::string getQuery(void) const;
-		const std::map<std::string, std::string>& getHeaders() const;
-
 
 	private:
 		std::string _method;

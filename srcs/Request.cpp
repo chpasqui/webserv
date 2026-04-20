@@ -49,6 +49,19 @@ const std::string& Request::getHeaders(std::string key) const{
     return "";
 }
 
+std::string Request::getUrl(void) const{
+	return this->_url;
+}
+
+
+std::string Request::getQuery(void) const{
+	return this->_query;
+}
+
+const std::map<std::string, std::string>& Request::getHeaders() const{
+	return this->_headers;
+}
+
 /**
  * @brief Sets _statusCode and returns false, used to propagate errors.
  * @param code HTTP status code to set.
