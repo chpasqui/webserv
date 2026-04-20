@@ -42,11 +42,12 @@ const std::string& Request::getVersion(void) const {
 }
 
 const std::string& Request::getHeader(std::string key) const{
+    static const std::string empty = "";
     std::map<std::string, std::string>::const_iterator it = _headers.begin();
 	for(; it != _headers.end(); it++)
         if (it->first == key)
             return it->second;
-    return "";
+    return empty;
 }
 
 std::string Request::getUrl(void) const{
