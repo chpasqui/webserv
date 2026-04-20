@@ -47,13 +47,14 @@ bool	Server::addNewConnection(int listeningFd)
  * 
  * @param fd 
  */
-void	Server::readFromSocket(int fd)
+void	Server::readFromSocket(int clientFd)
 {
-	Client& client = *(_clients[fd]); // _clients[6] will give us the Client class at fd = 6
+	Client& client = *(_clients[clientFd]); // _clients[6] will give us the Client class at clientFd = 6
+	
 	client.parseRequest();
 
 	if (client.getParsingStatus() == CLOSEFD) {
-		removeConnection(fd);
+		removeConnection(clientFd);
 	}
 
 	if (client.getParsingStatus() == COMPLETE) {
@@ -64,17 +65,16 @@ void	Server::readFromSocket(int fd)
 		}
 		// code for Response is here --> it will go to responseBuild which does the checks and then looks at the CGI
 		std::cout << GREEN << "entered the COMPLETE function" << RESET << std::endl;
-		// Cgi cgi(this->env);
-		// int piperead = cgi.handleCgi(client, "./www/cgi-bin/hello.py");
-		// if (piperead == -1) {
-		// 	removeConnection(fd);
-		// 	return;
-		// }
-		// std::cout << "pipenreceived from piperead is " << piperead << std::endl;
-		// addToEpoll(this->epollFd, piperead, EPOLLIN);
-		// if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
-		// 	removeConnection(fd);
-		// }
+		Cgi cgi;
+		client.setCgiPipeFd(cgi.handleCgi(client, "./www/cgi-bin/hello.py"));
+		if (client.getCgiPipeFd() == -1) {
+			removeConnection(client.getCgiPipeFd());
+			return;
+		}
+		std::cout << "pipenreceived from piperead is " << client.getCgiPipeFd() << std::endl;
+		if (!modifyEpoll(this->epollFd, clientFd, EPOLLOUT)){
+			removeConnection(clientFd);
+		}
 	}
 }
 

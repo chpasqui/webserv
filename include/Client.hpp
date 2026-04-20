@@ -30,6 +30,8 @@ class Client
 
 		int					getClientFd() const;
 		int					getParsingStatus() const;
+		int					getCgiPipeFd(void) const;
+		void				setCgiPipeFd(int fd);
 		Request*			getRequest(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t				getTimestamp(void) const;
@@ -42,6 +44,7 @@ class Client
 	private:
 		Client(); // client constructor is in private so that we never create a client out of nowhere
 		int					_clientFd;
+		int					_cgiPipeFd;
 		int					_writeCgiPipeEnd;
 		int					_readCgiPipeEnd;
 

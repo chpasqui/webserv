@@ -24,9 +24,8 @@
 
 int serverSignal = 0;
 
-Server::Server(char **env) : 
+Server::Server() : 
 		epollFd(-1),
-		env(env),
 		_listenFds(),
 		_clients()
 {

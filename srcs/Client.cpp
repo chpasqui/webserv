@@ -11,6 +11,7 @@
 
 Client::Client() :
 	_clientFd(-1),
+	_cgiPipeFd(-1),
 	_writeCgiPipeEnd(-1),
 	_readCgiPipeEnd(-1),
 	_bytesRead(-1),
@@ -25,6 +26,7 @@ Client::Client() :
 
 Client::Client(int fd, const ServerConfig* config, Request *request) :
 	_clientFd(fd),
+	_cgiPipeFd(-1),
 	_writeCgiPipeEnd(-1),
 	_readCgiPipeEnd(-1),
 	_bytesRead(-1),
@@ -39,6 +41,7 @@ Client::Client(int fd, const ServerConfig* config, Request *request) :
 
 Client::Client(const Client& other) :
 	_clientFd(other._clientFd),
+	_cgiPipeFd(other._cgiPipeFd),
 	_writeCgiPipeEnd(other._writeCgiPipeEnd),
 	_readCgiPipeEnd(other._readCgiPipeEnd),
 	_bytesRead(other._bytesRead),
@@ -115,6 +118,14 @@ time_t	Client::getTimestamp(void) const {
 
 int		Client::getParsingStatus() const {
 	return (this->_parsingStatus);
+}
+
+int		Client::getCgiPipeFd() const {
+	return (this->_cgiPipeFd);
+}
+
+void	Client::setCgiPipeFd(int fd) {
+	this->_cgiPipeFd = fd;
 }
 
 Request* Client::getRequest(void) const {

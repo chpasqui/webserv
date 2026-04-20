@@ -7,7 +7,7 @@
 #include <vector>
 #include <iostream>
 
-int main(int ac, char **av, char **env) {
+int main(int ac, char **av) {
 	if (ac != 2)
 		return 1;
 	
@@ -20,7 +20,7 @@ int main(int ac, char **av, char **env) {
 
 	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;
 	
-	Server server(env);
+	Server server;
 
 	try
 	{

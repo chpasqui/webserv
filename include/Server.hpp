@@ -24,7 +24,7 @@ extern int serverSignal;
 class Server
 {
 	public:
-		Server(char **env);
+		Server();
 		void setupListeningSockets(const std::vector<ServerConfig *>& serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);
@@ -46,7 +46,6 @@ class Server
 
 	private:
 		int	epollFd;
-		char **env;
 		std::map<int, const ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 		std::map<int, Client*> _clients;
 };

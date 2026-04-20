@@ -24,23 +24,21 @@ class Cgi
 {
 	public:
 		Cgi();
-		Cgi(char **originalEnv);
 		~Cgi();
 
 		int			handleCgi(Client& client, std::string internalPath);
 		void		setCgiEnvVariables(const Client& client, std::string internalPath);
-		void		buildScriptEnv();
-		int			executeScript(Client& client, std::string internalPath);
-		// std::string extractScriptPath(const std::string& internalPath);
-		// std::string getPathInfo(const std::string& internalPath, size_t endScriptName);
+		char**		getEnv();
+		int			executeScript(Client& client, const std::string& internalPath);
+		//const char**	getArgs(const std::string& internalPath);
 
 	private:
 		std::vector<std::string>	_tempEnv;
-		char						**_originalEnv;
-		char						**_finalEnv;
+		// char						**_env;
 		int							_tempEnvLength;
 		std::string					_scriptName;
 		std::string					_pathInfo;
+		const char *				_interpreter;
 };
 
 std::string intToString(int number);

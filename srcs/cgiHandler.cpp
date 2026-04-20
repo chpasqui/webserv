@@ -18,8 +18,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define PIPE_INPUT 1
-#define PIPE_OUTPUT 0
+#define WRITE_END 1
+#define READ_END 0
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
 int	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs to send this and then the path 
@@ -31,8 +31,8 @@ int	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs 
 	}
 	
 	setCgiEnvVariables(client, internalPath);
-	buildScriptEnv();
 	return (executeScript(client, internalPath));
+	//return -1;
 }
 
 /**
@@ -54,6 +54,7 @@ void	Cgi::setCgiEnvVariables(const Client& client, std::string internalPath) {
 	const ServerConfig *config = client.getServerConfig();
 	const std::map<std::string, std::string>& header = request->getHeaders();
 
+	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	_tempEnv.push_back("REQUEST_METHOD=" + request->getMethod());
 	_tempEnv.push_back("QUERY_STRING=" + request->getQuery()); // query string must be defined as empty string if not found (treated by getHeaderVariable)
 	_tempEnv.push_back("SERVER_PROTOCOL=" + request->getVersion());
@@ -70,35 +71,26 @@ void	Cgi::setCgiEnvVariables(const Client& client, std::string internalPath) {
 	hostname[1023] = '\0';
 	gethostname(hostname, 1023);
 	_tempEnv.push_back("SERVER_NAME=" + std::string(hostname));
+	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
+		std::cout << GREEN << *it << RESET << std::endl;
 }
 
 /**
  * @brief 
  * 
  */
-void	Cgi::buildScriptEnv()
+char**	Cgi::getEnv()
 {
-	int len;
-	for (len = 0; this->_originalEnv[len]; ++len) {}
-	int nbEnv = len;
-
-	// const int finalEnvColumns = 2;
-	const int finalNbEnv = nbEnv + this->_tempEnv.size();
-
-	this->_finalEnv = new char*[finalNbEnv + 1];
-	int index;
-	for (index = 0; index < nbEnv; ++index)
-	{
-		this->_finalEnv[index] = new char[strlen(this->_originalEnv[index]) + 1];
-		std::copy(this->_originalEnv[index], this->_originalEnv[index] + strlen(this->_originalEnv[index]), this->_finalEnv[index]);
-	}
+	char **env = new char*[_tempEnv.size() + 1];
+	int index = 0;
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
 	{
-		this->_finalEnv[index] = new char[(*it).length()];
-		strcpy(this->_finalEnv[index], (*it).c_str());
+		env[index] = new char[(*it).length()];
+		strcpy(env[index], (*it).c_str());
 		index++;
 	}
-	this->_finalEnv[finalNbEnv] = NULL;
+	env[_tempEnv.size() + 1] = NULL;
+	return env;
 }
 
 
@@ -114,9 +106,10 @@ void	Cgi::buildScriptEnv()
  * 
  * commands for the CGI would be 
  */
-int	Cgi::executeScript(Client& client, std::string internalPath)
+int	Cgi::executeScript(Client& client, const std::string &internalPath)
 {
 	(void)client;
+	(void)internalPath;
 	std::cout << GREEN << "entered the executeCGI function" << RESET << std::endl;
 
 	int fd[2];
@@ -131,28 +124,31 @@ int	Cgi::executeScript(Client& client, std::string internalPath)
 		std::cout << "error" << std::endl;
 	}
 	if (pid == 0) {
+
 		std::cout << "entered the child" << std::endl;
 		std::string interpreterStr = extractExecutable();
-		const char *interpreter = interpreterStr.c_str();
-		std::cout << "interpreter :" << interpreter << std::endl;
+		this->_interpreter = interpreterStr.c_str();
 		const char *scriptpath = internalPath.c_str();
 		std::cout << "scriptpath :" << scriptpath << std::endl;
-		const char *args[] = { interpreter, scriptpath, NULL };
+		const char *args[] = { this->_interpreter, scriptpath, NULL };
+
+
 		int tempFileFd = open("tmpfile.txt", O_RDONLY);
 		std::cout << GREEN << "inside child all good" << RESET << std::endl;
 		dup2(tempFileFd, STDIN_FILENO);
-		dup2(fd[PIPE_OUTPUT], STDOUT_FILENO);
-		close(fd[PIPE_OUTPUT]);
-		close(fd[PIPE_INPUT]);
-		execve(interpreter, const_cast<char *const *>(args), this->_finalEnv);
+		dup2(fd[WRITE_END], STDOUT_FILENO);
+		close(fd[WRITE_END]);
+		close(fd[READ_END]);
+		execve(this->_interpreter, const_cast<char *const *>(args), getEnv());
 		perror("execve");
 		exit(1);
 	}
 	else {
-		close(fd[PIPE_OUTPUT]);
-		return fd[PIPE_INPUT];
+		close(fd[WRITE_END]);
+		return fd[READ_END];
 	}
 }
+
 
 std::string intToString(int number){
 	std::stringstream ss;
@@ -191,29 +187,3 @@ std::string extractExecutable() {
 	
 	return line;
 }
-
-
-//copy of originalEnv TO DO
-
-// if the method is POST, then i need to pass on the body to the CGI stdin from server -> tell charlotte
-
-
-
-//  The server acts as an application gateway.  It receives the request
-//    from the client, selects a CGI script to handle the request, converts
-//    the client request to a CGI request, executes the script and converts
-//    the CGI response into a response for the client.  When processing the
-//    client request, it is responsible for implementing any protocol or
-//    transport level authentication and security.  The server MAY also
-//    function in a 'non-transparent' manner, modifying the request or
-//    response in order to provide some additional service, such as media
-//    type transformation or protocol reduction.
-
-//CGI defines the abstract parameters, known as metavariables, which describe the client's request.
-
-
-// If the request has a ./cgi-bin/ inside, then we identify the request as being CGI
-// it comes with MEHOD URI (inside the uri is the cgi) and
-// first I can check If i receive a directory or a file?
-// 1. I need to create a chid process which will handle this --> first before I fork with a child, i need the originalEnv varuables
-// od I need to creat a class for CGI?
