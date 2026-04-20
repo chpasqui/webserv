@@ -9,7 +9,6 @@
 #include <fstream>
 #include <dirent.h>
 
-
 /**
  * @brief Builds the HTTP response from a parsed request.
  * Resolves location, checks method, dispatches to handler or CGI.
@@ -67,7 +66,6 @@ Location* Response::findLocation(const std::string& url){
     return best;
 }
 
-
 /**
  * @brief Builds the filesystem path from location root and URL remainder.
  */
@@ -107,7 +105,6 @@ bool Response::isCGI(){
     }
     return false;
 }
-
 
 /**
  * @brief Dispatches to the appropriate method handler (GET/POST/DELETE).
@@ -159,7 +156,6 @@ void Response::buildError(){
     }
     generateErrorPage();
 }
-
 
 /**
  * @brief Generates a minimal HTML error page from _statusCode.

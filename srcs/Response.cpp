@@ -62,7 +62,6 @@ std::string Response::extractContentType(){
     
 }
 
-
 /**
  * @brief Sets Content-Length and Server headers from current _body.
  */

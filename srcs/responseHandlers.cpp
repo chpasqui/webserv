@@ -9,7 +9,6 @@
 #include <fstream>
 #include <dirent.h>
 
-
 /**
  * @brief Handles GET requests. Serves file, index, or autoindex.
  */
