@@ -120,6 +120,16 @@ const ServerConfig* Client::getServerConfig(void) const {
 	return this->_config;
 }
 
+void Client::buildResponse(char **envp)
+{
+    _response = new Response();
+    _response->build(*_request, const_cast<ServerConfig*>(_config), envp);
+}
+
+std::string Client::getResponse() const
+{
+    return _response->responseFormat(*_request);
+}
 
 
 /**

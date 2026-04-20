@@ -21,7 +21,9 @@ SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp \
 				requestUtils.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp \
 				serverEpoll.cpp serverLoop.cpp \
 				listeningSockets.cpp serverUtils.cpp \
-				serverHandler.cpp Cgi.cpp cgiHandler.cpp
+				serverHandler.cpp Cgi.cpp cgiHandler.cpp \
+				Response.cpp responseBuild.cpp responseHandlers.cpp responseFormat.cpp
+				
 SRCS_NAME	=	$(basename $(SRCS))
 OBJS		=	$(addsuffix .o, $(addprefix $(DIR_BUILD)/, $(SRCS_NAME)))
 

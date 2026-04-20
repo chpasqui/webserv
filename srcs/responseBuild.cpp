@@ -13,7 +13,7 @@
  * @brief Builds the HTTP response from a parsed request.
  * Resolves location, checks method, dispatches to handler or CGI.
  */
-void Response::build(Request& request, ServerConfig *config, char **envp){
+void Response::build(Request& request, const ServerConfig *config, char **envp){
     _config = config;
     _loc = findLocation(request.getPath());
     if (_loc == NULL) {
@@ -54,12 +54,12 @@ Location* Response::findLocation(const std::string& url){
     Location *best = NULL;
     size_t bestLen = 0;
 
-    std::vector<Location>& locs = _config->getLocations();
-    std::vector<Location>::iterator it = locs.begin();
+    std::vector<Location*> locs = _config->getLocations();
+    std::vector<Location*>::iterator it = locs.begin();
     for (; it != locs.end(); it++){
         const std::string& prefix = it->getPath();
         if (url.substr(0, prefix.size()) == prefix && prefix.size() > bestLen){
-            best = &(*it);
+            best = *it;
             bestLen = prefix.size();
         }
     }

@@ -11,7 +11,7 @@
 
 class Response {
 	private :
-		ServerConfig* 						_config;
+		const ServerConfig* 				_config;
 		Location* 							_loc;
 		int 								_statusCode;
 		std::string 						_internalPath;
@@ -47,7 +47,7 @@ class Response {
 		Response();
 		~Response();
 
-		void 		build(Request& request, ServerConfig *config, char **envp);
+		void 		build(Request& request, const ServerConfig *config, char **envp);
 		std::string responseFormat(Request& request);
 		
 
