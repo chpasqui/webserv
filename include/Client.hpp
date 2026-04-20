@@ -33,6 +33,9 @@ class Client
 		Request*			getRequest(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t				getTimestamp(void) const;
+		void				buildResponse(char **envp);
+		std::string 		getResponse() const;
+
 		
 
 
