@@ -9,17 +9,11 @@
 #include <fstream>
 #include <dirent.h>
 
-//CE QU'IL TE RESTE A FAIRE :
-//- mettre fonction findLocation dans ServerConfig
 
-//-----------------------
-
-//Step1: verifier que le request status code soit != 0, if yes buildError(statusCode) -- OK
-//Step2 : findlocation verifier quil existe ? if not utilise le root du server -- OK
-//Step3: y a t il une redirection ? if yes stop et buildError(300); -- OK
-//Step4: la methode est elle authorise ? if no stop buildError(405) -- OK;
-//Step5: est ce que c'est un CGI ? if yes execute CGI et return; -- OK
-//Step6: gerer les requests en fonction de la methode -- OK
+/**
+ * @brief Builds the HTTP response from a parsed request.
+ * Resolves location, checks method, dispatches to handler or CGI.
+ */
 void Response::build(Request& request, ServerConfig *config, char **envp){
     _config = config;
     _loc = findLocation(request.getPath());
@@ -53,19 +47,10 @@ void Response::build(Request& request, ServerConfig *config, char **envp){
     handleMethod(request);
 }
 
-void Response::handleMethod(Request& request){
-    if (request.getMethod() == "GET")
-        handleGetMethod(request);
-    else if (request.getMethod() == "POST")
-        handlePostMethod(request);
-    else
-        handleDeleteMethod(request);
-}
-
-//Step1: trouver si le URI correspond a une des locations -- OK
-//Step2: mettre cette fonction dans ServerConfig -- OK
-//Step3: renvoyer le nom de la location qui correpond le plus a la URI -- OK
-//Step4: est ce quil faut que jaggrege le root path ici -- OK
+/**
+ * @brief Returns the longest-prefix matching location for the given URL.
+ * @return Pointer to matching Location, or NULL if none found.
+ */
 Location* Response::findLocation(const std::string& url){
     Location *best = NULL;
     size_t bestLen = 0;
@@ -82,11 +67,19 @@ Location* Response::findLocation(const std::string& url){
     return best;
 }
 
+
+/**
+ * @brief Builds the filesystem path from location root and URL remainder.
+ */
 std::string Response::buildFileSystemPath(const std::string& url){    
     _remain = url.substr(_loc->getPath().size());
     return _loc->getRoot() + "/" + _remain; 
 }
 
+
+/**
+ * @brief Checks if the method is allowed by the matched location.
+ */
 bool Response::methodAllowed(const std::string& method){
     std::string methodAllowed = _loc->getMethodAllowed();
     if (methodAllowed.find(method) != std::string::npos)
@@ -94,6 +87,10 @@ bool Response::methodAllowed(const std::string& method){
     return false;
 }
 
+
+/**
+ * @brief Checks if the request targets a CGI resource by extension.
+ */
 bool Response::isCGI(){
     if (_loc->getCgiEnabled()){
         std::vector<std::string>::iterator it = _loc->getCgiExtensions().begin();
@@ -111,6 +108,22 @@ bool Response::isCGI(){
     return false;
 }
 
+
+/**
+ * @brief Dispatches to the appropriate method handler (GET/POST/DELETE).
+ */
+void Response::handleMethod(Request& request){
+    if (request.getMethod() == "GET")
+        handleGetMethod(request);
+    else if (request.getMethod() == "POST")
+        handlePostMethod(request);
+    else
+        handleDeleteMethod(request);
+}
+
+/**
+ * @brief Sets _statusCode from errno and calls buildError().
+ */
 void Response::setSyscallError(){
     if (errno == ENOENT || errno == ENOTDIR)
         _statusCode = NOT_FOUND;
@@ -121,162 +134,9 @@ void Response::setSyscallError(){
     buildError();
 }
 
-//Step1: define type of uri (is it a directory or a file) (fonction stat) -- OK
-//Step1.1: si cest un file, statuscode : 200 et on buildResponse() -- OK
-//Step2: if it is a dir but doesnt end with / ??? -> error 301 on redirige vers URI/ (on rajoute donc le /) -- OK
-//Step3: si cest bien un dir, je cherche le fichier index defini dans la config et je tente le path -- OK
-//Step4: si aucun index trouv;, je regarde si autoindex est on ou off -> off : 403 forbidden / -- OK
-//Step5: si oui on, genere une page html qui liste le contenu du directory (opendir/readdir) -- OK
-void Response::handleGetMethod(Request& request){
-    struct stat sb;
-   
-    if (stat(_internalPath.c_str(), &sb) != 0){
-        setSyscallError();
-        return;
-    }
-    if (!S_ISDIR(sb.st_mode)){
-        serveFile();
-        return ;
-    }
-    if (request.getPath()[request.getPath().size() - 1] != '/'){
-        _statusCode = MOVED_PERMANENTLY;
-        _headers["Location"] = request.getPath() + "/";
-        return ;
-    }
-    std::vector<std::string> indexes = _loc->getIndexes();
-    std::vector<std::string>::iterator it = indexes.begin();
-    for (; it != indexes.end(); it++){
-        _internalPath = *it;
-        if (serveFile())
-            return ;
-    }
-    if (!_loc->getAutoIndex()){
-        _statusCode = FORBIDDEN;
-        buildError();
-        return ;
-    }
-    displayAutoIndex();
-}
-
-void Response::displayAutoIndex(){
-    DIR *dir = opendir(_internalPath.c_str());
-    if (dir == NULL){
-        setSyscallError();
-        return ;
-    }
-    std::string html = "<html><body><h1>Index of " + _internalPath + "</h1><ul>";
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL ){
-        std::string name = entry->d_name;
-        if (name == ".") continue;
-        html += "<li><a href=\"" + name + "\">" + name + "</a></li>";
-    }
-    closedir(dir);
-    html += "</ul></body></html>";
-    _body = html;
-    _statusCode = OK;
-    _headers["Content-Type"] = "text/html";
-}
-
-bool Response::serveFile() {
-    std::ifstream file(_internalPath.c_str());
-    if (!file.is_open()) {
-        setSyscallError();
-        return false;
-    }
-    std::ostringstream ss;
-    ss << file.rdbuf();
-    _body = ss.str();
-    _statusCode = OK;
-    _headers["Content-Type"] = extractContentType();
-    return true;
-}
-
-// A DISCUTER :
-// - directive upload_store ou upload ? -- OK
-// - upload store obligatoire ?  -- OUI -- OK
-// - si l url est un dossier qui se terminer par / -> ERREUR -- OK
-// - si url contient des sous dossier non existant -> TEST STAT UPLOADDIR -- OK
-// - si cest un fichier sans extension on le cree tel quel ? -> COMME LINUX CREER TELQUEL
-// - si le fichier existe deja, on refuse --> ERREUR REFUSE : conflit 409 -- OK
-// - est ce qu on gere le multipart ? --> OUI MAIS UNIQUEMENT PAR CGI -- OK
-
-//Step 1: check if upload allowed in location -- OK
-//Step 2: define if it is a DIR or a FILE -- OK
-//Step 3: DIR create a file containing the body of the request, generate name of the file according to content-disposition if existing
-//Step 4: EXISTING FILE : add the body to the file or replace it -- OK
-//Step 5: NON-EXISTING FILE : create file and body to the file -- OK
-
-void Response::handlePostMethod(Request& request){
-    if (_remain.empty() || _remain[_remain.size() - 1] == '/') {
-        _statusCode = BAD_REQUEST;
-        buildError();
-        LOG(std::cout << "can't upload body without specifying the file in URL" << std::endl);
-        return;
-    }
-    if (request.getHeaders("content-type").find("multipart/form-data") != std::string::npos){
-        _statusCode = FORBIDDEN;
-        buildError();
-        LOG(std::cout << "can't handle multipart without cgi" << std::endl);
-        return ;
-    }
-    if (_loc->getUploadStore().empty()){
-        _statusCode = FORBIDDEN;
-        buildError();
-        LOG(std::cout << "can't upload, no upload store" << std::endl);
-        return ;
-    }
-    std::string uploadDir = _loc->getUploadStore();
-    struct stat dirStat;
-    if (stat(uploadDir.c_str(), &dirStat) != 0 || !S_ISDIR(dirStat.st_mode)){
-        setSyscallError();
-        LOG(std::cout << "upload folder doesnt exist" << std::endl);
-        return ;
-    }
-    std::string uploadPath = _loc->getUploadStore() + "/" + _remain;
-    struct stat fileStat;
-    if (stat(uploadPath.c_str(), &fileStat) == 0){
-        _statusCode = CONFLICT;
-        buildError();
-        LOG(std::cout << "file already exist" << std::endl);
-        return ;
-    }
-    std::ofstream file(uploadPath.c_str());
-    if (!file.is_open()) {
-        setSyscallError();
-        return;
-    }
-    file << request.getBody();
-    file.close();
-    _body = request.getBody();
-    _statusCode = CREATED;
-    _headers["Content-Type"] = request.getHeaders("content-type");
-}
-
-//Step1 : define if file ou directory is available
-//Step2: if directory but ambiguous url that doesnt end wiht / -> 409
-//Step3: try to remove if no -> syscall if yes -> 204 : no content action succesful 
-
-void Response::handleDeleteMethod(Request& request){
-    struct stat sb;
-   
-    if (stat(_internalPath.c_str(), &sb) != 0){
-        setSyscallError();
-        return;
-    }
-    if (S_ISDIR(sb.st_mode)){
-        if (request.getPath()[request.getPath().size() - 1] != '/'){
-            _statusCode = CONFLICT;
-            return ;
-        }
-    }
-    if (std::remove(_internalPath.c_str()) != 0){
-        setSyscallError();
-        return;
-    }
-    _statusCode = NO_CONTENT;
-}
-
+/**
+ * @brief Populates _body with a custom or generated error page.
+ */
 void Response::buildError(){
 
     std::string errorPageFile;
@@ -300,6 +160,10 @@ void Response::buildError(){
     generateErrorPage();
 }
 
+
+/**
+ * @brief Generates a minimal HTML error page from _statusCode.
+ */
 void Response::generateErrorPage()
 {
     std::ostringstream body;

@@ -10,6 +10,9 @@ Response::Response() :
 
 Response::~Response(){}
 
+/**
+ * @brief Returns the reason phrase for the current _statusCode.
+ */
 std::string Response::getReasonPhrase() const{
     switch(_statusCode) {
         case OK : return "Success";
@@ -34,6 +37,10 @@ std::string Response::getReasonPhrase() const{
     }
 }
 
+/**
+ * @brief Infers Content type from _internalPath extension.
+ * @return Content type string, defaults to application/octet-stream.
+ */
 // est ce qu'il y en a d'autres a mettre ?
 std::string Response::extractContentType(){
     static std::map<std::string, std::string> mime;
@@ -55,6 +62,10 @@ std::string Response::extractContentType(){
     
 }
 
+
+/**
+ * @brief Sets Content-Length and Server headers from current _body.
+ */
 // To decide whether we want to put the date or not
 void Response::setDefaultHeaders(){
     std::ostringstream ss;

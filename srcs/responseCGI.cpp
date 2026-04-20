@@ -9,6 +9,9 @@
 #include <fstream>
 #include <dirent.h>
 
+/**
+ * @brief Executes the CGI handler for the matched script.
+ */
 void Response::handleCGI(Request& request, char **envp){
     CGI cgi; //voir avec Josephine
 

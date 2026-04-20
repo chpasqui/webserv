@@ -2,6 +2,10 @@
 #include "../include/ServerConfig.hpp"
 #include "../include/statusCode.hpp"
 
+
+/**
+ * @brief Serializes the response to a raw HTTP/1.1 string.
+ */
 std::string Response::responseFormat(Request& request){
 	std::ostringstream response;
 
