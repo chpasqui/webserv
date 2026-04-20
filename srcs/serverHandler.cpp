@@ -59,17 +59,17 @@ void	Server::readFromSocket(int fd)
 	if (client.getParsingStatus() == COMPLETE) {
 		// code for Response is here --> it will go to responseBuild which does the checks and then looks at the CGI
 		std::cout << GREEN << "entered the COMPLETE function" << RESET << std::endl;
-		Cgi cgi(this->env);
-		int piperead = cgi.handleCgi(client, "./www/cgi-bin/hello.py");
-		if (piperead == -1) {
-			removeConnection(fd);
-			return;
-		}
-		std::cout << "pipenreceived from piperead is " << piperead << std::endl;
-		addToEpoll(this->epollFd, piperead, EPOLLIN);
-		if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
-			removeConnection(fd);
-		}
+		// Cgi cgi(this->env);
+		// int piperead = cgi.handleCgi(client, "./www/cgi-bin/hello.py");
+		// if (piperead == -1) {
+		// 	removeConnection(fd);
+		// 	return;
+		// }
+		// std::cout << "pipenreceived from piperead is " << piperead << std::endl;
+		// addToEpoll(this->epollFd, piperead, EPOLLIN);
+		// if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
+		// 	removeConnection(fd);
+		// }
 	}
 }
 

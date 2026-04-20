@@ -50,8 +50,7 @@ class Client
 
 		const ServerConfig*	_config;
 		Request*			_request;
-		Response*			_response;
-		char				**_originalEnv;
+		//Response*			_response;
 };
 
 #endif

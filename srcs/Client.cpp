@@ -17,8 +17,8 @@ Client::Client() :
 	_buffer(""),
 	_parsingStatus(PARSING_REQUEST_LINE),
 	_config(NULL),
-	_request(NULL),
-	_response(NULL)
+	_request(NULL)
+	//_response(NULL)
 {
 	time(&(this)->_timestamp);
 }
@@ -31,8 +31,8 @@ Client::Client(int fd, const ServerConfig* config, Request *request) :
 	_buffer(""),
 	_parsingStatus(PARSING_REQUEST_LINE),
 	_config(config),
-	_request(request),
-	_response(NULL)
+	_request(request)
+	//_response(NULL)
 {
 	time(&(this)->_timestamp);
 }
@@ -45,8 +45,8 @@ Client::Client(const Client& other) :
 	_buffer(other._buffer),
 	_parsingStatus(other._parsingStatus),
 	_config(other._config),
-	_request(other._request),
-	_response(NULL)
+	_request(other._request)
+	//_response(NULL)
 {}
 
 bool Client::bodyRead(std::string& buffer){
