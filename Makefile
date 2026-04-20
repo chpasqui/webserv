@@ -13,7 +13,7 @@ LDINCLUDE	=	-I$(DIR_INCLUDE)
 
 SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp \
 				Request.cpp requestParsingLine.cpp requestParsingHeader.cpp requestParsingBody.cpp debug.cpp \
-				requestUtils.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp
+				requestUtils.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp \
 				Request.cpp requestParsingLine.cpp requestParsingHeader.cpp requestParsingBody.cpp debug.cpp serverEpoll.cpp serverLoop.cpp \
 				listeningSockets.cpp serverUtils.cpp \
 				requestUtils.cpp serverHandler.cpp Cgi.cpp cgiHandler.cpp
