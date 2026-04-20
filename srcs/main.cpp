@@ -11,8 +11,8 @@ int main(int ac, char **av) {
 		return 1;
 	
 	std::vector<ServerConfig*> configs;
-	ParseConfig pc(av[1]);
-	pc.parsingConfigFile(configs);
+	ParseConfig pc(av[1], configs);
+	pc.parsingConfigFile();
 
 	ServerConfig *serverconfig = *(configs.begin());
 

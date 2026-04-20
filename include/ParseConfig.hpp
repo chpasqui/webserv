@@ -1,6 +1,7 @@
 #ifndef PARSECONFIG_HPP
 # define PARSECONFIG_HPP
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -18,34 +19,36 @@ enum context {
 class ParseConfig {
 	public:
 		ParseConfig();
-		ParseConfig(std::string filename);
+		ParseConfig(std::string filename, std::vector<ServerConfig *> &serverConfigs);
 		~ParseConfig();
 		
-		int				parsingConfigFile(std::vector<ServerConfig*> &serversConfigs);
+		int				parsingConfigFile(void);
 	private:
 		int				openFile(void);
 		std::string		getNextToken(void);
 		//----ProcessToken----//
-		int				processToken(std::vector<ServerConfig*> &serversConfigs);
-		int				processTokenHttp(void);
-		int				processServerToken(std::vector<ServerConfig *> &servers);
-		int				processLocationToken(void);
-		int				processHeaderTimeoutToken(void);
-		int				processBodyTimeoutToken(void);
-		int				processMaxBodySizeToken(void);
-		int				processRootToken(void);
-		int				processListenToken(void);
-		int 			processAutoindexToken(void);
-		int				processErrorPageToken(void);
+		void				processEndBraquetToken(void);
+		void				processTokenHttp(void);
+		void				processServerToken(void);
+		void				processLocationToken(void);
+		void				processHeaderTimeoutToken(void);
+		void				processBodyTimeoutToken(void);
+		void				processMaxBodySizeToken(void);
+		void				processRootToken(void);
+		void				processListenToken(void);
+		void 				processAutoindexToken(void);
+		void				processErrorPageToken(void);
 		//----Static functions----//
 		static int		transformTokenToInt(std::string token);
 		//----Atributes----//
-		std::string		_filename;
-		std::string		_configFile;
-		int				_context;
-		Http			*_http;
-		ServerConfig	*_currentServer;
-		Location		*_location;
+		std::string											_filename;
+		std::string											_configFile;
+		int													_context;
+		Http												*_http;
+		ServerConfig										*_currentConfig;
+		Location											*_location;
+		std::vector<ServerConfig*>							_serverConfigs;
+		std::map<std::string, void (ParseConfig::*)(void)>	_dictionary;
 };
 
 #endif
