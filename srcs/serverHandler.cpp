@@ -72,8 +72,10 @@ void	Server::readFromSocket(int clientFd)
 			return;
 		}
 		std::cout << "pipenreceived from piperead is " << client.getCgiPipeFd() << std::endl;
-		if (!modifyEpoll(this->epollFd, clientFd, EPOLLOUT)){
-			removeConnection(clientFd);
+		// remove clientFd?
+		addToEpoll(this->epollFd, client.getCgiPipeFd(), EPOLLIN);
+		// if (!modifyEpoll(this->epollFd, clientFd, EPOLLOUT)){
+		// 	removeConnection(clientFd);
 		}
 	}
 }
