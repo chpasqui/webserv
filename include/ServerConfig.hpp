@@ -23,7 +23,7 @@ class ServerConfig
 		bool						_autoindex;
 		std::string					_route;
 		std::string					_allowedMethods;
-		std::vector<std::string>	_indexs;
+		std::vector<std::string>	_indexes;
 		std::map<int, std::string>	_errorPages;
 	public:
 		ServerConfig(const Http &http);
@@ -50,7 +50,7 @@ class ServerConfig
 		bool						getAutoIndex(void) const;
 		std::string					getRoute(void) const;
 		std::string					getAllowedMethods(void) const;
-		std::vector<std::string>	getIndexs(void) const;
+		std::vector<std::string>	getIndexes(void) const;
 		std::map<int, std::string>	getErrorPages(void) const;
 		const std::string& getErrorPage(int key) const;
 };

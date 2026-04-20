@@ -13,7 +13,7 @@ ServerConfig::ServerConfig() :
 	_autoindex(false),
 	_route(""),
 	_allowedMethods("GET|POST|DELETE"),
-	_indexs(0),
+	_indexes(0),
 	_errorPages() { //WARN: add the default "index.html" if this is empty after parsing
 	std::cout << C_CSTR << "ServerConfig: Default constructor called" << RESET << std::endl;
 	return ;
@@ -29,7 +29,7 @@ ServerConfig::ServerConfig(const Http &http) :
 	_autoindex(http.getAutoIndex()),
 	_route(http.getRoot()),
 	_allowedMethods(http.getAllowedMethods()),
-	_indexs(http.getIndexs()),
+	_indexes(http.getIndexes()),
 	_errorPages(http.getErrorPages()) {
 	std::cout << C_CSTR << "ServerConfig: Normal constructor called" << RESET << std::endl;
 	return ;
@@ -79,7 +79,7 @@ void ServerConfig::setAllowedMethods(const std::string allowedMethods) {
 }
 
 void ServerConfig::addIndex(const std::string index) {
-	this->_indexs.push_back(index);
+	this->_indexes.push_back(index);
 }
 
 std::map<int, std::string> ServerConfig::getErrorPages(void) const
@@ -125,8 +125,8 @@ std::string ServerConfig::getAllowedMethods(void) const {
 	return (this->_allowedMethods);
 }
 
-std::vector<std::string> ServerConfig::getIndexs(void) const {
-	return (this->_indexs);
+std::vector<std::string> ServerConfig::getIndexes(void) const {
+	return (this->_indexes);
 }
 
 void ServerConfig::addErrorPage(int code, std::string page) {

@@ -21,7 +21,7 @@ Location::Location(const ServerConfig &serverConfig) :
 	_serverName(serverConfig.getServerName()),
 	_root(serverConfig.getRoute()),
 	_allowedMethods(serverConfig.getAllowedMethods()),
-	_indexs(serverConfig.getIndexs()) {
+	_indexes(serverConfig.getIndexes()) {
 	std::cout << C_CSTR << "Location: Normal constructor called" << RESET << std::endl;
 	return ;
 }
@@ -82,7 +82,7 @@ void Location::setAllowedMethods(const std::string allowedMethods) {
 }
 
 void Location::addIndex(const std::string index) {
-	this->_indexs.push_back(index);
+	this->_indexes.push_back(index);
 }
 
 std::string Location::getErrorPage(int code) const
@@ -147,7 +147,7 @@ std::string Location::getAllowedMethods(void) const {
 }
 
 std::vector<std::string> Location::getIndexes(void) const {
-	return (this->_indexs);
+	return (this->_indexes);
 }
 
 std::string Location::getUploadStore() const{

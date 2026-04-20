@@ -10,7 +10,7 @@ Http::Http() :
 	_autoindex(true),
 	_root(""),
 	_allowedMethods("GET|POST|DELETE"),
-	_indexs(0),
+	_indexes(0),
 	_errorPages() {
 	std::cout << C_CSTR << "Http: Default constructor called" << RESET << std::endl;
 	return ;
@@ -47,8 +47,8 @@ std::string Http::getAllowedMethods(void) const {
 	return (this->_allowedMethods);
 }
 
-std::vector<std::string> Http::getIndexs(void) const {
-	return (this->_indexs);
+std::vector<std::string> Http::getIndexes(void) const {
+	return (this->_indexes);
 }
 
 std::map<int, std::string> Http::getErrorPages(void) const
@@ -83,7 +83,7 @@ void Http::setAllowedMethods(std::string allowedMethods) {
 }
 
 void Http::addIndex(std::string index) {
-	this->_indexs.push_back(index);
+	this->_indexes.push_back(index);
 }
 
 void Http::addErrorPage(int code, std::string page) {

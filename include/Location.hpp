@@ -41,7 +41,7 @@ class Location
 		std::string					getServerName(void) const;
 		std::string 				getRoot(void) const;
 		std::string 				getAllowedMethods(void) const;
-		std::vector<std::string> 	getIndexs(void) const;
+		std::vector<std::string> 	getIndexes(void) const;
 		std::string					getErrorPage(int code) const;
 		std::string					getUploadStore() const;
 
@@ -63,7 +63,7 @@ class Location
 		std::string					_serverName; //OPTIM: Location probably doesn't need that
 		std::string					_root;
 		std::string					_allowedMethods;
-		std::vector<std::string>	_indexs;
+		std::vector<std::string>	_indexes;
 		std::map<int, std::string>	_errorPages;
 };
 

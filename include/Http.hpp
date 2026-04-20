@@ -10,16 +10,16 @@ class Http
 	public:
 		Http();
 		~Http();
-		//----Setter----//
+		//----Getter----//
 		int							getHeaderTimeout(void) const;
 		int							getBodyTimeout(void) const;
 		int							getMaxBodySize(void) const;
 		bool						getAutoIndex(void) const;
 		std::string					getRoot(void) const;
 		std::string					getAllowedMethods(void) const;
-		std::vector<std::string>	getIndexs(void) const;
+		std::vector<std::string>	getIndexes(void) const;
 		std::map<int, std::string>	getErrorPages(void) const;
-		//----Getter----//
+		//----Setter----//
 		void						setHeaderTimeout(int headerTimeout);
 		void						setBodyTimeout(int bodyTimeout);
 		void						setMaxBodySize(int maxBodySize);
@@ -35,7 +35,7 @@ class Http
 		bool						_autoindex;
 		std::string					_root;
 		std::string					_allowedMethods;
-		std::vector<std::string>	_indexs;
+		std::vector<std::string>	_indexes;
 		std::map<int, std::string>	_errorPages;
 };
 
