@@ -11,11 +11,6 @@
 
 
 //CE QU'IL TE RESTE A FAIRE :
-//-finir POST METHOD -- OK
-//-faire DELETE METHOD -- OK
-//- build error (regarder les rfc) - on est daccord que cest la qu'on ajoute les pages html ? -- OK
-//- ajouter les reasons phrases -- OK
-//- creer la fonction de responses formats -- OK
 //- mettre fonction findLocation dans ServerConfig
 
 //-----------------------
@@ -28,6 +23,11 @@
 //Step6: gerer les requests en fonction de la methode -- OK
 void Response::build(Request& request, ServerConfig *config, char **envp){
     _loc = findLocation(request.getPath());
+    if (_loc == NULL) {
+        _statusCode = NOT_FOUND;
+        buildError();
+        return;
+    }
     _config = config;
     if (request.getStatusCode() != 0){
         _statusCode = request.getStatusCode();
@@ -95,14 +95,17 @@ bool Response::methodAllowed(const std::string& method){
     return false;
 }
 
-bool Response::isCGI(const std::string& path){
+bool Response::isCGI(){
     if (_loc->getCgiEnabled()){
         std::vector<std::string>::iterator it = _loc->getCgiExtensions().begin();
         
         for (; it != _loc->getCgiExtensions().end(); it++){
-            size_t pos = path.find(*it) + (*it).size();
-            if (pos != std::string::npos && (path[pos] == *path.end() || path[pos] == '/'))
+            size_t pos = _internalPath.find(*it);
+            if (pos != std::string::npos){
+                size_t end = pos + it->size();
+                if (end == _internalPath.size() || _internalPath[end] == '/')
                 return true;
+                }
         }
         return false;
     }
@@ -154,12 +157,17 @@ void Response::handleGetMethod(Request& request){
         for (; it != indexes.end(); it++){
             std::ifstream file(*it);
             if (file.is_open()){
+                std::ostringstream ss;
+                ss << file.rdbuf();
+                _body = ss.str();
                 _statusCode = OK;
+                _headers["Content-Type"] = extractContentType();
                 return ;
             }
         }
         if (!_loc->getAutoIndex()){
-            setSyscallError();
+            _statusCode = FORBIDDEN;
+            buildError();
             return ;
         }
         displayAutoIndex();
@@ -199,24 +207,28 @@ void Response::displayAutoIndex(){
 // - si url contient des sous dossier non existant -> TEST STAT UPLOADDIR -- OK
 // - si cest un fichier sans extension on le cree tel quel ? -> COMME LINUX CREER TELQUEL
 // - si le fichier existe deja, on refuse --> ERREUR REFUSE : conflit 409 -- OK
-// - est ce qu on gere le multipart ? --> OUI MAIS UNIQUEMENT PAR CGI
-// car si on uploads depuis un vrai navigateur on est oblige mais via curl et telnet cest okay sans
-
+// - est ce qu on gere le multipart ? --> OUI MAIS UNIQUEMENT PAR CGI -- OK
 
 //Step 1: check if upload allowed in location -- OK
 //Step 2: define if it is a DIR or a FILE -- OK
 //Step 3: DIR create a file containing the body of the request, generate name of the file according to content-disposition if existing
 //Step 4: EXISTING FILE : add the body to the file or replace it -- OK
-//Step 5: NON-EXISTING FILE : create file and body to the file
+//Step 5: NON-EXISTING FILE : create file and body to the file -- OK
 
 void Response::handlePostMethod(Request& request){
+    if (_remain.empty() || _remain[_remain.size() - 1] == '/') {
+        _statusCode = BAD_REQUEST;
+        buildError();
+        LOG(std::cout << "can't upload body without specifying the file in URL" << std::endl);
+        return;
+    }
     if (request.getHeaders("content-type").find("multipart/form-data") != std::string::npos){
         _statusCode = FORBIDDEN;
         buildError();
         LOG(std::cout << "can't handle multipart without cgi" << std::endl);
         return ;
     }
-    if (!_loc->getUploadStore().empty()){
+    if (_loc->getUploadStore().empty()){
         _statusCode = FORBIDDEN;
         buildError();
         LOG(std::cout << "can't upload, no upload store" << std::endl);
@@ -237,11 +249,6 @@ void Response::handlePostMethod(Request& request){
         LOG(std::cout << "file already exist" << std::endl);
         return ;
     }
-    if (S_ISDIR(fileStat.st_mode)){
-        _statusCode = FORBIDDEN;
-        LOG(std::cout << "can't upload body without specifying the file in URL" << std::endl);
-        return ;
-    }
     else {
         std::string fileName = extractFileName(request.getPath());
         std::ofstream file(fileName);
@@ -254,8 +261,10 @@ void Response::handlePostMethod(Request& request){
 }
 
 std::string extractFileName(std::string path){
-    std::string fileName;
-    return (fileName);
+    size_t pos = path.rfind('/');
+    if (pos == std::string::npos)
+        return path;
+    return (path.substr(pos + 1));
 }
 
 
@@ -286,7 +295,6 @@ void Response::handleDeleteMethod(Request& request){
 
 void Response::buildError(){
 
-    _reasonPhrase = getReasonPhrase(_statusCode);
     std::string errorPageFile;
     if (_loc && !_loc->getErrorPage(_statusCode).empty())
         errorPageFile = _loc->getRoot() + "/" + _loc->getErrorPage(_statusCode);
