@@ -58,7 +58,7 @@ void	Server::readFromSocket(int clientFd)
 	}
 
 	if (client.getParsingStatus() == COMPLETE) {
-		client.buildResponse(this->env);
+		client.buildResponse();
         if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
             removeConnection(fd);
 			return ;

@@ -26,8 +26,8 @@ class Cgi
 		Cgi();
 		~Cgi();
 
-		int			handleCgi(Client& client, std::string internalPath);
-		void		setCgiEnvVariables(const Client& client, std::string internalPath);
+		int			handleCgi(Request& request, const std::string& internalPath, int port);
+		void		setCgiEnvVariables(const Request& request, std::string internalPath);
 		char**		getEnv();
 		int			executeScript(Client& client, const std::string& internalPath);
 		//const char**	getArgs(const std::string& internalPath);

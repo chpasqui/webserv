@@ -3,6 +3,7 @@
 #include "../include/statusCode.hpp"
 #include "../include/Location.hpp"
 #include "../include/Debug.hpp"
+#include "../include/Cgi.hpp"
 
 #include <sys/stat.h>
 #include <string.h>
@@ -13,8 +14,7 @@
  * @brief Builds the HTTP response from a parsed request.
  * Resolves location, checks method, dispatches to handler or CGI.
  */
-void Response::build(Request& request, const ServerConfig *config, char **envp){
-	(void)envp;
+void Response::build(Request& request, const ServerConfig *config){
 	_config = config;
 	_loc = findLocation(request.getPath());
 	if (_loc == NULL) {
@@ -40,10 +40,11 @@ void Response::build(Request& request, const ServerConfig *config, char **envp){
 		buildError();
 		return ;
 	}
-	// if (isCGI()){
-	//     handleCGI(request, envp);
-	//     return;
-	// }
+	if (isCGI()){
+		Cgi cgi;
+		int fd = cgi.handleCgi(request, _internalPath, config->getPort());
+		return;
+	}
 	handleMethod(request);
 }
 

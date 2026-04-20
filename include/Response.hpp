@@ -33,7 +33,7 @@ class Response {
 		void displayAutoIndex();
 		void handlePostMethod(Request& request);
 		void handleDeleteMethod(Request& request);
-		void handleCGI(Request& request, char **envp);
+		//void handleCGI(Request& request, const std::string& _internalPath, int port);
 
 		// response building and formatting
 		void 		buildError();
@@ -47,7 +47,7 @@ class Response {
 		Response();
 		~Response();
 
-		void 		build(Request& request, const ServerConfig *config, char **envp);
+		void 		build(Request& request, const ServerConfig *config);
 		std::string responseFormat(Request& request);
 		
 
