@@ -1,31 +1,37 @@
+#include "../include/color.hpp"
+#include "../include/ParseConfig.hpp"
 #include "../include/Server.hpp"
 #include "../include/ServerConfig.hpp"
+#include "../include/Cgi.hpp"
 
 #include <vector>
 #include <iostream>
 
-int main() {
-	std::vector<ServerConfig> configs;
-	ServerConfig config1;
-	config1.setPort(8080);
-	config1.setRoute("/var/www");
-
-	ServerConfig config2;
-	config2.setPort(9090);
-	config2.setRoute("/api");
-
-	configs.push_back(config1);
-	configs.push_back(config2);
+int main(int ac, char **av, char **env) {
+	if (ac != 2)
+		return 1;
 	
+	std::vector<ServerConfig*> configs;
+	ParseConfig pc(av[1], &configs);
+	pc.parsingConfigFile();
+
+
+	ServerConfig *serverconfig = *(configs.begin());
+
+	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;
+	
+	Server server(env);
+
 	try
 	{
+		std::cout << "entered the try tactch block" << std::endl;
 		/**
 		 * @brief Server(Serverconfigs) will loop over the vector of serverConfigs and will
 		 * 1. create a new socket for the listening fd
 		 * 2. bind the listening fd to the corresponding port in the configuration file. The port number is used by the kernel to match an incoming packet to a certin process's socket descriptotr
 		 * 3. set it to listen to incoming connecitons on a specific port. Backllog says how many connections are allower to queue up
 		 */
-		Server server(configs);
+		server.setupListeningSockets(configs);
 		/**
 		 * @brief server.run is the main multiplexer loop though which everything passes. 
 		 * 1. a client (someone) will try to connect on your machine or port and that we are 

@@ -9,11 +9,19 @@ ifdef DEBUG
     CXXFLAGS += -DDEBUG
 endif
 
+
+ifdef DEBUG
+    CXXFLAGS += -DDEBUG
+endif
+
 LDINCLUDE	=	-I$(DIR_INCLUDE)
 
 SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp \
 				Request.cpp requestParsingLine.cpp requestParsingHeader.cpp requestParsingBody.cpp debug.cpp \
-				requestUtils.cpp
+				requestUtils.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp \
+				serverEpoll.cpp serverLoop.cpp \
+				listeningSockets.cpp serverUtils.cpp \
+				serverHandler.cpp Cgi.cpp cgiHandler.cpp
 SRCS_NAME	=	$(basename $(SRCS))
 OBJS		=	$(addsuffix .o, $(addprefix $(DIR_BUILD)/, $(SRCS_NAME)))
 
