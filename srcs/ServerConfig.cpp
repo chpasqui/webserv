@@ -95,14 +95,6 @@ int	ServerConfig::getPort(void) const {
 
 std::string ServerConfig::getServerName(void) const {
 	return (this->_serverName);
-char ** ServerConfig::getEnv(void) const {
-	return this->_originalEnv;
-}
-
-
-ServerConfig::~ServerConfig()
-{
-	
 }
 
 std::vector<Location *> ServerConfig::getLocations(void) const {

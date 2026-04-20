@@ -25,7 +25,7 @@
  * 
  * @param serverConfigsVec (loop through)
  */
-void Server::setupListeningSockets(const std::vector<ServerConfig>& serverConfigsVec) {
+void Server::setupListeningSockets(const std::vector<ServerConfig *>& serverConfigsVec) {
 	createEpollInstance();
 	std::string errorMsg;
 	
@@ -35,8 +35,8 @@ void Server::setupListeningSockets(const std::vector<ServerConfig>& serverConfig
 	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
 	{
 		int listenFd = openListeningSocket();
-		bindAndListen(listenFd, serverConfigsVec[i].getPort());
-		this->_listenFds[listenFd] = &serverConfigsVec[i];
+		bindAndListen(listenFd, serverConfigsVec[i]->getPort());
+		this->_listenFds[listenFd] = serverConfigsVec[i];
 		addToEpoll(this->epollFd, listenFd, EPOLLIN);
 	}
 }

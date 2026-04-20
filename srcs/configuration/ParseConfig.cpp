@@ -11,6 +11,7 @@
 #include "../../include/ServerConfig.hpp"
 #include "../../include/Location.hpp"
 #include "../../include/color.hpp"
+#include "../../include/Debug.hpp"
 
 ParseConfig::ParseConfig() :
 	_filename(""),
@@ -18,17 +19,18 @@ ParseConfig::ParseConfig() :
 	_http(0),
 	_currentConfig(0),
 	_location(0),
+	_serverConfigs(0),
 	_dictionary() {
-	std::cout << "ParseConfig: Default constructor called" << std::endl;
+	LOG("ParseConfig: Default constructor called");
 }
 
-ParseConfig::ParseConfig(std::string filename, std::vector<ServerConfig *> &serverConfigs) :
+ParseConfig::ParseConfig(std::string filename, std::vector<ServerConfig *> *serverConfigs) :
 	_filename(filename),
 	_context(0),
 	_http(0),
 	_currentConfig(0),
 	_location(0),
-	_serverConfigs(serverConfigs){
+	_serverConfigs(serverConfigs) {
 	_dictionary["}"] = &ParseConfig::processEndBraquetToken;
 	_dictionary["http"] = &ParseConfig::processTokenHttp;
 	_dictionary["server"] = &ParseConfig::processServerToken;
@@ -41,11 +43,11 @@ ParseConfig::ParseConfig(std::string filename, std::vector<ServerConfig *> &serv
 	_dictionary["autoindex"] = &ParseConfig::processAutoindexToken;
 	_dictionary["error_page"] = &ParseConfig::processErrorPageToken;
 
-	std::cout << "ParseConfig: Normal construtor called" << std::endl;
+	LOG("ParseConfig: Normal construtor called");
 }
 
 ParseConfig::~ParseConfig() {
-	std::cout << "ParseConfig: Destructor called" << std::endl;
+	LOG("ParseConfig: Destructor called");
 }
 
 int	ParseConfig::parsingConfigFile(void) {
@@ -57,23 +59,25 @@ int	ParseConfig::parsingConfigFile(void) {
 	while (true) 
 	{
 		token = this->getNextToken();
-		// if (currentToken == "")
-		// {
-		// 	std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
-		// 	return (1);
-		// }
+		if (token == "")
+		{
+			LOG(C_GREEN << "End of configFile: no error" << RESET);
+			return (1);
+		}
+		it = this->_dictionary.find(token);
 		if (it == this->_dictionary.end())
 		{
-			std::cerr << C_RED << token << ": Unknow token" << RESET << std::endl; //TODO: Add line number
+			std::cerr << C_RED << token << ": Unknow token" << RESET  << std::endl; //TODO: Add line number
 			return (1);
 		}
 		
 		try {
-			it = this->_dictionary.find(token);
+			LOG(token);
 			(this->*it->second)();
+			LOG(" no segfault");
 		}
 		catch (std::exception &e) {
-			std::cout << C_RED << e.what() << RESET << std::endl;
+			LOG(C_RED << e.what() << RESET);
 			return (1);
 		}
 	}
@@ -108,11 +112,11 @@ std::string	ParseConfig::getNextToken(void) {
 	pos = this->_configFile.find_first_not_of(" \n");
 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
 	pos = this->_configFile.find_first_of(" \n");	//WARN: no protect for end, use find() to check the npos
-	std::cout << pos << std::endl;
+	LOG(pos);
 	token = this->_configFile.substr(0, pos);
 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
 
-	std::cout << C_PINK << token << RESET << std::endl;
+	LOG(C_PINK << token << RESET);
 	return (token);
 }
 
@@ -130,7 +134,7 @@ void	ParseConfig::processTokenHttp(void) {
 
 	nextToken = getNextToken();
 	if (nextToken != "{" || this->_context!= NONE || this->_http) {
-		std::cerr << C_RED << "Unknow token after http" << RESET << std::endl; 
+		std::cerr << C_RED << "Unknow token after http" << RESET << std::endl;
 		return;
 	}
 	try {
@@ -147,21 +151,21 @@ void	ParseConfig::processServerToken(void) {
 
 		nextToken = getNextToken();
 		if (nextToken != "{" || this->_context != HTTP || this->_currentConfig) {
-			std::cerr << C_RED << "TEST" << RESET << std::endl;
+			std::cerr << C_RED << "TEST" << RESET  << std::endl;
 			return;
 		}
-		this->_serverConfigs.push_back(new ServerConfig(*(this)->_http));
+		this->_serverConfigs->push_back(new ServerConfig(*(this)->_http));
 		this->_context = SERVER;
-		this->_currentConfig = *(this->_serverConfigs.rbegin());
+		this->_currentConfig = *(this)->_serverConfigs->rbegin();
 }
 
 void	ParseConfig::processLocationToken(void) {
 	std::string	nextToken;
 
 	nextToken = getNextToken();
-	std::cout << C_CORAL << "Inside location block" << RESET << std::endl;
+	LOG(C_CORAL << "Inside location block" << RESET);
 	if (nextToken != "{" || this->_context!= SERVER || this->_location) {
-		std::cerr << C_RED << "TEST" << RESET << std::endl;
+		std::cerr << C_RED << "TEST" << RESET  << std::endl;
 		return ;
 	}
 	this->_location = new Location(*(this)->_currentConfig);
@@ -312,7 +316,7 @@ void	ParseConfig::processAutoindexToken(void) {
 	else if (this->_context == LOCATION)
 		this->_location->setAutoindex(is_enable);
 	else {
-		std::cout << C_RED << "Using token \"autoindex\" in wrong context" << RESET << std::endl;
+		LOG(C_RED << "Using token \"autoindex\" in wrong context" << RESET);
 		return;
 	}
 	return;
@@ -337,7 +341,7 @@ void	ParseConfig::processErrorPageToken(void) {
 	else if (this->_context == LOCATION)
 		this->_location->addErrorPage(code, pageToken);
 	else {
-		std::cout << C_RED << "Using token \"error_page\" in wrong context" << RESET << std::endl;
+		LOG(C_RED << "Using token \"error_page\" in wrong context" << RESET);
 		return;
 	}
 	return;
@@ -358,7 +362,7 @@ int	ParseConfig::transformTokenToInt(std::string token) {
 		std::cerr << C_RED << "invalid number in line x" << RESET << std::endl;
 		return (-1);
 	}
-	std::cout << C_PURPLE << "DEBUG: number is: " << nb << RESET << std::endl;
+	LOG(C_PURPLE << "DEBUG: number is: " << nb << RESET);
 	return (nb);
 }
 

@@ -25,7 +25,7 @@ class Server
 {
 	public:
 		Server(char **env);
-		void setupListeningSockets(const std::vector<ServerConfig>& serverConfigsVec);
+		void setupListeningSockets(const std::vector<ServerConfig *>& serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);
 		int		getEpollFd(void) const;

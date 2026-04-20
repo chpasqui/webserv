@@ -25,14 +25,14 @@ class Client
 		Client(const Client& other);
 		~Client();
 
-		void		parseRequest();
-		bool		bodyRead(std::string& buffer);
+		void				parseRequest();
+		bool				bodyRead(std::string& buffer);
 
-		int			getClientFd() const;
-		int			getParsingStatus() const;
-		Request*	getRequest(void) const;
+		int					getClientFd() const;
+		int					getParsingStatus() const;
+		Request*			getRequest(void) const;
 		const ServerConfig* getServerConfig(void) const;
-		time_t		getTimestamp(void) const;
+		time_t				getTimestamp(void) const;
 		
 
 

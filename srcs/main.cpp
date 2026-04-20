@@ -7,32 +7,24 @@
 #include <vector>
 #include <iostream>
 
-int main(int ac, char **av) {
+int main(int ac, char **av, char **env) {
 	if (ac != 2)
 		return 1;
 	
 	std::vector<ServerConfig*> configs;
-	ParseConfig pc(av[1], configs);
+	ParseConfig pc(av[1], &configs);
 	pc.parsingConfigFile();
+
 
 	ServerConfig *serverconfig = *(configs.begin());
 
 	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;
-	//ServerConfig config1;
-	// config1.setPort(8080);
-	// config1.setRoute("/var/www");
-	//
-	// ServerConfig config2;
-	// config2.setPort(9090);
-	// config2.setRoute("/api");
-
-	configs.push_back(config1);
-	//configs.push_back(config2);
-
+	
 	Server server(env);
 
 	try
 	{
+		std::cout << "entered the try tactch block" << std::endl;
 		/**
 		 * @brief Server(Serverconfigs) will loop over the vector of serverConfigs and will
 		 * 1. create a new socket for the listening fd

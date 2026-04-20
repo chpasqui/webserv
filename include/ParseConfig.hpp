@@ -19,7 +19,7 @@ enum context {
 class ParseConfig {
 	public:
 		ParseConfig();
-		ParseConfig(std::string filename, std::vector<ServerConfig *> &serverConfigs);
+		ParseConfig(std::string filename, std::vector<ServerConfig *> *serverConfigs);
 		~ParseConfig();
 		
 		int				parsingConfigFile(void);
@@ -47,7 +47,7 @@ class ParseConfig {
 		Http												*_http;
 		ServerConfig										*_currentConfig;
 		Location											*_location;
-		std::vector<ServerConfig*>							_serverConfigs;
+		std::vector<ServerConfig*>							*_serverConfigs;
 		std::map<std::string, void (ParseConfig::*)(void)>	_dictionary;
 };
 
