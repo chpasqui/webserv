@@ -23,7 +23,7 @@ class Request
 		const std::string& 	getBody(void) const;
 		const std::string& 	getPath(void) const;
 		const std::string& 	getMethod(void) const;
-		const std::string& 	getHeaders(std::string key) const;
+		const std::string& 	getHeader(std::string key) const;
 		std::string getUrl(void) const;			// eventuellement faire une classe Request a part avec const
 		std::string getQuery(void) const;
 		const std::map<std::string, std::string>& getHeaders() const;
