@@ -18,8 +18,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define WRITE_END 1
-#define READ_END 0
+
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
 int	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs to send this and then the path 

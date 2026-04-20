@@ -24,6 +24,9 @@
 #include <fstream>
 #include <dirent.h>
 
+#define WRITE_END 1
+#define READ_END 0
+
 // /**
 //  * @brief Executes the CGI handler for the matched script.
 //  */
