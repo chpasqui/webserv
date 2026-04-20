@@ -34,14 +34,14 @@ void	Server::createEpollInstance(void) {
  * @brief Registers fdToModify with the epoll instance to monitor it for the
  * events specified by flag (e.g. EPOLLIN, EPOLLOUT).
  */
-void	Server::addToInterestList(int epollFd, int fdToModify, uint32_t flag)
+void	Server::addToEpoll(int epollFd, int newFd, uint32_t flag)
 {
 	struct epoll_event	event;
 	event.events = flag;
-	event.data.fd = fdToModify;
-	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fdToModify, &event) == -1)
+	event.data.fd = newFd;
+	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, newFd, &event) == -1)
 	{
-		close(fdToModify);
+		close(newFd);
 		close(epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
@@ -70,7 +70,7 @@ bool	Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
 /**
  * @brief Removes the fd from the epoll instance to stop monitoring it.
  */
-void	Server::removeFromInterestList(int epollFd, int fdToModify)
+void	Server::delFromEpoll(int epollFd, int fdToModify)
 {
 	struct epoll_event	event;
 	event.events = 0;
@@ -84,4 +84,10 @@ void	Server::removeFromInterestList(int epollFd, int fdToModify)
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw (std::runtime_error(errorMsg));
 	}
+	close(fdToModify);
+	// if (_clients.count(fdToModify))
+	// {
+	// 	delete clients[fdToModify];
+	// 	_clients.erase(fdToModify);
+	// }
 }

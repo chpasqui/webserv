@@ -25,7 +25,7 @@ bool	Server::addNewConnection(int listeningFd)
 
 	try
 	{
-		addToInterestList(this->epollFd, clientFd, EPOLLIN);
+		addToEpoll(this->epollFd, clientFd, EPOLLIN);
 		const ServerConfig *config = _listenFds[listeningFd];
 		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
 		std::cout <<"new connection with " << clientFd << "." << std::endl;
@@ -60,8 +60,13 @@ void	Server::readFromSocket(int fd)
 		// code for Response is here --> it will go to responseBuild which does the checks and then looks at the CGI
 		std::cout << GREEN << "entered the COMPLETE function" << RESET << std::endl;
 		Cgi cgi(this->env);
-		std::cout << "after the segfault" << std::endl;
-		cgi.handleCgi(client, "/var/www/cgi-bin/foo.py/user/42");
+		int piperead = cgi.handleCgi(client, "./www/cgi-bin/hello.py");
+		if (piperead == -1) {
+			removeConnection(fd);
+			return;
+		}
+		std::cout << "pipenreceived from piperead is " << piperead << std::endl;
+		addToEpoll(this->epollFd, piperead, EPOLLIN);
 		if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
 			removeConnection(fd);
 		}
@@ -77,6 +82,7 @@ void	Server::writeToSocket(int fd)
 
 void	Server::removeConnection(int fd)
 {
+	delFromEpoll(this->epollFd, fd);
 	if (close(fd) == -1)
 		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
 	if (_clients.count(fd))

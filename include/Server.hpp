@@ -38,9 +38,9 @@ class Server
 		void	timeoutCheck(void);
 		
 		void	removeConnection(int fd);
-		static void	addToInterestList(int epollFd, int fdToModify, uint32_t flag);
+		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static bool	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
-		static void	removeFromInterestList(int epollFd, int fdToModify);
+		static void	delFromEpoll(int epollFd, int fdToModify);
 		static void	signalHandler(int signal);
 
 

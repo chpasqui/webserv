@@ -1,8 +1,11 @@
 #include "../include/Cgi.hpp"
+#include "../include/Server.hpp"
 #include "../include/Request.hpp"
 #include "../include/ServerConfig.hpp"
 #include "../include/Client.hpp"
 
+#include <iostream>
+#include <fstream>
 #include <unistd.h>
 #include <string>
 #include <vector>
@@ -15,20 +18,37 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define WRITE_END 1
-#define READ_END 0
+#define PIPE_INPUT 1
+#define PIPE_OUTPUT 0
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
-void	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs to send this and then the path 
+int	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs to send this and then the path 
 {
 	std::cout << GREEN << "ENTERED CGI FUNCTIOM" << RESET << std::endl;
-	if (!access(internalPath.c_str(), X_OK)) { return; }
+	if (access(internalPath.c_str(), X_OK) == -1) {
+		std::cerr << "access issue" << std::endl;
+		return -1;
+	}
 	
 	setCgiEnvVariables(client, internalPath);
-	buildEnv();
-	executeCgi(client, internalPath);
+	buildScriptEnv();
+	return (executeScript(client, internalPath));
 }
 
+/**
+ * @brief 
+ *  Environment variables are used to pass data about the request from
+ * the server to the script. They are accessed by the script in a system 
+ * defined manner. In all cases, a missing environment variable is
+ * equivalent to a zero-length (NULL) value, and vice versa.
+ * 
+ * PATH_INFO identifies the resource to be returnwed by the CGI script. The leading / is not part of the pathinfo
+ * if it is just "/", then it must be replaced by "".
+ * 
+ * 
+ * @param client 
+ * @param internalPath 
+ */
 void	Cgi::setCgiEnvVariables(const Client& client, std::string internalPath) {
 	Request *request = client.getRequest();
 	const ServerConfig *config = client.getServerConfig();
@@ -39,11 +59,11 @@ void	Cgi::setCgiEnvVariables(const Client& client, std::string internalPath) {
 	_tempEnv.push_back("SERVER_PROTOCOL=" + request->getVersion());
 	_tempEnv.push_back("CONTENT_TYPE=" + getHeaderVariable(header, "content-type"));
 	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
-	_tempEnv.push_back("PATH_INFO=" + internalPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself 
 	
 	if (request->getContentLength() != 0) { _tempEnv.push_back("CONTENT_LENGTH=" + getHeaderVariable(header, "content-length")); } // if and onlf if body.. need to check with charlotte
 	this ->_scriptName =  internalPath.substr(0, internalPath.find(".py") + 3);
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName); // need to split? not sure how i willr eceive it.... see wiht charlotte today
+	_tempEnv.push_back("PATH_INFO=" + internalPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself 
 	_tempEnv.push_back("SERVER_PORT=" + intToString(config->getPort()));
 	
 	char hostname[1024];
@@ -52,7 +72,11 @@ void	Cgi::setCgiEnvVariables(const Client& client, std::string internalPath) {
 	_tempEnv.push_back("SERVER_NAME=" + std::string(hostname));
 }
 
-void	Cgi::buildEnv()
+/**
+ * @brief 
+ * 
+ */
+void	Cgi::buildScriptEnv()
 {
 	int len;
 	for (len = 0; this->_originalEnv[len]; ++len) {}
@@ -77,39 +101,56 @@ void	Cgi::buildEnv()
 	this->_finalEnv[finalNbEnv] = NULL;
 }
 
-void	Cgi::executeCgi(Client& client, std::string internalPath)
-{
-	std::cout << GREEN << "enterex the executeCGI function" << RESET << std::endl;
-	Request *request = client.getRequest();
-	int fd[2];
-	(void)internalPath;
-	//const char *execFriendlyPath = internalPath.c_str();
-	const char *execFriendlyBuffer = request->getBody().c_str();
-	size_t	argSize = request->getBody().size();
-	//char	*args[] = { const_cast<char *>(execFriendlyPath), NULL };
-	
 
+
+// Create the new fd
+// add it to the epoll (the pipe out)
+// 
+/**
+ * @brief 
+ * 
+ * @param client 
+ * @param internalPath 
+ * 
+ * commands for the CGI would be 
+ */
+int	Cgi::executeScript(Client& client, std::string internalPath)
+{
+	(void)client;
+	std::cout << GREEN << "entered the executeCGI function" << RESET << std::endl;
+
+	int fd[2];
+	
 	if (pipe(fd) == -1) {
 		perror("pipe");
 		// leave the function and handle error
 	}
+	fcntl(fd[0], F_SETFD | O_NONBLOCK); // set the read end of the pipe to non blocking
 	pid_t pid = fork();
 	if (pid < 0) {
 		std::cout << "error" << std::endl;
 	}
-	if (pid == 0) {                                                                                                                                                                                                                                                      
-		close(fd[WRITE_END]);
-		dup2(fd[READ_END], STDIN_FILENO);
-		close(fd[READ_END]);
+	if (pid == 0) {
+		std::cout << "entered the child" << std::endl;
+		std::string interpreterStr = extractExecutable();
+		const char *interpreter = interpreterStr.c_str();
+		std::cout << "interpreter :" << interpreter << std::endl;
+		const char *scriptpath = internalPath.c_str();
+		std::cout << "scriptpath :" << scriptpath << std::endl;
+		const char *args[] = { interpreter, scriptpath, NULL };
+		int tempFileFd = open("tmpfile.txt", O_RDONLY);
 		std::cout << GREEN << "inside child all good" << RESET << std::endl;
+		dup2(tempFileFd, STDIN_FILENO);
+		dup2(fd[PIPE_OUTPUT], STDOUT_FILENO);
+		close(fd[PIPE_OUTPUT]);
+		close(fd[PIPE_INPUT]);
+		execve(interpreter, const_cast<char *const *>(args), this->_finalEnv);
+		perror("execve");
 		exit(1);
-		//execve(execFriendlyPath, args, this->_finalEnv);
-		//if (execve(internalPath.c_str(), // send someting here, this->_finalEnv) == -1);
 	}
-	if (pid > 0) {
-		close(fd[READ_END]);
-		write(fd[WRITE_END], execFriendlyBuffer, argSize);
-		close(fd[WRITE_END]);
+	else {
+		close(fd[PIPE_OUTPUT]);
+		return fd[PIPE_INPUT];
 	}
 }
 
@@ -129,7 +170,27 @@ std::string getHeaderVariable(const std::map<std::string, std::string>& header, 
 	return "";
 }
 
- 
+std::string extractExecutable() {
+	std::ifstream filestream("./www/cgi-bin/hello.py");
+	std::string line;
+	getline(filestream, line);
+	std::cout << "line contains " << line << std::endl;
+	if (line.substr(0,2) != "#!")
+	{
+		std::cout << "CASE 1" << std::endl;
+		return "";
+	}
+
+	if (line.find("env") != std::string::npos) {
+		std::cout << "CASE 2" << std::endl;
+		size_t spacepos = line.find(' ');
+		std::string interpreterName = line.substr(spacepos + 1);
+		return "/usr/bin/" + interpreterName; // /usr/bin/python3
+	}
+	std::cout << "CASE 3" << std::endl;
+	
+	return line;
+}
 
 
 //copy of originalEnv TO DO

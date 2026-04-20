@@ -27,10 +27,10 @@ class Cgi
 		Cgi(char **originalEnv);
 		~Cgi();
 
-		void		handleCgi(Client& client, std::string internalPath);
+		int			handleCgi(Client& client, std::string internalPath);
 		void		setCgiEnvVariables(const Client& client, std::string internalPath);
-		void		buildEnv();
-		void		executeCgi(Client& client, std::string internalPath);
+		void		buildScriptEnv();
+		int			executeScript(Client& client, std::string internalPath);
 		// std::string extractScriptPath(const std::string& internalPath);
 		// std::string getPathInfo(const std::string& internalPath, size_t endScriptName);
 
@@ -45,5 +45,6 @@ class Cgi
 
 std::string intToString(int number);
 std::string getHeaderVariable(const std::map<std::string, std::string>& header, const std::string& tofind);
+std::string extractExecutable();
 
 #endif
