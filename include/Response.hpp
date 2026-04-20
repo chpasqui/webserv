@@ -6,49 +6,55 @@
 #include "Location.hpp"
 
 #include <map>
-#include <iostream>
+#include <string>
+#include <sstream>
 
 class Response {
 	private :
-		ServerConfig* _config;
-		Location* _loc;
-		int _statusCode;
-		std::string _internalPath;
-		std::map<std::string, std::string> _headers;
-		std::string _body;
-		std::string _remain;
+		ServerConfig* 						_config;
+		Location* 							_loc;
+		int 								_statusCode;
+		std::string 						_internalPath;
+		std::string 						_remain;
+		std::map<std::string, std::string> 	_headers;
+		std::string 						_body;
+		
 
+		//route
+		Location* 	findLocation(const std::string& url); // serait mieux dans serverConfig ou location
+		std::string buildFileSystemPath(const std::string& url);
+		bool 		methodAllowed(const std::string& method);
+		bool 		isCGI();
+		void 		handleMethod(Request& request);
+
+		// handlers
+		void handleGetMethod(Request& request);
+		bool serveFile();
+		void displayAutoIndex();
+		void handlePostMethod(Request& request);
+		void handleDeleteMethod(Request& request);
+		void handleCGI(Request& request, char **envp);
+
+		// response building and formatting
+		void 		buildError();
+		void 		generateErrorPage();
+		void 		setSyscallError();
+		void 		setDefaultHeaders();
+		std::string extractContentType();
+		std::string getReasonPhrase() const;
+		
 	public:
 		Response();
 		~Response();
 
-		std::string getReasonPhrase() const;
-		void setDefaultHeaders();
-
-		void build(Request& request, ServerConfig *config, char **envp);
-		Location* findLocation(const std::string& url); // serait mieux dans serverConfig ou location
-		std::string buildFileSystemPath(const std::string& url);
-		bool methodAllowed(const std::string& method);
-		bool isCGI();
-
-		void handleMethod(Request& request);
-
-		void handleGetMethod(Request& request);
-		bool serveFile();
-		void displayAutoIndex(); 
-
-		void handlePostMethod(Request& request);
-
-		void handleDeleteMethod(Request& request);
-		void buildError();
-		void generateErrorPage();
-
-		void handleCGI(Request& request, char **envp);
-
-		void setSyscallError();
-
-		std::string extractContentType();
+		void 		build(Request& request, ServerConfig *config, char **envp);
 		std::string responseFormat(Request& request);
+		
+
+		
+
+	
+		
 
 		
 };

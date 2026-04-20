@@ -15,13 +15,13 @@ class Request
 		~Request();
 
 		//Getter
-		int	getStatusCode(void) const;
-		int	getContentLength(void) const;
-		const std::string& getVersion(void) const;
-		const std::string& getBody(void) const;
-		const std::string& getPath(void) const;
-		const std::string& getMethod(void) const;
-		const std::string& getHeaders(std::string key) const
+		int					getStatusCode(void) const;
+		int					getContentLength(void) const;
+		const std::string& 	getVersion(void) const;
+		const std::string& 	getBody(void) const;
+		const std::string& 	getPath(void) const;
+		const std::string& 	getMethod(void) const;
+		const std::string& 	getHeaders(std::string key) const;
 
 		//Parsing
 		bool parseRequestLine(const std::string &message);
@@ -49,12 +49,12 @@ class Request
 		void stockIfQuery(std::string url_decode);
 
 		// Header
-		bool validateCRLF(const std::string &line);
-		bool validateObsFold(const std::string &line);
-		bool validateFieldName(const std::string &line, size_t colonPos);
+		bool 		validateCRLF(const std::string &line);
+		bool 		validateObsFold(const std::string &line);
+		bool 		validateFieldName(const std::string &line, size_t colonPos);
 		std::string extractFieldName(const std::string &line, size_t colonPos);
 		std::string extractValue(const std::string &line, size_t colonPos);
-		bool validateFieldValue(const std::string &fieldname, const std::string &value);
+		bool 		validateFieldValue(const std::string &fieldname, const std::string &value);
 
 		// Body
 		bool unchunkedBody(const std::string &body);
