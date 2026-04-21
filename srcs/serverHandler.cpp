@@ -59,8 +59,10 @@ void	Server::readFromSocket(int clientFd)
 
 	if (client.getParsingStatus() == COMPLETE) {
 		client.buildResponse();
-		if (client.getResponse()->getCgiStatus() == true)
+		if (client.getResponse()->getCgiStatus() == true) {
+			std::cout << "entered the case where it is cgi" << std::endl;
 			dispatchCgi(client);
+		}
 		else {
 			if(!modifyEpoll(this->epollFd, clientFd, EPOLLOUT)) {
 				removeConnection(clientFd);
@@ -70,6 +72,7 @@ void	Server::readFromSocket(int clientFd)
 }
 
 void	Server::dispatchCgi(const Client& client) const {
+	std::cout << "inside the dispatch cgi funciton" << std::endl;
 	Cgi cgi;
 	int pipeFd = cgi.executeCgi(*client.getRequest(),
 		*client.getServerConfig(),

@@ -67,7 +67,7 @@ void	Cgi::setCgiEnvVariables(const Request& request, const ServerConfig& config,
 	this ->_scriptName =  internalPath.substr(0, internalPath.find(".py") + 3);
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName); // need to split? not sure how i willr eceive it.... see wiht charlotte today
 	_tempEnv.push_back("PATH_INFO=" + internalPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself 
-	_tempEnv.push_back("SERVER_PORT=" + std::to_string(config.getPort()));
+	_tempEnv.push_back("SERVER_PORT=" + intToString(config.getPort()));
 	
 	char hostname[1024];
 	hostname[1023] = '\0';
@@ -110,6 +110,7 @@ char**	Cgi::setEnv()
  */
 int	Cgi::executeScript(const Request& request, const std::string &internalPath)
 {
+	(void)request;
 	std::cout << GREEN << "entered the executeCGI function" << RESET << std::endl;
 
 	int fd[2];
@@ -133,20 +134,29 @@ int	Cgi::executeScript(const Request& request, const std::string &internalPath)
 		const char *args[] = { this->_interpreter, scriptpath, NULL };
 
 
-		int tempFileFd = open("tmpfile.txt", O_RDONLY);
+		int tempFileFd = open("/tools/tmpfile.txt", O_RDONLY);
 		std::cout << GREEN << "inside child all good" << RESET << std::endl;
 		dup2(tempFileFd, STDIN_FILENO);
 		dup2(fd[WRITE_END], STDOUT_FILENO);
 		close(fd[WRITE_END]);
 		close(fd[READ_END]);
 		execve(this->_interpreter, const_cast<char *const *>(args), setEnv());
-		perror("execve");
+		perror("Error: execve was not able to do its thing");
 		exit(1);
 	}
 	else {
 		close(fd[WRITE_END]);
 		return fd[READ_END];
 	}
+}
+
+
+std::string intToString(int number){
+	std::stringstream ss;
+	ss << number;
+	std::string newString;
+	ss >> newString;
+	return newString;
 }
 
 std::string getHeaderVariable(const std::map<std::string, std::string>& header, const std::string& tofind)

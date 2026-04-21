@@ -25,6 +25,7 @@ bool Request::parseBody(const std::string &body, int maxBodySize){
         return true ;
     }
     _contentLength = 0;
+    // once the body is unchunked, 
     std::cout << _body << std::endl;
     return true ;
 }

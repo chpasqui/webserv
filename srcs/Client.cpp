@@ -68,6 +68,8 @@ bool Client::bodyRead(std::string& buffer){
 void	Client::parseRequest() {
 	char buffer[1024];
 
+	if (this->_parsingStatus == COMPLETE || this->_parsingStatus == CLOSEFD)
+		return ;
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0 || _bytesRead  == -1)
 	{
@@ -108,8 +110,14 @@ void	Client::parseRequest() {
 	return ;
 }
 
+/**
+ * @brief build response will set the bool isCgi which will then be used
+ * by the server to know which type of request we are dealing with.
+ * 
+ */
 void Client::buildResponse()
 {
+	std::cout << "entered the buildResponse function" << std::endl;
 	_response = new Response();
 	_response->build(*_request, _config);
 }

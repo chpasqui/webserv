@@ -41,6 +41,7 @@ void Response::build(Request& request, const ServerConfig *config){
 		return ;
 	}
 	if (isCGI()){
+		std::cout << "inside the build function, isCgi is set to true" << std::endl;
 		this->_isCgi = true;
 		return;
 	}
