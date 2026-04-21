@@ -18,6 +18,7 @@ class Response {
 		std::string 						_remain;
 		std::map<std::string, std::string> 	_headers;
 		std::string 						_body;
+		bool								_isCgi;
 		
 
 		//route
@@ -33,7 +34,6 @@ class Response {
 		void displayAutoIndex();
 		void handlePostMethod(Request& request);
 		void handleDeleteMethod(Request& request);
-		//void handleCGI(Request& request, const std::string& _internalPath, int port);
 
 		// response building and formatting
 		void 		buildError();
@@ -49,14 +49,8 @@ class Response {
 
 		void 		build(Request& request, const ServerConfig *config);
 		std::string responseFormat(Request& request);
-		
-
-		
-
-	
-		
-
-		
+		bool		getCgiStatus(void) const;
+		std::string	getInternalPath(void) const;
 };
 
 #endif 

@@ -41,8 +41,7 @@ void Response::build(Request& request, const ServerConfig *config){
 		return ;
 	}
 	if (isCGI()){
-		Cgi cgi;
-		int fd = cgi.handleCgi(request, _internalPath, config->getPort());
+		this->_isCgi = true;
 		return;
 	}
 	handleMethod(request);

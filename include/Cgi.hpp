@@ -25,20 +25,17 @@ class Cgi
 	public:
 		Cgi();
 		~Cgi();
-
-		int			handleCgi(Request& request, const std::string& internalPath, int port);
-		void		setCgiEnvVariables(const Request& request, std::string internalPath);
-		char**		getEnv();
-		int			executeScript(Client& client, const std::string& internalPath);
-		//const char**	getArgs(const std::string& internalPath);
-
+		int			executeCgi(const Request& request, const ServerConfig& config, const std::string& internalPath);
 	private:
 		std::vector<std::string>	_tempEnv;
-		// char						**_env;
 		int							_tempEnvLength;
 		std::string					_scriptName;
 		std::string					_pathInfo;
 		const char *				_interpreter;
+		void						setCgiEnvVariables(const Request& request, std::string internalPath);
+		char**						setEnv();
+		int							executeScript(Client& client, const std::string& internalPath);
+		//const char**	getArgs(const std::string& internalPath);
 };
 
 std::string intToString(int number);

@@ -34,6 +34,7 @@ class Server
 		void	run(void);
 		bool	addNewConnection(int listeningFd);
 		void	readFromSocket(int fd);
+		void	dispatchCgi(const Client& client) const;
 		void	writeToSocket(int fd);
 		void	timeoutCheck(void);
 		

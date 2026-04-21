@@ -91,10 +91,10 @@ void	Client::parseRequest() {
 			return ;
 		}
 		if (_request->getContentLength() <= 0)
-    	{
-        	this->_parsingStatus = COMPLETE;
-        	return ;
-    	}
+		{
+			this->_parsingStatus = COMPLETE;
+			return ;
+		}
 		this->_parsingStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
@@ -106,6 +106,12 @@ void	Client::parseRequest() {
 		this->_parsingStatus = COMPLETE;
 	}
 	return ;
+}
+
+void Client::buildResponse()
+{
+	_response = new Response();
+	_response->build(*_request, _config);
 }
 
 int		Client::getClientFd() const {
@@ -132,19 +138,18 @@ Request* Client::getRequest(void) const {
 	return (this->_request);
 }
 
+Response* Client::getResponse(void) const {
+	return (this->_response);
+}
+
 const ServerConfig* Client::getServerConfig(void) const {
 	return this->_config;
 }
 
-void Client::buildResponse()
-{
-    _response = new Response();
-    _response->build(*_request, _config);
-}
 
-std::string Client::getResponse() const
+std::string Client::getResponseStr() const
 {
-    return _response->responseFormat(*_request);
+	return _response->responseFormat(*_request);
 }
 
 

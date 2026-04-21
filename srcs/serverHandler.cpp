@@ -59,25 +59,26 @@ void	Server::readFromSocket(int clientFd)
 
 	if (client.getParsingStatus() == COMPLETE) {
 		client.buildResponse();
-        if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
-            removeConnection(fd);
-			return ;
-		}
-		// code for Response is here --> it will go to responseBuild which does the checks and then looks at the CGI
-		std::cout << GREEN << "entered the COMPLETE function" << RESET << std::endl;
-		Cgi cgi;
-		client.setCgiPipeFd(cgi.handleCgi(client, "./www/cgi-bin/hello.py"));
-		if (client.getCgiPipeFd() == -1) {
-			removeConnection(client.getCgiPipeFd());
-			return;
-		}
-		std::cout << "pipenreceived from piperead is " << client.getCgiPipeFd() << std::endl;
-		// remove clientFd?
-		addToEpoll(this->epollFd, client.getCgiPipeFd(), EPOLLIN);
-		// if (!modifyEpoll(this->epollFd, clientFd, EPOLLOUT)){
-		// 	removeConnection(clientFd);
+		if (client.getResponse()->getCgiStatus() == true)
+			dispatchCgi(client);
+		else {
+			if(!modifyEpoll(this->epollFd, clientFd, EPOLLOUT)) {
+				removeConnection(clientFd);
+				return ; }
 		}
 	}
+}
+
+void	Server::dispatchCgi(const Client& client) const {
+	Cgi cgi;
+	int pipeFd = cgi.executeCgi(*client.getRequest(),
+		*client.getServerConfig(),
+		client.getResponse()->getInternalPath());
+	if (pipeFd == -1) // return an error here 
+	//add to epoll
+	addToEpoll(this->epollFd, pipeFd, EPOLLIN);
+	
+
 }
 
 void	Server::writeToSocket(int fd)
@@ -85,8 +86,8 @@ void	Server::writeToSocket(int fd)
 	// the response will be called here
 	// read the pipe end
 	Client& client = *(_clients[fd]);
-    std::string response = client.getResponse();
-    send(fd, response.c_str(), response.size(), 0);
+	std::string response = client.getResponseStr();
+	send(fd, response.c_str(), response.size(), 0);
 	removeConnection(fd);
 }
 

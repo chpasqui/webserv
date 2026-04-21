@@ -33,11 +33,11 @@ class Client
 		int					getCgiPipeFd(void) const;
 		void				setCgiPipeFd(int fd);
 		Request*			getRequest(void) const;
+		Response*			getResponse(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t				getTimestamp(void) const;
-		void				buildResponse(char **envp);
-		std::string 		getResponse() const;
-
+		void				buildResponse();
+		std::string 		getResponseStr() const;
 		
 
 

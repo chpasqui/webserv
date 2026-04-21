@@ -18,10 +18,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#define WRITE_END 1
+#define READ_END 0
 
 //https://www.cs.toronto.edu/~penny/teaching/csc309-01f/lectures/40/CGI.pdf
 
-int	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs to send this and then the path 
+int	Cgi::executeCgi(const Request& request, const ServerConfig& config, const std::string& internalPath) // charlotte needs to send this and then the path 
 {
 	std::cout << GREEN << "ENTERED CGI FUNCTIOM" << RESET << std::endl;
 	if (access(internalPath.c_str(), X_OK) == -1) {
@@ -29,8 +31,8 @@ int	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs 
 		return -1;
 	}
 	
-	setCgiEnvVariables(client, internalPath);
-	return (executeScript(client, internalPath));
+	setCgiEnvVariables(request, internalPath);
+	return (executeScript(request, internalPath));
 	//return -1;
 }
 
@@ -48,19 +50,17 @@ int	Cgi::handleCgi(Client& client, std::string internalPath) // charlotte needs 
  * @param client 
  * @param internalPath 
  */
-void	Cgi::setCgiEnvVariables(const Client& client, std::string internalPath) {
-	Request *request = client.getRequest();
-	const ServerConfig *config = client.getServerConfig();
-	const std::map<std::string, std::string>& header = request->getHeaders();
+void	Cgi::setCgiEnvVariables(const Request& request, std::string internalPath) {
+	const std::map<std::string, std::string>& header = request.getHeaders();
 
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
-	_tempEnv.push_back("REQUEST_METHOD=" + request->getMethod());
-	_tempEnv.push_back("QUERY_STRING=" + request->getQuery()); // query string must be defined as empty string if not found (treated by getHeaderVariable)
-	_tempEnv.push_back("SERVER_PROTOCOL=" + request->getVersion());
+	_tempEnv.push_back("REQUEST_METHOD=" + request.getMethod());
+	_tempEnv.push_back("QUERY_STRING=" + request.getQuery()); // query string must be defined as empty string if not found (treated by getHeaderVariable)
+	_tempEnv.push_back("SERVER_PROTOCOL=" + request.getVersion());
 	_tempEnv.push_back("CONTENT_TYPE=" + getHeaderVariable(header, "content-type"));
 	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
 	
-	if (request->getContentLength() != 0) { _tempEnv.push_back("CONTENT_LENGTH=" + getHeaderVariable(header, "content-length")); } // if and onlf if body.. need to check with charlotte
+	if (request.getContentLength() != 0) { _tempEnv.push_back("CONTENT_LENGTH=" + getHeaderVariable(header, "content-length")); } // if and onlf if body.. need to check with charlotte
 	this ->_scriptName =  internalPath.substr(0, internalPath.find(".py") + 3);
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName); // need to split? not sure how i willr eceive it.... see wiht charlotte today
 	_tempEnv.push_back("PATH_INFO=" + internalPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself 
@@ -78,7 +78,7 @@ void	Cgi::setCgiEnvVariables(const Client& client, std::string internalPath) {
  * @brief 
  * 
  */
-char**	Cgi::getEnv()
+char**	Cgi::setEnv()
 {
 	char **env = new char*[_tempEnv.size() + 1];
 	int index = 0;
@@ -105,7 +105,7 @@ char**	Cgi::getEnv()
  * 
  * commands for the CGI would be 
  */
-int	Cgi::executeScript(Client& client, const std::string &internalPath)
+int	Cgi::executeScript(const Request& request, const std::string &internalPath)
 {
 	(void)client;
 	(void)internalPath;
@@ -138,7 +138,7 @@ int	Cgi::executeScript(Client& client, const std::string &internalPath)
 		dup2(fd[WRITE_END], STDOUT_FILENO);
 		close(fd[WRITE_END]);
 		close(fd[READ_END]);
-		execve(this->_interpreter, const_cast<char *const *>(args), getEnv());
+		execve(this->_interpreter, const_cast<char *const *>(args), setEnv());
 		perror("execve");
 		exit(1);
 	}
