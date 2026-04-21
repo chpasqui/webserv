@@ -4,8 +4,9 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "IConfig.hpp"
 
-class Http
+class Http : public IConfig
 {
 	public:
 		Http();

@@ -4,11 +4,12 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "IConfig.hpp"
 
 class Http;
 class Location;
 
-class ServerConfig
+class ServerConfig : public IConfig
 {
 	private:
 		ServerConfig();
@@ -52,7 +53,7 @@ class ServerConfig
 		std::string					getAllowedMethods(void) const;
 		std::vector<std::string>	getIndexes(void) const;
 		std::map<int, std::string>	getErrorPages(void) const;
-		const std::string& getErrorPage(int key) const;
+		//const std::string& getErrorPage(int key) const;
 };
 
 #endif

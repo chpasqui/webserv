@@ -4,10 +4,11 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "IConfig.hpp"
 
 class ServerConfig;
 
-class Location
+class Location : public IConfig
 {
 	public:
 		Location(const ServerConfig &serverConfig);

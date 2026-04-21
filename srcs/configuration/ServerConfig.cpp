@@ -1,7 +1,7 @@
-#include "../include/ServerConfig.hpp"
+#include "../../include/ServerConfig.hpp"
 #include <iostream>
-#include "../include/color.hpp"
-#include "../include/Http.hpp"
+#include "../../include/color.hpp"
+#include "../../include/Http.hpp"
 
 ServerConfig::ServerConfig() :
 	_port(0),

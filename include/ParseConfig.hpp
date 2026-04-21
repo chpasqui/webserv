@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "IConfig.hpp"
 
 class Http;
 class ServerConfig;
@@ -16,7 +17,7 @@ enum context {
 	LOCATION,
 };
 
-class ParseConfig {
+class ParseConfig : public IConfig{
 	public:
 		ParseConfig();
 		ParseConfig(std::string filename, std::vector<ServerConfig *> *serverConfigs);
