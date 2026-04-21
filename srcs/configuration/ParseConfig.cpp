@@ -15,9 +15,10 @@
 
 ParseConfig::ParseConfig() :
 	_filename(""),
-	_context(0),
+	_contextLevel(0),
 	_http(0),
 	_currentConfig(0),
+	_contextConfig(0),
 	_location(0),
 	_serverConfigs(0),
 	_dictionary() {
@@ -26,9 +27,10 @@ ParseConfig::ParseConfig() :
 
 ParseConfig::ParseConfig(std::string filename, std::vector<ServerConfig *> *serverConfigs) :
 	_filename(filename),
-	_context(0),
+	_contextLevel(0),
 	_http(0),
 	_currentConfig(0),
+	_contextConfig(0),
 	_location(0),
 	_serverConfigs(serverConfigs) {
 	_dictionary["}"] = &ParseConfig::processEndBraquetToken;
@@ -42,7 +44,6 @@ ParseConfig::ParseConfig(std::string filename, std::vector<ServerConfig *> *serv
 	_dictionary["listen"] = &ParseConfig::processListenToken;
 	_dictionary["autoindex"] = &ParseConfig::processAutoindexToken;
 	_dictionary["error_page"] = &ParseConfig::processErrorPageToken;
-
 	LOG("ParseConfig: Normal construtor called");
 }
 
@@ -51,7 +52,7 @@ ParseConfig::~ParseConfig() {
 }
 
 int	ParseConfig::parsingConfigFile(void) {
-	std::string													token;
+	std::string														token;
 	std::map<std::string, void (ParseConfig::*)(void)>::iterator	it;
 
 	errno = 0;
@@ -125,7 +126,7 @@ void	ParseConfig::processEndBraquetToken(void) {
 
 	currentToken = this->getNextToken();
 	if (currentToken == "}") {
-		this->_context -= 1;
+		this->_contextLevel -= 1;
 	}
 }
 
@@ -133,30 +134,27 @@ void	ParseConfig::processTokenHttp(void) {
 	std::string	nextToken;
 
 	nextToken = getNextToken();
-	if (nextToken != "{" || this->_context!= NONE || this->_http) {
-		std::cerr << C_RED << "Unknow token after http" << RESET << std::endl;
+	if (nextToken != "{" || this->_contextLevel!= NONE || this->_http) {
+		std::cerr << C_RED << "Unexcepted token after \"http\"" << RESET << std::endl;
 		return;
 	}
-	try {
-		this->_http = new Http();
-	}
-	catch (std::exception &e) {
-		std::cerr << C_RED << "Fatal error: " << e.what() << RESET << std::endl;
-	}
-	this->_context = HTTP;
+	this->_http = new Http();
+	this->_contextConfig = this->_http;
+	this->_contextLevel = HTTP;
 }
 
 void	ParseConfig::processServerToken(void) {
 		std::string	nextToken;
 
 		nextToken = getNextToken();
-		if (nextToken != "{" || this->_context != HTTP || this->_currentConfig) {
+		if (nextToken != "{" || this->_contextLevel != HTTP || this->_currentConfig) {
 			std::cerr << C_RED << "TEST" << RESET  << std::endl;
-			return;
+			return ;
 		}
 		this->_serverConfigs->push_back(new ServerConfig(*(this)->_http));
-		this->_context = SERVER;
 		this->_currentConfig = *(this)->_serverConfigs->rbegin();
+		this->_contextConfig = this->_currentConfig;
+		this->_contextLevel = SERVER;
 }
 
 void	ParseConfig::processLocationToken(void) {
@@ -164,13 +162,13 @@ void	ParseConfig::processLocationToken(void) {
 
 	nextToken = getNextToken();
 	LOG(C_CORAL << "Inside location block" << RESET);
-	if (nextToken != "{" || this->_context!= SERVER || this->_location) {
-		std::cerr << C_RED << "TEST" << RESET  << std::endl;
-		return ;
+	if (nextToken != "{" || this->_contextLevel!= SERVER || this->_location) {
+		std::cerr << C_RED << "Unexcepted token after \"http\"" << RESET << std::endl;
+		return;
 	}
 	this->_location = new Location(*(this)->_currentConfig);
-	this->_context = LOCATION;
-	return ;
+	this->_contextConfig = this->_location;
+	this->_contextLevel = LOCATION;
 }
 
 
@@ -184,17 +182,7 @@ void	ParseConfig::processHeaderTimeoutToken(void) {
 	nextToken = getNextToken();
 	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
 		return ;
-	if (this->_context == HTTP) {
-		this->_http->setHeaderTimeout(timeout);
-	}
-	else if (this->_context == SERVER) {
-		this->_currentConfig->setHeaderTimeout(timeout);
-	}
-	else {
-		std::cerr << C_RED << "Using token \"client_header_timeout\" in wrong context" << RESET << std::endl;
-		return ;
-	}
-	return ;
+	this->_contextConfig->setHeaderTimeout(timeout);
 }
 
 /**
@@ -207,19 +195,7 @@ void	ParseConfig::processBodyTimeoutToken(void) {
 	nextToken = getNextToken();
 	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
 		return ;
-	if (this->_context == HTTP) {
-		this->_http->setBodyTimeout(timeout);
-	}
-	else if (this->_context == SERVER) {
-		this->_currentConfig->setBodyTimeout(timeout);
-	}
-	else if (this->_context == LOCATION) {
-		this->_location->setBodyTimeout(timeout);
-	}
-	else {
-		std::cerr << C_RED << "Using token \"client_body_timeout\" in wrong context" << RESET << std::endl;
-		return ;
-	}
+	this->_contextConfig->setBodyTimeout(timeout);
 	return ;
 }
 
@@ -233,20 +209,7 @@ void	ParseConfig::processMaxBodySizeToken(void) {
 	nextToken = getNextToken();
 	if ((maxBodySize = ParseConfig::transformTokenToInt(nextToken)) == -1) //FIX: need to mutiplie this later
 		return ;
-	if (this->_context == HTTP) {
-		this->_http->setMaxBodySize(maxBodySize);
-	}
-	else if (this->_context == SERVER) {
-		this->_currentConfig->setMaxBodySize(maxBodySize);
-	}
-	else if (this->_context == LOCATION) {
-		this->_location->setMaxBodySize(maxBodySize);
-	}
-	else {
-		std::cerr << C_RED << "Using token \"client_body_timeout\" in wrong context" << RESET << std::endl;
-		return ;
-	}
-	return;
+	this->_contextConfig->setMaxBodySize(maxBodySize);
 }
 
 /**
@@ -256,13 +219,13 @@ void	ParseConfig::processRootToken(void) {
 	std::string nextToken;
 
 	nextToken = getNextToken();
-	if (this->_context == HTTP){
+	if (this->_contextLevel == HTTP){
 		this->_http->setRoot(nextToken);
 	}
-	else if (this->_context == SERVER) {
-		this->_currentConfig->setRoute(nextToken);
+	else if (this->_contextLevel == SERVER) {
+		this->_currentConfig->setRoot(nextToken);
 	}
-	else if (this->_context == LOCATION) {
+	else if (this->_contextLevel == LOCATION) {
 		this->_location->setRoot(nextToken);
 	}
 	else {
@@ -280,7 +243,7 @@ void	ParseConfig::processListenToken(void) {
 		std::string	nextToken;
 
 		nextToken = getNextToken();
-		if (this->_context != SERVER)
+		if (this->_contextLevel != SERVER)
 		{
 			std::cerr << C_RED << "Using token \"listen\" in wrong context" << RESET << std::endl;
 			return;
@@ -309,11 +272,11 @@ void	ParseConfig::processAutoindexToken(void) {
 		std::cerr << C_RED << "value " << value << " unrecognized after autoindex" << RESET << std::endl;
 		return;
 	}
-	if (this->_context == HTTP)
-		this->_http->setAutoIndex(is_enable);
-	else if (this->_context == SERVER)
-		this->_currentConfig->setAutoIndex(is_enable);
-	else if (this->_context == LOCATION)
+	if (this->_contextLevel == HTTP)
+		this->_http->setAutoindex(is_enable);
+	else if (this->_contextLevel == SERVER)
+		this->_currentConfig->setAutoindex(is_enable);
+	else if (this->_contextLevel == LOCATION)
 		this->_location->setAutoindex(is_enable);
 	else {
 		LOG(C_RED << "Using token \"autoindex\" in wrong context" << RESET);
@@ -334,11 +297,11 @@ void	ParseConfig::processErrorPageToken(void) {
 	std::stringstream ss(codeToken);
 	if ((code = ParseConfig::transformTokenToInt(codeToken) == -1))
 		return;
-	if (this->_context == HTTP)
+	if (this->_contextLevel == HTTP)
 		this->_http->addErrorPage(code, pageToken);
-	else if (this->_context == SERVER)
+	else if (this->_contextLevel == SERVER)
 		this->_currentConfig->addErrorPage(code, pageToken);
-	else if (this->_context == LOCATION)
+	else if (this->_contextLevel == LOCATION)
 		this->_location->addErrorPage(code, pageToken);
 	else {
 		LOG(C_RED << "Using token \"error_page\" in wrong context" << RESET);

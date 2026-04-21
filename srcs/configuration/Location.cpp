@@ -17,7 +17,7 @@ Location::Location(const ServerConfig &serverConfig) :
 	_bodyTimeout(serverConfig.getBodyTimeout()),
 	_maxBodysize(serverConfig.getMaxBodySize()),
 	_port(serverConfig.getPort()),
-	_autoindex(serverConfig.getAutoIndex()),
+	_autoindex(serverConfig.getAutoindex()),
 	_serverName(serverConfig.getServerName()),
 	_root(serverConfig.getRoute()),
 	_allowedMethods(serverConfig.getAllowedMethods()),
@@ -53,20 +53,12 @@ void Location::addCgiExtension(const std::string extension) {
 	this->_cgiExtension.push_back(extension);
 }
 
-void Location::setHeaderTimeout(int headerTimeout) {
-	this->_headerTimeout = headerTimeout;
-}
-
 void Location::setBodyTimeout(int bodyTimeout) {
 	this->_bodyTimeout = bodyTimeout;
 }
 
 void Location::setMaxBodySize(int maxBodySize) {
 	this->_maxBodysize = maxBodySize;
-}
-
-void Location::setPort(const int port) {
-	this->_port = port;
 }
 
 void Location::setAutoindex(const bool autoindex) {

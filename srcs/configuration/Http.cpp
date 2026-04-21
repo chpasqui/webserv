@@ -35,7 +35,7 @@ int Http::getMaxBodySize(void) const {
 	return (this->_maxBodysize);
 }
 
-bool Http::getAutoIndex(void) const {
+bool Http::getAutoindex(void) const {
 	return (this->_autoindex);
 }
 
@@ -70,7 +70,7 @@ void Http::setMaxBodySize(int maxBodySize) {
 	this->_maxBodysize = maxBodySize;
 }
 
-void Http::setAutoIndex(bool autoindex) {
+void Http::setAutoindex(bool autoindex) {
 	this->_autoindex = autoindex;
 }
 

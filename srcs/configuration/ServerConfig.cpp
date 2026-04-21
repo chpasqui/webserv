@@ -11,7 +11,7 @@ ServerConfig::ServerConfig() :
 	_bodyTimeout(0),
 	_maxBodysize(0),
 	_autoindex(false),
-	_route(""),
+	_root(""),
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() { //WARN: add the default "index.html" if this is empty after parsing
@@ -26,8 +26,8 @@ ServerConfig::ServerConfig(const Http &http) :
 	_headerTimeout(http.getHeaderTimeout()),
 	_bodyTimeout(http.getBodyTimeout()),
 	_maxBodysize(http.getMaxBodySize()),
-	_autoindex(http.getAutoIndex()),
-	_route(http.getRoot()),
+	_autoindex(http.getAutoindex()),
+	_root(http.getRoot()),
 	_allowedMethods(http.getAllowedMethods()),
 	_indexes(http.getIndexes()),
 	_errorPages(http.getErrorPages()) {
@@ -66,12 +66,12 @@ void ServerConfig::setMaxBodySize(int maxBodySize) {
 	this->_maxBodysize = maxBodySize;
 }
 
-void ServerConfig::setAutoIndex(bool autoindex) {
+void ServerConfig::setAutoindex(bool autoindex) {
 	this->_autoindex = autoindex;
 }
 
-void ServerConfig::setRoute(const std::string& route) {
-	this->_route = route;
+void ServerConfig::setRoot(const std::string route) {
+	this->_root = route;
 }
 
 void ServerConfig::setAllowedMethods(const std::string allowedMethods) {
@@ -113,12 +113,12 @@ int ServerConfig::getMaxBodySize(void) const {
 	return (this->_maxBodysize);
 }
 
-bool ServerConfig::getAutoIndex(void) const {
+bool ServerConfig::getAutoindex(void) const {
 	return (this->_autoindex);
 }
 
 std::string ServerConfig::getRoute(void) const {
-	return (this->_route);
+	return (this->_root);
 }
 
 std::string ServerConfig::getAllowedMethods(void) const {

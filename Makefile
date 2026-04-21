@@ -3,27 +3,22 @@ DIR_SRC		=	./srcs
 DIR_BUILD	=	./build
 DIR_INCLUDE =	./include
 CXX			=	c++
-CXXFLAGS	=	-std=c++98 -Wall -Werror -Wextra -g
+CXXFLAGS	=	-std=c++98 -Wall -Werror -Wextra
 
 ifdef DEBUG
-    CXXFLAGS += -DDEBUG
-endif
-
-
-ifdef DEBUG
-    CXXFLAGS += -DDEBUG
+    CXXFLAGS += -DDEBUG -g
 endif
 
 LDINCLUDE	=	-I$(DIR_INCLUDE)
 
-SRCS		=	main.cpp Server.cpp Client.cpp ServerConfig.cpp \
+SRCS		=	main.cpp Server.cpp Client.cpp .cpp \
 				Request.cpp requestParsingLine.cpp requestParsingHeader.cpp requestParsingBody.cpp debug.cpp \
-				requestUtils.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp \
-				serverEpoll.cpp serverLoop.cpp \
+				requestUtils.cpp 				serverEpoll.cpp serverLoop.cpp \
 				listeningSockets.cpp serverUtils.cpp \
 				serverHandler.cpp Cgi.cpp cgiHandler.cpp \
-				Response.cpp responseBuild.cpp responseHandlers.cpp responseFormat.cpp
-				
+				Response.cpp responseBuild.cpp responseHandlers.cpp responseFormat.cpp \
+				configuration/ServerConfig.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp configuration/AConfig.cpp
+
 SRCS_NAME	=	$(basename $(SRCS))
 OBJS		=	$(addsuffix .o, $(addprefix $(DIR_BUILD)/, $(SRCS_NAME)))
 
