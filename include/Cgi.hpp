@@ -32,10 +32,9 @@ class Cgi
 		std::string					_scriptName;
 		std::string					_pathInfo;
 		const char *				_interpreter;
-		void						setCgiEnvVariables(const Request& request, std::string internalPath);
+		void						setCgiEnvVariables(const Request& request, const ServerConfig& config, const std::string& internalPath);
 		char**						setEnv();
-		int							executeScript(Client& client, const std::string& internalPath);
-		//const char**	getArgs(const std::string& internalPath);
+		int							executeScript(const Request& request, const std::string &internalPath);
 };
 
 std::string intToString(int number);

@@ -26,12 +26,14 @@
 int	Cgi::executeCgi(const Request& request, const ServerConfig& config, const std::string& internalPath) // charlotte needs to send this and then the path 
 {
 	std::cout << GREEN << "ENTERED CGI FUNCTIOM" << RESET << std::endl;
+
+	// check if i have access to the path 
 	if (access(internalPath.c_str(), X_OK) == -1) {
 		std::cerr << "access issue" << std::endl;
 		return -1;
 	}
 	
-	setCgiEnvVariables(request, internalPath);
+	setCgiEnvVariables(request, config, internalPath);
 	return (executeScript(request, internalPath));
 	//return -1;
 }
@@ -50,7 +52,8 @@ int	Cgi::executeCgi(const Request& request, const ServerConfig& config, const st
  * @param client 
  * @param internalPath 
  */
-void	Cgi::setCgiEnvVariables(const Request& request, std::string internalPath) {
+void	Cgi::setCgiEnvVariables(const Request& request, const ServerConfig& config, const std::string& internalPath) {
+	
 	const std::map<std::string, std::string>& header = request.getHeaders();
 
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
@@ -64,7 +67,7 @@ void	Cgi::setCgiEnvVariables(const Request& request, std::string internalPath) {
 	this ->_scriptName =  internalPath.substr(0, internalPath.find(".py") + 3);
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName); // need to split? not sure how i willr eceive it.... see wiht charlotte today
 	_tempEnv.push_back("PATH_INFO=" + internalPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself 
-	_tempEnv.push_back("SERVER_PORT=" + intToString(config->getPort()));
+	_tempEnv.push_back("SERVER_PORT=" + std::to_string(config.getPort()));
 	
 	char hostname[1024];
 	hostname[1023] = '\0';
@@ -84,7 +87,7 @@ char**	Cgi::setEnv()
 	int index = 0;
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
 	{
-		env[index] = new char[(*it).length()];
+		env[index] = new char[(*it).length() + 1];
 		strcpy(env[index], (*it).c_str());
 		index++;
 	}
@@ -107,8 +110,6 @@ char**	Cgi::setEnv()
  */
 int	Cgi::executeScript(const Request& request, const std::string &internalPath)
 {
-	(void)client;
-	(void)internalPath;
 	std::cout << GREEN << "entered the executeCGI function" << RESET << std::endl;
 
 	int fd[2];
@@ -146,15 +147,6 @@ int	Cgi::executeScript(const Request& request, const std::string &internalPath)
 		close(fd[WRITE_END]);
 		return fd[READ_END];
 	}
-}
-
-
-std::string intToString(int number){
-	std::stringstream ss;
-	ss << number;
-	std::string newString;
-	ss >> newString;
-	return newString;
 }
 
 std::string getHeaderVariable(const std::map<std::string, std::string>& header, const std::string& tofind)
