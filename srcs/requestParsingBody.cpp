@@ -1,9 +1,14 @@
 #include "../include/Request.hpp"
 #include "../include/statusCode.hpp"
 #include "../include/Debug.hpp"
-
+#include <unistd.h>
 
 static bool parseChunkSize(const std::string &body, size_t &pos, long &chunkSize);
+
+bool Request::writeTmpFile(std::string body){
+    //faire un tmpfile sans les fonctions interdites par le sujet yes on adore
+    // attention a body qui est utilise dans handlePostMethod
+}
 
 /**
  * @brief Parses body based on transfer-encoding or content-length header.
@@ -20,12 +25,12 @@ bool Request::parseBody(const std::string &body, int maxBodySize){
     else if (_headers.count("content-length")){
         if (_contentLength > maxBodySize) 
             return (setError(PAYLOAD_TOO_LARGE, "parseBody: contentLength too long"));
-        _body = body;
-        std::cout << _body << std::endl;
+        writeTempFile(body);
+        LOG(std::cout << body << std::endl);
         return true ;
     }
     _contentLength = 0;
-    std::cout << _body << std::endl;
+    LOG(std::cout << body << std::endl);
     return true ;
 }
 

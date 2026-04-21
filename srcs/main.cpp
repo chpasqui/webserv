@@ -15,7 +15,6 @@ int main(int ac, char **av, char **env) {
 	ParseConfig pc(av[1], &configs);
 	pc.parsingConfigFile();
 
-
 	ServerConfig *serverconfig = *(configs.begin());
 
 	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;

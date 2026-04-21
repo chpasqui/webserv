@@ -41,6 +41,7 @@ class Request
 		std::string _path;
 		std::string _body;
 		std::string _query;
+		std::string _tmpFilePath;
 		int			_contentLength;
 		int			_statusCode;
 	
@@ -64,6 +65,7 @@ class Request
 		// Body
 		bool unchunkedBody(const std::string &body);
 		bool extractChunkData(const std::string &body, size_t &pos, long chunkSize);
+		bool writeTempFile(std::string body);
 
 		// Utils
 		bool setError(int code, const std::string &context);
