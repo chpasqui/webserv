@@ -91,7 +91,7 @@ char**	Cgi::setEnv()
 		strcpy(env[index], (*it).c_str());
 		index++;
 	}
-	env[_tempEnv.size() + 1] = NULL;
+	env[_tempEnv.size()] = NULL;
 	return env;
 }
 
@@ -119,7 +119,7 @@ int	Cgi::executeScript(const Request& request, const std::string &internalPath)
 		perror("pipe");
 		// leave the function and handle error
 	}
-	fcntl(fd[0], F_SETFD | O_NONBLOCK); // set the read end of the pipe to non blocking
+	fcntl(fd[0], F_SETFD, O_NONBLOCK); // set the read end of the pipe to non blocking
 	pid_t pid = fork();
 	if (pid < 0) {
 		std::cout << "error" << std::endl;
@@ -142,6 +142,7 @@ int	Cgi::executeScript(const Request& request, const std::string &internalPath)
 		close(fd[READ_END]);
 		execve(this->_interpreter, const_cast<char *const *>(args), setEnv());
 		perror("Error: execve was not able to do its thing");
+		_tempEnv.clear();
 		exit(1);
 	}
 	else {
@@ -168,7 +169,7 @@ std::string getHeaderVariable(const std::map<std::string, std::string>& header, 
 }
 
 std::string extractExecutable() {
-	std::ifstream filestream("./www/cgi-bin/hello.py");
+	std::ifstream filestream("/www/cgi-bin/hello.py");
 	std::string line;
 	getline(filestream, line);
 	std::cout << "line contains " << line << std::endl;
