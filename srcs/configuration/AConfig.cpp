@@ -1,7 +1,7 @@
 #include "../../include/AConfig.hpp"
 #include <stdexcept>
-#include "../../include/color.hpp"
 #include "../../include/Debug.hpp"
+#include "../../include/color.hpp"
 
 AConfig::AConfig() {
 	LOG(C_CSTR << "AConfig: Default constructor called"<< RESET);

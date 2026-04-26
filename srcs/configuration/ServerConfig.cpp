@@ -1,7 +1,9 @@
 #include "../../include/ServerConfig.hpp"
-#include <iostream>
+#include "../../include/debug.hpp"
 #include "../../include/color.hpp"
 #include "../../include/Http.hpp"
+#include "../../include/Location.hpp"
+
 
 ServerConfig::ServerConfig() :
 	_port(0),
@@ -15,7 +17,7 @@ ServerConfig::ServerConfig() :
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() { //WARN: add the default "index.html" if this is empty after parsing
-	std::cout << C_CSTR << "ServerConfig: Default constructor called" << RESET << std::endl;
+	LOG(C_CSTR << "ServerConfig: Default constructor called" << RESET);
 	return ;
 }
 
@@ -31,12 +33,12 @@ ServerConfig::ServerConfig(const Http &http) :
 	_allowedMethods(http.getAllowedMethods()),
 	_indexes(http.getIndexes()),
 	_errorPages(http.getErrorPages()) {
-	std::cout << C_CSTR << "ServerConfig: Normal constructor called" << RESET << std::endl;
+	LOG(C_CSTR << "ServerConfig: Normal constructor called" << RESET);
 	return ;
 }
 
 ServerConfig::~ServerConfig() {
-	std::cout << C_DSTR << "ServerConfig: Destructor called" << RESET << std::endl;
+	LOG(C_DSTR << "ServerConfig: Destructor called" << RESET);
 	for (std::vector<Location *>::iterator it = this->_locations.begin(); it != this->_locations.end(); it++)
 		delete (*it);
 	this->_locations.clear();

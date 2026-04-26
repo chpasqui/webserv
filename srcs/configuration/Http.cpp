@@ -1,6 +1,5 @@
 #include "../../include/Http.hpp"
-
-#include <iostream>
+#include "../../include/Debug.hpp"
 #include "../../include/color.hpp"
 
 Http::Http() :
@@ -12,12 +11,12 @@ Http::Http() :
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() {
-	std::cout << C_CSTR << "Http: Default constructor called" << RESET << std::endl;
+	LOG(C_CSTR << "Http: Default constructor called" << RESET);
 	return ;
 }
 
 Http::~Http() {
-	std::cout << C_DSTR << "Http: Destructor called" << RESET << std::endl;
+	LOG(C_DSTR << "Http: Destructor called" << RESET);
 	return ;
 }
 
