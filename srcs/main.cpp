@@ -1,6 +1,7 @@
 #include "../include/color.hpp"
 #include "../include/ParseConfig.hpp"
 #include "../include/Server.hpp"
+#include "../include/Location.hpp"
 #include "../include/ServerConfig.hpp"
 
 #include <vector>
@@ -12,7 +13,8 @@ int main(int ac, char **av, char **env) {
 	
 	std::vector<ServerConfig*> configs;
 	ParseConfig pc(av[1], &configs);
-	pc.parsingConfigFile();
+	if (pc.parsingConfigFile() == 1)
+		return (1);
 
 
 	ServerConfig *serverconfig = *(configs.begin());
