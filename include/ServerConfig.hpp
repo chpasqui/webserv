@@ -28,7 +28,7 @@ class ServerConfig : public AConfig
 		std::map<int, std::string>	_errorPages;
 	public:
 		ServerConfig(const Http &http);
-		~ServerConfig();
+		virtual ~ServerConfig();
 		//----Setter----//
 		void						setPort(const int port);
 		void						setServerName(const std::string serverName);

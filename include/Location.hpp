@@ -12,7 +12,7 @@ class Location : public AConfig
 {
 	public:
 		Location(const ServerConfig &serverConfig);
-		~Location();
+		virtual ~Location();
 		//----Setter----//
 		void						setRedireCode(const int redireCode);
 		void						setCgiEnable(const bool cgiEnable);

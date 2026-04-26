@@ -2,7 +2,6 @@
 #include "../include/ParseConfig.hpp"
 #include "../include/Server.hpp"
 #include "../include/ServerConfig.hpp"
-#include "../include/Cgi.hpp"
 
 #include <vector>
 #include <iostream>
@@ -22,9 +21,7 @@ int main(int ac, char **av, char **env) {
 	
 	Server server(env);
 
-	try
-	{
-		std::cout << "entered the try tactch block" << std::endl;
+	try {
 		/**
 		 * @brief Server(Serverconfigs) will loop over the vector of serverConfigs and will
 		 * 1. create a new socket for the listening fd
@@ -47,11 +44,12 @@ int main(int ac, char **av, char **env) {
 		 */
 		server.run(); // server instance out of scope if declared outside, I need it here but run does not 
 	}
-	catch(const std::exception& e)
-	{
+	catch(const std::exception& e) {
 		std::cerr << e.what() << '\n';
 	}
 	
+	for (std::vector<ServerConfig*>::iterator it = configs.begin(); it != configs.end(); it++)
+		delete (*it);
 	return (0);
 }
 

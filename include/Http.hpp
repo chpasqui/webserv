@@ -10,7 +10,7 @@ class Http : public AConfig
 {
 	public:
 		Http();
-		~Http();
+		virtual ~Http();
 		//----Getter----//
 		int							getHeaderTimeout(void) const;
 		int							getBodyTimeout(void) const;
