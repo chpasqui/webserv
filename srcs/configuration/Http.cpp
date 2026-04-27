@@ -1,6 +1,5 @@
 #include "../../include/Http.hpp"
-
-#include <iostream>
+#include "../../include/Debug.hpp"
 #include "../../include/color.hpp"
 
 Http::Http() :
@@ -12,12 +11,12 @@ Http::Http() :
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() {
-	std::cout << C_CSTR << "Http: Default constructor called" << RESET << std::endl;
+	LOG(C_CSTR << "Http: Default constructor called" << RESET);
 	return ;
 }
 
 Http::~Http() {
-	std::cout << C_DSTR << "Http: Destructor called" << RESET << std::endl;
+	LOG(C_DSTR << "Http: Destructor called" << RESET);
 	return ;
 }
 
@@ -35,7 +34,7 @@ int Http::getMaxBodySize(void) const {
 	return (this->_maxBodysize);
 }
 
-bool Http::getAutoIndex(void) const {
+bool Http::getAutoindex(void) const {
 	return (this->_autoindex);
 }
 
@@ -70,7 +69,7 @@ void Http::setMaxBodySize(int maxBodySize) {
 	this->_maxBodysize = maxBodySize;
 }
 
-void Http::setAutoIndex(bool autoindex) {
+void Http::setAutoindex(bool autoindex) {
 	this->_autoindex = autoindex;
 }
 

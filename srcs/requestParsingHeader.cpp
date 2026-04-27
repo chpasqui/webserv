@@ -46,7 +46,7 @@ bool Request::parseHeader(const std::string &request){
 		
 		_headers.insert(std::make_pair(fieldname, value));
 	}
-	LOG(debugListHeader(_headers));
+	//LOG(debugListHeader(_headers));
 	return true ;
 }
 

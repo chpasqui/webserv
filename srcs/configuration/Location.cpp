@@ -1,9 +1,10 @@
 #include "../../include/Location.hpp"
-#include <iostream>
 #include "../../include/color.hpp"
+#include "../../include/debug.hpp"
 #include "../../include/ServerConfig.hpp"
 
 Location::Location() {
+	LOG(C_CSTR << "Location: Default constructor called" << RESET);
 	return ;
 }
 
@@ -17,17 +18,17 @@ Location::Location(const ServerConfig &serverConfig) :
 	_bodyTimeout(serverConfig.getBodyTimeout()),
 	_maxBodysize(serverConfig.getMaxBodySize()),
 	_port(serverConfig.getPort()),
-	_autoindex(serverConfig.getAutoIndex()),
+	_autoindex(serverConfig.getAutoindex()),
 	_serverName(serverConfig.getServerName()),
 	_root(serverConfig.getRoute()),
 	_allowedMethods(serverConfig.getAllowedMethods()),
 	_indexes(serverConfig.getIndexes()) {
-	std::cout << C_CSTR << "Location: Normal constructor called" << RESET << std::endl;
+	LOG(C_CSTR << "Location: Normal constructor called" << RESET);
 	return ;
 }
 
 Location::~Location() {
-	std::cout << C_DSTR << "Location: Destructor called" << RESET << std::endl;
+	LOG(C_DSTR << "Location: Destructor called" << RESET);
 	return ;
 }
 
@@ -53,20 +54,12 @@ void Location::addCgiExtension(const std::string extension) {
 	this->_cgiExtension.push_back(extension);
 }
 
-void Location::setHeaderTimeout(int headerTimeout) {
-	this->_headerTimeout = headerTimeout;
-}
-
 void Location::setBodyTimeout(int bodyTimeout) {
 	this->_bodyTimeout = bodyTimeout;
 }
 
 void Location::setMaxBodySize(int maxBodySize) {
 	this->_maxBodysize = maxBodySize;
-}
-
-void Location::setPort(const int port) {
-	this->_port = port;
 }
 
 void Location::setAutoindex(const bool autoindex) {

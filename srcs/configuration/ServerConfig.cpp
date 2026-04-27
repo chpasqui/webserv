@@ -1,7 +1,9 @@
-#include "../include/ServerConfig.hpp"
-#include <iostream>
-#include "../include/color.hpp"
-#include "../include/Http.hpp"
+#include "../../include/ServerConfig.hpp"
+#include "../../include/debug.hpp"
+#include "../../include/color.hpp"
+#include "../../include/Http.hpp"
+#include "../../include/Location.hpp"
+
 
 ServerConfig::ServerConfig() :
 	_port(0),
@@ -11,11 +13,11 @@ ServerConfig::ServerConfig() :
 	_bodyTimeout(0),
 	_maxBodysize(0),
 	_autoindex(false),
-	_route(""),
+	_root(""),
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() { //WARN: add the default "index.html" if this is empty after parsing
-	std::cout << C_CSTR << "ServerConfig: Default constructor called" << RESET << std::endl;
+	LOG(C_CSTR << "ServerConfig: Default constructor called" << RESET);
 	return ;
 }
 
@@ -26,17 +28,20 @@ ServerConfig::ServerConfig(const Http &http) :
 	_headerTimeout(http.getHeaderTimeout()),
 	_bodyTimeout(http.getBodyTimeout()),
 	_maxBodysize(http.getMaxBodySize()),
-	_autoindex(http.getAutoIndex()),
-	_route(http.getRoot()),
+	_autoindex(http.getAutoindex()),
+	_root(http.getRoot()),
 	_allowedMethods(http.getAllowedMethods()),
 	_indexes(http.getIndexes()),
 	_errorPages(http.getErrorPages()) {
-	std::cout << C_CSTR << "ServerConfig: Normal constructor called" << RESET << std::endl;
+	LOG(C_CSTR << "ServerConfig: Normal constructor called" << RESET);
 	return ;
 }
 
 ServerConfig::~ServerConfig() {
-	std::cout << C_DSTR << "ServerConfig: Destructor called" << RESET << std::endl;
+	LOG(C_DSTR << "ServerConfig: Destructor called" << RESET);
+	for (std::vector<Location *>::iterator it = this->_locations.begin(); it != this->_locations.end(); it++)
+		delete (*it);
+	this->_locations.clear();
 	return ;
 }
 
@@ -66,12 +71,12 @@ void ServerConfig::setMaxBodySize(int maxBodySize) {
 	this->_maxBodysize = maxBodySize;
 }
 
-void ServerConfig::setAutoIndex(bool autoindex) {
+void ServerConfig::setAutoindex(bool autoindex) {
 	this->_autoindex = autoindex;
 }
 
-void ServerConfig::setRoute(const std::string& route) {
-	this->_route = route;
+void ServerConfig::setRoot(const std::string route) {
+	this->_root = route;
 }
 
 void ServerConfig::setAllowedMethods(const std::string allowedMethods) {
@@ -113,12 +118,12 @@ int ServerConfig::getMaxBodySize(void) const {
 	return (this->_maxBodysize);
 }
 
-bool ServerConfig::getAutoIndex(void) const {
+bool ServerConfig::getAutoindex(void) const {
 	return (this->_autoindex);
 }
 
 std::string ServerConfig::getRoute(void) const {
-	return (this->_route);
+	return (this->_root);
 }
 
 std::string ServerConfig::getAllowedMethods(void) const {

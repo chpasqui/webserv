@@ -4,24 +4,23 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "AConfig.hpp"
 
 class ServerConfig;
 
-class Location
+class Location : public AConfig
 {
 	public:
 		Location(const ServerConfig &serverConfig);
-		~Location();
+		virtual ~Location();
 		//----Setter----//
 		void						setRedireCode(const int redireCode);
 		void						setCgiEnable(const bool cgiEnable);
 		void						setPath(const std::string path);
 		void						setredirePath(const std::string redirePath);
 		void						addCgiExtension(const std::string extension);
-		void						setHeaderTimeout(int headerTimeout);
 		void						setBodyTimeout(int bodyTimeout);
 		void						setMaxBodySize(int maxBodySize);
-		void						setPort(const int port);
 		void						setAutoindex(const bool autoindex);
 		void						setRoot(const std::string root);
 		void						setAllowedMethods(const std::string allowedMethods);

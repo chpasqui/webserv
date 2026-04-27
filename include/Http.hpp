@@ -4,30 +4,33 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "AConfig.hpp"
 
-class Http
+class Http : public AConfig
 {
 	public:
 		Http();
-		~Http();
+		virtual ~Http();
 		//----Getter----//
 		int							getHeaderTimeout(void) const;
 		int							getBodyTimeout(void) const;
 		int							getMaxBodySize(void) const;
-		bool						getAutoIndex(void) const;
+		bool						getAutoindex(void) const;
 		std::string					getRoot(void) const;
 		std::string					getAllowedMethods(void) const;
 		std::vector<std::string>	getIndexes(void) const;
 		std::map<int, std::string>	getErrorPages(void) const;
+		
 		//----Setter----//
-		void						setHeaderTimeout(int headerTimeout);
-		void						setBodyTimeout(int bodyTimeout);
-		void						setMaxBodySize(int maxBodySize);
-		void						setAutoIndex(bool autoindex);
-		void						setRoot(std::string root);
-		void						setAllowedMethods(std::string allowedMethods);
-		void						addIndex(std::string index);
-		void						addErrorPage(int code, std::string page);
+		void						setHeaderTimeout(const int headerTimeout);
+		void						setBodyTimeout(const int bodyTimeout);
+		void						setMaxBodySize(const int maxBodySize);
+		void						setAutoindex(const bool autoindex);
+		void						setRoot(const std::string root);
+		void						setAllowedMethods(const std::string allowedMethods);
+		void						addIndex(const std::string index);
+		void						addErrorPage(const int code, std::string page);
+
 	private:
 		int							_headerTimeout;
 		int							_bodyTimeout;

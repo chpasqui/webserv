@@ -4,11 +4,12 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "AConfig.hpp"
 
 class Http;
 class Location;
 
-class ServerConfig
+class ServerConfig : public AConfig
 {
 	private:
 		ServerConfig();
@@ -21,13 +22,13 @@ class ServerConfig
 		int							_bodyTimeout;
 		int							_maxBodysize;
 		bool						_autoindex;
-		std::string					_route;
+		std::string					_root;
 		std::string					_allowedMethods;
 		std::vector<std::string>	_indexes;
 		std::map<int, std::string>	_errorPages;
 	public:
 		ServerConfig(const Http &http);
-		~ServerConfig();
+		virtual ~ServerConfig();
 		//----Setter----//
 		void						setPort(const int port);
 		void						setServerName(const std::string serverName);
@@ -35,8 +36,8 @@ class ServerConfig
 		void						setHeaderTimeout(int headerTimeout);
 		void						setBodyTimeout(int bodyTimeout);
 		void						setMaxBodySize(int maxBodySize);
-		void						setAutoIndex(bool autoindex);
-		void						setRoute(const std::string& route);
+		void						setAutoindex(bool autoindex);
+		void						setRoot(const std::string route);
 		void						setAllowedMethods(std::string allowedMethods);
 		void						addIndex(const std::string index);
 		void						addErrorPage(int code, std::string page);
@@ -47,12 +48,12 @@ class ServerConfig
 		int							getHeaderTimeout(void) const;
 		int							getBodyTimeout(void) const;
 		int							getMaxBodySize(void) const;
-		bool						getAutoIndex(void) const;
+		bool						getAutoindex(void) const;
 		std::string					getRoute(void) const;
 		std::string					getAllowedMethods(void) const;
 		std::vector<std::string>	getIndexes(void) const;
 		std::map<int, std::string>	getErrorPages(void) const;
-		const std::string& getErrorPage(int key) const;
+		//const std::string& getErrorPage(int key) const;
 };
 
 #endif
