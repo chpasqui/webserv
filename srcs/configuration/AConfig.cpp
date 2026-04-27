@@ -13,7 +13,7 @@ AConfig::~AConfig() {
 
 void	AConfig::setRedireCode(const int redireCode){
 	(void) redireCode;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"return\" (redireCode)"));
 }
 
 void	AConfig::setCgiEnable(const bool cgiEnable){
@@ -26,9 +26,9 @@ void	AConfig::setPath(const std::string path) {
 	throw (std::runtime_error("wrong context"));
 }
 
-void	AConfig::setredirePath(const std::string redirePath) {
+void	AConfig::setRedirePath(const std::string redirePath) {
 	(void) redirePath;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"return\" (redirePath)"));
 }
 
 void	AConfig::addCgiExtension(const std::string extension) {
@@ -48,6 +48,11 @@ void	AConfig::setBodyTimeout(const int bodyTimeout) {
 
 void	AConfig::setMaxBodySize(const int maxBodySize) {
 	(void) maxBodySize;
+	throw (std::runtime_error("wrong context"));
+}
+
+void	AConfig::setServerName(const std::string serverName) {
+	(void) serverName;
 	throw (std::runtime_error("wrong context"));
 }
 

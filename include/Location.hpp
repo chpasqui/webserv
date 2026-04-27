@@ -17,15 +17,15 @@ class Location : public AConfig
 		void						setRedireCode(const int redireCode);
 		void						setCgiEnable(const bool cgiEnable);
 		void						setPath(const std::string path);
-		void						setredirePath(const std::string redirePath);
+		void						setRedirePath(const std::string redirePath);
 		void						addCgiExtension(const std::string extension);
-		void						setBodyTimeout(int bodyTimeout);
-		void						setMaxBodySize(int maxBodySize);
+		void						setBodyTimeout(const int bodyTimeout);
+		void						setMaxBodySize(const int maxBodySize);
 		void						setAutoindex(const bool autoindex);
 		void						setRoot(const std::string root);
 		void						setAllowedMethods(const std::string allowedMethods);
 		void						addIndex(const std::string index);
-		void						addErrorPage(int code, std::string page);
+		void						addErrorPage(const int code, const std::string page);
 		//----Getter----//
 		int							getRedirCode(void) const;
 		bool						getCgiEnable(void) const;

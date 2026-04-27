@@ -46,7 +46,7 @@ void Location::setPath(const std::string path) {
 	this->_path = path;
 }
 
-void Location::setredirePath(const std::string redirePath) {
+void Location::setRedirePath(const std::string redirePath) {
 	this->_redirePath = redirePath;
 }
 
@@ -54,11 +54,11 @@ void Location::addCgiExtension(const std::string extension) {
 	this->_cgiExtension.push_back(extension);
 }
 
-void Location::setBodyTimeout(int bodyTimeout) {
+void Location::setBodyTimeout(const int bodyTimeout) {
 	this->_bodyTimeout = bodyTimeout;
 }
 
-void Location::setMaxBodySize(int maxBodySize) {
+void Location::setMaxBodySize(const int maxBodySize) {
 	this->_maxBodysize = maxBodySize;
 }
 
@@ -78,13 +78,10 @@ void Location::addIndex(const std::string index) {
 	this->_indexes.push_back(index);
 }
 
-std::string Location::getErrorPage(int code) const
-{
-    std::map<int, std::string>::const_iterator it = _errorPages.find(code);
-    if (it != _errorPages.end())
-        return it->second;
-    return "";
+void Location::addErrorPage(const int code, const std::string page) {
+	this->_errorPages.insert(std::map<int, std::string>::value_type(code, page));
 }
+
 //----Getter----//
 
 int Location::getRedirCode(void) const {
@@ -147,7 +144,11 @@ std::string Location::getUploadStore() const{
 	return (this->_uploadStore);
 }
 
-void Location::addErrorPage(int code, std::string page) {
-	this->_errorPages.insert(std::map<int, std::string>::value_type(code, page));
+std::string Location::getErrorPage(int code) const
+{
+    std::map<int, std::string>::const_iterator it = _errorPages.find(code);
+    if (it != _errorPages.end())
+        return it->second;
+    return "";
 }
 

@@ -26,9 +26,6 @@ int main(int ac, char **av, char **env) {
 	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;
 	std::vector<Location *> locations = serverconfig->getLocations();
 
-	Location location = **(locations).begin();
-	std::cout << "first location : " << std::endl;
-	std::cout << "path: " << location.getPath() << std::endl; 
 	Server server(env);
 
 	try {
