@@ -24,10 +24,10 @@ ParseConfig::ParseConfig() :
 	_location(0),
 	_serverConfigs(0),
 	_dictionary() {
-	LOG("ParseConfig: Default constructor called");
+	LOG(C_CSTR << "ParseConfig: Default constructor called" << RESET);
 }
 
-ParseConfig::ParseConfig(std::string filename, std::vector<ServerConfig *> *serverConfigs) :
+ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *> *serverConfigs) :
 	_filename(filename),
 	_configFile(""),
 	_contextLevel(NONE),
@@ -52,11 +52,11 @@ ParseConfig::ParseConfig(std::string filename, std::vector<ServerConfig *> *serv
 	_dictionary["index"] = &ParseConfig::processIndexToken;
 	_dictionary["cgi_enable"] = &ParseConfig::processCgiEnableToken;
 	_dictionary["return"] = &ParseConfig::processRedirectionToken;
-	LOG("ParseConfig: Normal construtor called");
+	LOG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
 }
 
 ParseConfig::~ParseConfig() {
-	LOG("ParseConfig: Destructor called");
+	LOG(C_DSTR << "ParseConfig: Destructor called" << RESET);
 }
 
 int	ParseConfig::parsingConfigFile(void) {
@@ -72,7 +72,7 @@ int	ParseConfig::parsingConfigFile(void) {
 		token = this->getNextToken();
 		if (token.empty())
 		{
-			LOG(C_GREEN << "End of configFile: no error" << RESET);
+			std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
 			break;
 		}
 		it = this->_dictionary.find(token);
@@ -87,7 +87,8 @@ int	ParseConfig::parsingConfigFile(void) {
 			(this->*it->second)();
 		}
 		catch (std::exception &e) {
-			LOG(C_RED << e.what() << RESET);
+			std::cerr << C_RED << "current context :" << this->_contextLevel << RESET << std::endl;
+			std::cerr << C_RED << e.what() << RESET << std::endl;
 			//TODO: free http
 			//TODO: free serverConfigsVector
 			return (1);
@@ -201,7 +202,6 @@ void	ParseConfig::processLocationToken(void) {
 		throw std::runtime_error("Unexcepted token after \"Location\"");
 
 	this->_contextLevel = LOCATION;
-	std::cout << this->_location->getPath() << " is the path of the location" << RESET << std::endl;
 	this->_currentConfig->addLocation(this->_location);
 }
 
@@ -272,7 +272,7 @@ void	ParseConfig::processListenToken(void) {
 		}
 		if ((port = ParseConfig::transformTokenToInt(nextToken)) == -1)
 			return;
-		this->_currentConfig->setPort(port);
+		this->_contextConfig->setPort(port);
 		return;
 }
 
@@ -285,9 +285,9 @@ void	ParseConfig::processAutoindexToken(void) {
 
 	value = getNextToken();
 	if (value == "on")
-		this->_currentConfig->setAutoindex(true);
+		this->_contextConfig->setAutoindex(true);
 	else if (value == "off")
-		this->_currentConfig->setAutoindex(false);
+		this->_contextConfig->setAutoindex(false);
 	else
 		throw std::runtime_error("value " + value + " unrecognized after autoindex");
 	return;
@@ -304,7 +304,7 @@ void	ParseConfig::processErrorPageToken(void) {
 	pageToken = getNextToken();
 
 	code = ParseConfig::transformTokenToInt(codeToken);
-	this->_currentConfig->addErrorPage(code, pageToken);
+	this->_contextConfig->addErrorPage(code, pageToken);
 }
 
 /**
@@ -314,7 +314,7 @@ void	ParseConfig::processServerNameToken(void) {
 	std::string serverName;
 
 	serverName = getNextToken();
-	this->_currentConfig->setServerName(serverName);
+	this->_contextConfig->setServerName(serverName);
 }
 
 
@@ -322,14 +322,14 @@ void	ParseConfig::processAllowedMethodsToken(void) {
 	std::string allowedMethods;
 
 	allowedMethods = getNextToken();
-	this->_currentConfig->setAllowedMethods(allowedMethods);
+	this->_contextConfig->setAllowedMethods(allowedMethods);
 }
 
 void	ParseConfig::processIndexToken(void) {
 	std::string index;
 
 	index = getNextToken();
-	this->_currentConfig->addIndex(index);
+	this->_contextConfig->addIndex(index);
 }
 
 void	ParseConfig::processRedirectionToken(void) {
@@ -340,8 +340,8 @@ void	ParseConfig::processRedirectionToken(void) {
 	codeToken = getNextToken();
 	redirectionPath = getNextToken();
 	code = ParseConfig::transformTokenToInt(codeToken);
-	this->_currentConfig->setRedireCode(code);
-	this->_currentConfig->setredirePath(redirectionPath);
+	this->_contextConfig->setRedireCode(code);
+	this->_contextConfig->setRedirePath(redirectionPath);
 }
 
 void	ParseConfig::processCgiEnableToken(void) {
@@ -349,9 +349,9 @@ void	ParseConfig::processCgiEnableToken(void) {
 
 	value = getNextToken();
 	if (value == "on")
-		this->_currentConfig->setCgiEnable(true);
+		this->_contextConfig->setCgiEnable(true);
 	else if (value == "off")
-		this->_currentConfig->setCgiEnable(false);
+		this->_contextConfig->setCgiEnable(false);
 	else
 		throw std::runtime_error("value " + value + " unrecognized after cgi_enable");
 }

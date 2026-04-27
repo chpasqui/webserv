@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "../include/color.hpp"
 #include "../include/ParseConfig.hpp"
 #include "../include/Server.hpp"
@@ -7,24 +8,25 @@
 #include <vector>
 #include <iostream>
 
-int main(int ac, char **av) {
-	if (ac != 2)
-	{
-		std::cerr << C_RED << "Please provide a configuration file as an argument" << RESET << std::endl;
-		return 1;
-	}
-	
+int	checkInputArgs(int ac, char **av, std::string &filename);
+int	checkResponse(const std::string &response);
+
+int main(int ac, char **av, char **env) {
+	std::string configFileName;
 	std::vector<ServerConfig*> configs;
-	ParseConfig pc(av[1], &configs);
+
+	if (checkInputArgs(ac, av, configFileName) == 1)
+		return (1);
+
+	ParseConfig pc(configFileName, &configs);
 	if (pc.parsingConfigFile() == 1)
 		return (1);
 
-
 	ServerConfig *serverconfig = *(configs.begin());
-
 	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;
-	
-	Server server;
+	std::vector<Location *> locations = serverconfig->getLocations();
+
+	Server server();
 
 	try {
 		/**
@@ -64,3 +66,39 @@ int main(int ac, char **av) {
 	//	server.run()
 	//	return 0
 //}
+//
+int	checkInputArgs(int ac, char **av, std::string &filename) {
+	int			status;
+	std::string	response;
+
+	if (ac > 2) {
+		std::cerr << C_RED << "Please use only one configuration file" << RESET << std::endl;
+		return 1;
+	}
+	else if (ac == 1) {
+		do {
+			std::cout << C_BLUE << "No configuration file was provided. Would you like to try using the default one ?\n[Y/n]" <<  RESET << std::endl;
+			std::getline(std::cin, response);
+			std::transform(response.begin(), response.end(), response.begin(), tolower);
+			status = checkResponse(response);
+		}
+		while (!status);
+		if (status == 1)
+			filename = "config/default.conf";
+		else {
+			std::cout << C_RED << "Please provide a configuration file" << RESET << std::endl;
+			return (1);
+		}
+	}
+	else
+		filename = av[1];
+	return (0);
+}
+
+int	checkResponse(const std::string &response) {
+	if (response == "y" || response == "yes" || response.empty())
+		return (1);
+	if (response == "n" || response == "no")
+		return (2);
+	return (0);
+}

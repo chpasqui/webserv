@@ -20,7 +20,7 @@ enum context {
 class ParseConfig {
 	public:
 		ParseConfig();
-		ParseConfig(std::string filename, std::vector<ServerConfig *> *serverConfigs);
+		ParseConfig(const std::string &filename, std::vector<ServerConfig *> *serverConfigs);
 		~ParseConfig();
 		
 		int				parsingConfigFile(void);
