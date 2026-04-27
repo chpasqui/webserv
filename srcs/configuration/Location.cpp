@@ -1,6 +1,6 @@
 #include "../../include/Location.hpp"
 #include "../../include/color.hpp"
-#include "../../include/debug.hpp"
+#include "../../include/Debug.hpp"
 #include "../../include/ServerConfig.hpp"
 
 Location::Location() {
@@ -148,6 +148,6 @@ std::string Location::getUploadStore() const{
 }
 
 void Location::addErrorPage(int code, std::string page) {
-	this->_errorPages.insert(std::map<int, std::string>::value_type(code, page));
+	this->_errorPages.insert(std::pair<int, std::string>(code, page));
 }
 

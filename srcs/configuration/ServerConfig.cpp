@@ -1,5 +1,5 @@
 #include "../../include/ServerConfig.hpp"
-#include "../../include/debug.hpp"
+#include "../../include/Debug.hpp"
 #include "../../include/color.hpp"
 #include "../../include/Http.hpp"
 #include "../../include/Location.hpp"

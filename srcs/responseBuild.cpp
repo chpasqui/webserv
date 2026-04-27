@@ -72,6 +72,9 @@ Location* Response::findLocation(const std::string& url){
  * @brief Builds the filesystem path from location root and URL remainder.
  */
 std::string Response::buildFileSystemPath(const std::string& url){    
+	if (_loc->getRoot().empty())
+		std::cout << "ROOT EMPTY" << std::endl;
+	std::cout << "root :" << _loc->getRoot() << std::endl;
 	_remain = url.substr(_loc->getPath().size());
 	return _loc->getRoot() + "/" + _remain; 
 }
@@ -140,6 +143,7 @@ void Response::setSyscallError(){
 void Response::buildError(){
 
 	std::string errorPageFile;
+	std::cout << "value:" << _loc->getErrorPage(_statusCode) << std::endl;
 	if (_loc && !_loc->getErrorPage(_statusCode).empty())
 		errorPageFile = _loc->getRoot() + "/" + _loc->getErrorPage(_statusCode);
 	// else if (!_config->getErrorPage(_statusCode).empty())
