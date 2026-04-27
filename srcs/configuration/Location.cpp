@@ -23,6 +23,7 @@ Location::Location(const ServerConfig &serverConfig) :
 	_root(serverConfig.getRoute()),
 	_allowedMethods(serverConfig.getAllowedMethods()),
 	_indexes(serverConfig.getIndexes()) {
+	_errorPages = serverConfig.getErrorPages();
 	LOG(C_CSTR << "Location: Normal constructor called" << RESET);
 	return ;
 }
