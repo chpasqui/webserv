@@ -3,7 +3,7 @@ DIR_SRC		=	./srcs
 DIR_BUILD	=	./build
 DIR_INCLUDE =	./include
 CXX			=	c++
-CXXFLAGS	=	-std=c++98 -Wall -Werror -Wextra
+CXXFLAGS	=	-std=c++98 -Wall -Werror -Wextra -g
 
 ifdef DEBUG
     CXXFLAGS += -DDEBUG -g

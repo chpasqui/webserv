@@ -72,7 +72,7 @@ Location* Response::findLocation(const std::string& url){
  */
 std::string Response::buildFileSystemPath(const std::string& url){    
 	_remain = url.substr(_loc->getPath().size());
-	return _loc->getRoot() + "/" + _remain; 
+	return _loc->getRoot() + _remain; 
 }
 
 

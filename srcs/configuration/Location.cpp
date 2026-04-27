@@ -1,6 +1,6 @@
 #include "../../include/Location.hpp"
 #include "../../include/color.hpp"
-#include "../../include/debug.hpp"
+#include "../../include/Debug.hpp"
 #include "../../include/ServerConfig.hpp"
 
 Location::Location() {
