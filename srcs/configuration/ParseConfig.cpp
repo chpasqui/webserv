@@ -27,7 +27,7 @@ ParseConfig::ParseConfig() :
 	LOG("ParseConfig: Default constructor called");
 }
 
-ParseConfig::ParseConfig(std::string filename, std::vector<ServerConfig *> *serverConfigs) :
+ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *> *serverConfigs) :
 	_filename(filename),
 	_configFile(""),
 	_contextLevel(NONE),
