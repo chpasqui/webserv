@@ -23,12 +23,14 @@ void Response::build(Request& request, const ServerConfig *config){
 		return;
 	}
 	if (request.getStatusCode() != 0){
+		std::cout << "inside ERROR" << std::endl;
 		_statusCode = request.getStatusCode();
 		buildError();
 		return ;
 	}
 	 //si on met dans serverConfig config->findLocation
 	_internalPath = buildFileSystemPath(request.getPath());
+	std::cout << "internal path is " << _internalPath << std::endl;
 	
 	if (_loc->getRedirCode() != 0){
 		_statusCode = _loc->getRedirCode();
@@ -76,7 +78,7 @@ std::string Response::buildFileSystemPath(const std::string& url){
 		std::cout << "ROOT EMPTY" << std::endl;
 	std::cout << "root :" << _loc->getRoot() << std::endl;
 	_remain = url.substr(_loc->getPath().size());
-	return _loc->getRoot() + "/" + _remain; 
+	return _loc->getRoot() + _remain; 
 }
 
 
@@ -143,7 +145,6 @@ void Response::setSyscallError(){
 void Response::buildError(){
 
 	std::string errorPageFile;
-	std::cout << "value:" << _loc->getErrorPage(_statusCode) << std::endl;
 	if (_loc && !_loc->getErrorPage(_statusCode).empty())
 		errorPageFile = _loc->getRoot() + "/" + _loc->getErrorPage(_statusCode);
 	// else if (!_config->getErrorPage(_statusCode).empty())
