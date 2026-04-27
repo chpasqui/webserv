@@ -9,7 +9,10 @@
 
 int main(int ac, char **av, char **env) {
 	if (ac != 2)
+	{
+		std::cerr << C_RED << "Please provide a configuration file as an argument" << RESET << std::endl;
 		return 1;
+	}
 	
 	std::vector<ServerConfig*> configs;
 	ParseConfig pc(av[1], &configs);
