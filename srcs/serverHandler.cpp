@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include "../include/Session.hpp"
 #include "../include/Cgi.hpp"
 
 #include <iostream>
@@ -55,9 +56,16 @@ void	Server::readFromSocket(int fd)
 	if (client.getParsingStatus() == CLOSEFD) {
 		removeConnection(fd);
 	}
-
 	if (client.getParsingStatus() == COMPLETE) {
-		client.buildResponse(this->env);
+		bool isNew = false;
+		std::string cookieHeader = client.getRequest()->getHeader("cookie");
+		std::string sessionId = Session::extractSessionId(cookieHeader);
+		if (sessionId.empty() || _sessions.find(sessionId) == _sessions.end()){
+			sessionId = Session::generateId();
+			isNew = true;
+		}
+		Session& session = _sessions[sessionId];
+		client.buildResponse(isNew);
         if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
             removeConnection(fd);
 			return ;

@@ -4,6 +4,7 @@
 #include "Request.hpp"
 #include "ServerConfig.hpp"
 #include "Location.hpp"
+#include "Session.hpp"
 
 #include <map>
 #include <string>
@@ -18,6 +19,9 @@ class Response {
 		std::string 						_remain;
 		std::map<std::string, std::string> 	_headers;
 		std::string 						_body;
+
+		Session*							_session;
+		std::vector<Session>				_setCookies;
 		
 
 		//route
@@ -47,7 +51,7 @@ class Response {
 		Response();
 		~Response();
 
-		void 		build(Request& request, const ServerConfig *config, char **envp);
+		void 		build(Request& request, const ServerConfig *config, bool isNew);
 		std::string responseFormat(Request& request);
 		
 

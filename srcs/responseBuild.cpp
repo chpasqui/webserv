@@ -13,8 +13,7 @@
  * @brief Builds the HTTP response from a parsed request.
  * Resolves location, checks method, dispatches to handler or CGI.
  */
-void Response::build(Request& request, const ServerConfig *config, char **envp){
-	(void)envp;
+void Response::build(Request& request, const ServerConfig *config, bool isNew){
 	_config = config;
 	_loc = findLocation(request.getPath());
 	if (_loc == NULL) {

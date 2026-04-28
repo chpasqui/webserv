@@ -125,10 +125,10 @@ const ServerConfig* Client::getServerConfig(void) const {
 	return this->_config;
 }
 
-void Client::buildResponse(char **envp)
+void Client::buildResponse(bool isNew)
 {
     _response = new Response();
-    _response->build(*_request, _config, envp);
+    _response->build(*_request, _config, isNew);
 }
 
 std::string Client::getResponse() const

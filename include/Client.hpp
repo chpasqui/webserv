@@ -33,7 +33,7 @@ class Client
 		Request*			getRequest(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t				getTimestamp(void) const;
-		void				buildResponse(char **envp);
+		void				buildResponse(bool isNew);
 		std::string 		getResponse() const;
 
 		
