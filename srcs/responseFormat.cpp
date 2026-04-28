@@ -20,3 +20,5 @@ std::string Response::responseFormat(Request& request){
 				<< _body;
 	return response.str();
 }
+
+//faut rajouter les set-Cookies si existants

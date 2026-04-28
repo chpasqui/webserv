@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <ctime>
+#include <cstdlib>
 
  Session::Session(){}
 

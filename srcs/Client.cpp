@@ -125,10 +125,10 @@ const ServerConfig* Client::getServerConfig(void) const {
 	return this->_config;
 }
 
-void Client::buildResponse(bool isNew)
+void Client::buildResponse(Session& session, bool isNew)
 {
-    _response = new Response();
-    _response->build(*_request, _config, isNew);
+    _response = new Response(session, isNew);
+    _response->build(*_request, _config);
 }
 
 std::string Client::getResponse() const

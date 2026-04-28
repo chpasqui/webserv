@@ -16,6 +16,7 @@ SRCS		=	main.cpp Server.cpp Client.cpp .cpp \
 				requestUtils.cpp 				serverEpoll.cpp serverLoop.cpp \
 				listeningSockets.cpp serverUtils.cpp \
 				serverHandler.cpp Cgi.cpp cgiHandler.cpp \
+				Session.cpp \
 				Response.cpp responseBuild.cpp responseHandlers.cpp responseFormat.cpp \
 				configuration/ServerConfig.cpp configuration/ParseConfig.cpp configuration/Http.cpp configuration/Location.cpp configuration/AConfig.cpp
 

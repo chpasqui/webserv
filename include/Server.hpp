@@ -43,6 +43,8 @@ class Server
 		static void	delFromEpoll(int epollFd, int fdToModify);
 		static void	signalHandler(int signal);
 
+		Session& resolveSession(const std::string& cookieHeader, bool& isNew);
+
 
 	private:
 		int	epollFd;

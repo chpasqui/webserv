@@ -40,3 +40,15 @@ void	Server::signalHandler(int signal) {
 		std::cout << "\nSIGQUIT signal detected, stopping server\n";
 	serverSignal = signal;
 }
+
+
+Session& Server::resolveSession(const std::string& cookieHeader, bool& isNew){
+	std::string sessionId = Session::extractSessionId(cookieHeader);
+	if (sessionId.empty() || _sessions.find(sessionId) == _sessions.end()){
+		sessionId = Session::generateId();
+		_sessions[sessionId].setId(sessionId); 
+		isNew = true;
+	}
+	return (_sessions[sessionId]);
+
+}

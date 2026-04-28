@@ -33,7 +33,7 @@ class Client
 		Request*			getRequest(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t				getTimestamp(void) const;
-		void				buildResponse(bool isNew);
+		void				buildResponse(Session& session, bool isNew);
 		std::string 		getResponse() const;
 
 		

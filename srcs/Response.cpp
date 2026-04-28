@@ -6,7 +6,18 @@ Response::Response() :
     _config(NULL),
     _loc(NULL),
     _statusCode(0),
-    _body("") {}
+    _body(""), 
+    _session(NULL),
+    _isNewSession(false) {}
+
+
+Response::Response(Session& session, bool isNew) : 
+    _config(NULL),
+    _loc(NULL),
+    _statusCode(0),
+    _body(""),
+    _session(&session),
+    _isNewSession(isNew) {}
 
 Response::~Response(){}
 

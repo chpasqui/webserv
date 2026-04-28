@@ -21,7 +21,7 @@ class Response {
 		std::string 						_body;
 
 		Session*							_session;
-		std::vector<Session>				_setCookies;
+		bool								_isNewSession;
 		
 
 		//route
@@ -49,9 +49,10 @@ class Response {
 		
 	public:
 		Response();
+		Response(Session& session, bool isNew);
 		~Response();
 
-		void 		build(Request& request, const ServerConfig *config, bool isNew);
+		void 		build(Request& request, const ServerConfig *config);
 		std::string responseFormat(Request& request);
 		
 

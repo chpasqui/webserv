@@ -58,14 +58,8 @@ void	Server::readFromSocket(int fd)
 	}
 	if (client.getParsingStatus() == COMPLETE) {
 		bool isNew = false;
-		std::string cookieHeader = client.getRequest()->getHeader("cookie");
-		std::string sessionId = Session::extractSessionId(cookieHeader);
-		if (sessionId.empty() || _sessions.find(sessionId) == _sessions.end()){
-			sessionId = Session::generateId();
-			isNew = true;
-		}
-		Session& session = _sessions[sessionId];
-		client.buildResponse(isNew);
+		Session& session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
+		client.buildResponse(session, isNew);
         if (!modifyEpoll(this->epollFd, fd, EPOLLOUT)){
             removeConnection(fd);
 			return ;
