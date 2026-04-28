@@ -32,8 +32,7 @@ class Cgi
 		std::string					_scriptName;
 		std::string					_pathInfo;
 		const char *				_interpreter;
-		void						setCgiEnvVariables(const Request& request, const ServerConfig& config, const std::string& internalPath);
-		char**						setEnv();
+		std::vector<char *>			setCgiEnvVariables(const Request& request, const ServerConfig& config, const std::string& internalPath);
 		int							executeScript(const Request& request, const std::string &internalPath);
 };
 
