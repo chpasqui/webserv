@@ -18,17 +18,20 @@ std::string Session::generateId(){
     return ss.str();
 }
 
-//mais en fait est ce que jaurai bien la key session_id, est ce que cest parce que cest ca que je cree moi dans le server?
 std::string Session::extractSessionId(std::string cookieHeader){
 	std::string key = "session_id=";
 	size_t pos = cookieHeader.find(key);
-	if (pos == std::string::npos)
-		return "";
-    pos += key.size();
-    size_t end = cookieHeader.find(";", pos);
-    if (end == std::string::npos)
-        return cookieHeader.substr(pos);
-    return cookieHeader.substr(pos, end - pos);
+	while (pos == std::string::npos){
+		if (pos == 0 || (pos >= 2 && cookieHeader.substr(pos - 2, 2) == "; ")){
+			pos += key.size();
+			size_t end = cookieHeader.find(";", pos);
+			if (end == std::string::npos)
+				return cookieHeader.substr(pos);
+			return cookieHeader.substr(pos, end - pos);
+		}
+		pos = cookieHeader.find(key, pos + 1);
+	}
+	return "";
 }
 
 std::string Session::toSetCookieString() const
