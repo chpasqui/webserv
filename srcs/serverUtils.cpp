@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include "../include/color.hpp"
 
 #include <iostream>
 #include <ctime>
@@ -44,17 +45,14 @@ void	Server::signalHandler(int signal) {
 
 Session& Server::resolveSession(const std::string& cookieHeader, bool& isNew)
 {
-    std::cerr << "resolveSession called" << std::endl;
-    std::string sessionId = Session::extractSessionId(cookieHeader);
-    std::cerr << "sessionId extracted: " << sessionId << std::endl;
-    if (sessionId.empty() || _sessions.find(sessionId) == _sessions.end()) {
-        std::cerr << "creating new session" << std::endl;
-        sessionId = Session::generateId();
-        std::cerr << "generated id: " << sessionId << std::endl;
-        _sessions[sessionId].setId(sessionId);
-        std::cerr << "session created" << std::endl;
-        isNew = true;
+	std::string sessionId = Session::extractSessionId(cookieHeader);
+	if (sessionId.empty() || _sessions.find(sessionId) == _sessions.end()) {
+		sessionId = Session::generateId();
+		_sessions[sessionId].setId(sessionId);
+		isNew = true;
+		std::cout << YELLOW << "NEW session: " << sessionId << RESET << std::endl;
     }
-    std::cerr << "returning session" << std::endl;
-    return (_sessions[sessionId]);
+	else
+		std::cout << GREEN << "EXISTING session: " << sessionId << RESET << std::endl;
+	return (_sessions[sessionId]);
 }
