@@ -55,6 +55,7 @@ void	Server::readFromSocket(int fd)
 
 	if (client.getParsingStatus() == CLOSEFD) {
 		removeConnection(fd);
+		return ;
 	}
 	if (client.getParsingStatus() == COMPLETE) {
 		bool isNew = false;

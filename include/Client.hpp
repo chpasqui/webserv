@@ -3,6 +3,7 @@
 
 #include "../include/Request.hpp"
 #include "../include/Response.hpp"
+#include "../include/Session.hpp"
 #include <ctime>
 #include <string>
 #include <sys/types.h>
