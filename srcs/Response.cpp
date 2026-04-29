@@ -10,7 +10,6 @@ Response::Response() :
     _session(NULL),
     _isNewSession(false) {}
 
-
 Response::Response(Session& session, bool isNew) : 
     _config(NULL),
     _loc(NULL),

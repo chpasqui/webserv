@@ -21,7 +21,7 @@ std::string Session::generateId(){
 std::string Session::extractSessionId(std::string cookieHeader){
 	std::string key = "session_id=";
 	size_t pos = cookieHeader.find(key);
-	while (pos == std::string::npos){
+	while (pos != std::string::npos){
 		if (pos == 0 || (pos >= 2 && cookieHeader.substr(pos - 2, 2) == "; ")){
 			pos += key.size();
 			size_t end = cookieHeader.find(";", pos);
