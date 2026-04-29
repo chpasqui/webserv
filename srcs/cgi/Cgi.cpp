@@ -67,49 +67,42 @@ void	Cgi::buildEnv(const Request& request, const ServerConfig& config) {
 
 int	Cgi::executeScript(const Request& request)
 {
-	int stdoutPipe[2];	// the stdoutPipe file descriptor pair inherited by child
-	int stdinPipe[2];	// the stdin file descriptor pair inherited by child
+	int stdoutPipe[2];
+	int stdinPipe[2];
 	std::string responseBody;
 
 	if (pipe(stdoutPipe) == -1)
 		perror("Error: ");
 	
-	// setting the read end of the pipe non blocking
-	if (fcntl(stdoutPipe[READ_END], F_SETFL, O_NONBLOCK) < 0) // if a process atempts to read from an empty pipe it can block and writing to a full pipe will also block. 
+	if (fcntl(stdoutPipe[READ_END], F_SETFL, O_NONBLOCK) < 0)
 		perror("Error: ");
 
-	// Handling when it is POST
 	if (request.getMethod() == "POST") { 
-		//std::cout << "the request.getMethod() is post, so in this case, we create the std:::in pipe" << std::endl;
 		if (pipe(stdinPipe) == -1)
 			perror("Error: ");
-		if (fcntl(stdinPipe[WRITE_END], F_SETFL, O_NONBLOCK) < 0) // set the write end to ONONBLOCK because normally the write() call would wait for the pipe to be read to add new data. it wil instead write what it can, and then immdiately return
+		if (fcntl(stdinPipe[WRITE_END], F_SETFL, O_NONBLOCK) < 0)
 			perror ("Error: ");
 	}
 
 	pid_t pid = fork();	//
-	// error case
 	if (pid == 0)
 	{
 		if (request.getMethod() == "POST") {
-			//std::cout << "entered the post pipe creation" << std::endl;
-			close(stdinPipe[WRITE_END]); // the child will readn from the pipe
-			dup2(stdinPipe[READ_END], STDIN_FILENO); // the STDIN of the child inc ase of POST is the pipe read end
-			close(stdinPipe[READ_END]);	// can close the original fd
+			close(stdinPipe[WRITE_END]);
+			dup2(stdinPipe[READ_END], STDIN_FILENO);
+			close(stdinPipe[READ_END]);
 		}
-		//std::cout << "inside the child after the POST method" << std::endl;
 		close(stdoutPipe[READ_END]);
-		dup2(stdoutPipe[WRITE_END], STDOUT_FILENO); // when the process will output something, it will go to the read end of the stdoutPipe
+		dup2(stdoutPipe[WRITE_END], STDOUT_FILENO);
 		close(stdoutPipe[WRITE_END]); 
 		std::string executable = parseShebang();
-		//std::cout << executable << internalPath << std::endl;
+
 		char *argv[] = { const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileSystemPath.c_str()), NULL }; // NULL marks the end of the array
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 			std::exit(1);
 	}
 	else {
 		if (request.getMethod() == "POST") {
-			//std::cout << "entered the parent POST" << std::endl;
 			close(stdinPipe[READ_END]);
 			write(stdinPipe[WRITE_END], request.getBody().c_str(), request.getBody().size());
 			close(stdinPipe[WRITE_END]);		
@@ -119,7 +112,6 @@ int	Cgi::executeScript(const Request& request)
 
 		close(stdoutPipe[WRITE_END]);
 
-		// FOR NOW DEBUG PURPOSES
 		char buffer[1024];
 		int contentLength = 0;
 		do {

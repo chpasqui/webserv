@@ -49,6 +49,7 @@ class Server
 		int	epollFd;
 		std::map<int, const ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 		std::map<int, Client*> _clients;
+		std::map<
 };
 
 #endif
