@@ -1,6 +1,6 @@
-#include "../include/Request.hpp"
-#include "../include/statusCode.hpp"
-#include "../include/Debug.hpp"
+#include "../../include/Request.hpp"
+#include "../../include/statusCode.hpp"
+#include "../../include/Debug.hpp"
 
 /**
  * @brief Decodes %XX sequences to ASCII.

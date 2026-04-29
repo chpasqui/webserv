@@ -1,6 +1,7 @@
 #include "../include/Client.hpp"
 #include "../include/Cgi.hpp"
 #include "../include/ServerConfig.hpp"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -154,12 +155,10 @@ const ServerConfig* Client::getServerConfig(void) const {
 	return this->_config;
 }
 
-
 std::string Client::getResponseStr() const
 {
 	return _response->responseFormat(*_request);
 }
-
 
 /**
  * @brief Destroy the Client:: Client object

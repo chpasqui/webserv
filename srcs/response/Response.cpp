@@ -1,6 +1,6 @@
-#include "../include/Response.hpp"
-#include "../include/ServerConfig.hpp"
-#include "../include/statusCode.hpp"
+#include "../../include/Response.hpp"
+#include "../../include/ServerConfig.hpp"
+#include "../../include/statusCode.hpp"
 
 Response::Response() :
 	_config(NULL),

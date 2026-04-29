@@ -1,6 +1,6 @@
-#include "../include/Request.hpp"
-#include "../include/statusCode.hpp"
-#include "../include/Debug.hpp"
+#include "../../include/Request.hpp"
+#include "../../include/statusCode.hpp"
+#include "../../include/Debug.hpp"
 
 
 static bool parseChunkSize(const std::string &body, size_t &pos, long &chunkSize);

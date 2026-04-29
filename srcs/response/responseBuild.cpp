@@ -1,9 +1,9 @@
-#include "../include/Response.hpp"
-#include "../include/ServerConfig.hpp"
-#include "../include/statusCode.hpp"
-#include "../include/Location.hpp"
-#include "../include/Debug.hpp"
-#include "../include/Cgi.hpp"
+#include "../../include/Response.hpp"
+#include "../../include/ServerConfig.hpp"
+#include "../../include/statusCode.hpp"
+#include "../../include/Location.hpp"
+#include "../../include/Debug.hpp"
+#include "../../include/Cgi.hpp"
 
 #include <sys/stat.h>
 #include <string.h>

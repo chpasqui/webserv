@@ -1,4 +1,4 @@
-#include "../include/Server.hpp"
+#include "../../include/Server.hpp"
 
 #include <iostream>
 #include <ctime>
@@ -91,3 +91,4 @@ void	Server::delFromEpoll(int epollFd, int fdToModify)
 	// 	_clients.erase(fdToModify);
 	// }
 }
+

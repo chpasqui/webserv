@@ -23,21 +23,25 @@
 class Cgi
 {
 	public:
-		Cgi();
+		//Cgi();
+		Cgi(const std::string& fileSystemPath);
 		~Cgi();
-		int			executeCgi(const Request& request, const ServerConfig& config, const std::string& internalPath);
+		int			launch(const Request& request, const ServerConfig& config);
 	private:
+		const std::string&			_fileSystemPath;
 		std::vector<std::string>	_tempEnv;
-		int							_tempEnvLength;
+		std::vector<char *>			_finalEnv;
+
 		std::string					_scriptName;
 		std::string					_pathInfo;
-		const char *				_interpreter;
-		std::vector<char *>			setCgiEnvVariables(const Request& request, const ServerConfig& config, const std::string& internalPath);
-		int							executeScript(const Request& request, const std::string &internalPath);
+
+		void						buildEnv(const Request& request, const ServerConfig& config);
+		int							executeScript(const Request& request);
 };
 
+std::string getHeaderVariable(const std::map<std::string, std::string>& header, const std::string& key);
+std::string parseShebang();
+std::string resolveHostname();
 std::string intToString(int number);
-std::string getHeaderVariable(const std::map<std::string, std::string>& header, const std::string& tofind);
-std::string extractExecutable();
 
 #endif

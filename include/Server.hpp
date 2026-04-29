@@ -32,13 +32,13 @@ class Server
 		int		openListeningSocket(void);
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
-		bool	addNewConnection(int listeningFd);
-		void	readFromSocket(int fd);
-		void	dispatchCgi(const Client& client) const;
-		void	writeToSocket(int fd);
+		bool	acceptNewConnection(int listeningFd);
+		void	readFromClient(int fd);
+		void	launchCgi(const Client& client) const;
+		void	writeToClient(int fd);
 		void	timeoutCheck(void);
 		
-		void	removeConnection(int fd);
+		void	closeConnection(int fd);
 		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static bool	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static void	delFromEpoll(int epollFd, int fdToModify);

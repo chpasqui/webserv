@@ -1,6 +1,6 @@
-#include "../include/Response.hpp"
-#include "../include/ServerConfig.hpp"
-#include "../include/statusCode.hpp"
+#include "../../include/Response.hpp"
+#include "../../include/ServerConfig.hpp"
+#include "../../include/statusCode.hpp"
 
 /**
  * @brief Serializes the response to a raw HTTP/1.1 string.
