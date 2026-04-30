@@ -11,10 +11,9 @@ class AConfig
 
 		//----Setter----//
 		virtual void						setRedireCode(const int redireCode);
-		virtual void						setCgiEnable(const bool cgiEnable);
 		virtual void						setPath(const std::string path);
 		virtual void						setRedirePath(const std::string redirePath);
-		virtual void						addCgiExtension(const std::string extension);
+		virtual void						addCgiExtension(const std::string extension, const std::string path);
 		virtual void						setHeaderTimeout(const int headerTimeout);
 		virtual void						setBodyTimeout(const int bodyTimeout);
 		virtual void						setMaxBodySize(const int maxBodySize);

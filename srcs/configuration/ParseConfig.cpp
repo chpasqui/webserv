@@ -50,8 +50,8 @@ ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *
 	_dictionary["server_name"] = &ParseConfig::processServerNameToken;
 	_dictionary["allowed_methods"] = &ParseConfig::processAllowedMethodsToken;
 	_dictionary["index"] = &ParseConfig::processIndexToken;
-	_dictionary["cgi_enable"] = &ParseConfig::processCgiEnableToken;
 	_dictionary["return"] = &ParseConfig::processRedirectionToken;
+	_dictionary["cgi_pass"] = &ParseConfig::processCgiPassToken;
 	LOG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
 }
 
@@ -344,16 +344,14 @@ void	ParseConfig::processRedirectionToken(void) {
 	this->_contextConfig->setRedirePath(redirectionPath);
 }
 
-void	ParseConfig::processCgiEnableToken(void) {
-	std::string value;
+void	ParseConfig::processCgiPassToken(void) {
+	std::string	extension;
+	std::string	path;
 
-	value = getNextToken();
-	if (value == "on")
-		this->_contextConfig->setCgiEnable(true);
-	else if (value == "off")
-		this->_contextConfig->setCgiEnable(false);
-	else
-		throw std::runtime_error("value " + value + " unrecognized after cgi_enable");
+	extension = getNextToken();
+	path = getNextToken();
+	//TODO: check if is a vlaid entension ?
+	this->_contextConfig.addCgiExtension(extension);
 }
 
 /**

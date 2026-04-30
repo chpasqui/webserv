@@ -42,9 +42,8 @@ class ParseConfig {
 		void				processAllowedMethodsToken(void);
 		void				processIndexToken(void);
 		void				processErrorPageToken(void);
-		void				processCgiEnableToken(void);
 		void				processRedirectionToken(void);
-		void				processCgiExtensionToken(void);
+		void				processCgiPassToken(void);
 		void				procesaUploadStoreToken(void);
 		//----Static functions----//
 		static int		transformTokenToInt(std::string token);
