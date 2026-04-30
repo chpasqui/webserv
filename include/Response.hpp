@@ -23,6 +23,8 @@ class Response {
 		Session*							_session;
 		bool								_isNewSession;
 		bool								_isCgi;
+
+		std::string							_cgiPass;
 		
 
 		//route
@@ -58,6 +60,7 @@ class Response {
 		std::string responseFormat(Request& request);
 		bool		getCgiStatus(void) const;
 		std::string	getInternalPath(void) const;
+		std::string	getCgiPass(void) const;
 
 		void serverSessionPage();
 		void handleLogin(Request& request);

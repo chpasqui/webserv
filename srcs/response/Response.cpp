@@ -9,7 +9,8 @@ Response::Response() :
     _body(""), 
     _session(NULL),
     _isNewSession(false),
-	_isCgi(false) {}
+	_isCgi(false), 
+    _cgiPass("") {}
 
 Response::Response(Session& session, bool isNew) : 
     _config(NULL),
@@ -18,7 +19,8 @@ Response::Response(Session& session, bool isNew) :
     _body(""),
     _session(&session),
     _isNewSession(isNew),
-	_isCgi(false) {}
+	_isCgi(false),
+    _cgiPass("") {}
 
 Response::~Response(){}
 
@@ -90,6 +92,10 @@ bool	Response::getCgiStatus(void) const {
 
 std::string    Response::getInternalPath(void) const {
     return this->_internalPath;
+}
+
+std::string	Response::getCgiPass(void) const{
+    return this->_cgiPass;
 }
 
 void Response::setError(int code){

@@ -39,8 +39,8 @@ void Response::build(Request& request, const ServerConfig *config){
 		setError(METHOD_NOT_ALLOWED);
 		return ;
 	}
-	// if (isCGI()){
-	// 	std::cout << "inside the build function, isCgi is set to true" << std::endl;
+	 if (isCGI())
+		std::cout << "inside the build function, isCgi is set to true" << std::endl;
 	// 	this->_isCgi = true;
 	// 	return;
 	// }
@@ -71,11 +71,8 @@ Location* Response::findLocation(const std::string& url){
  * @brief Builds the filesystem path from location root and URL remainder.
  */
 std::string Response::buildFileSystemPath(const std::string& url){    
-	if (_loc->getRoot().empty())
-		std::cout << "ROOT EMPTY" << std::endl;
-	std::cout << "root :" << _loc->getRoot() << std::endl;
-	_remain = url.substr(_loc->getPath().size());
-	return _loc->getRoot() + _remain; 
+	_remain = url.substr(1);
+    return _loc->getRoot() + _remain;
 }
 
 /**
@@ -97,12 +94,15 @@ bool Response::isCGI(){
 	if (!temp.empty()){
 		std::map<std::string, std::string>::iterator it = temp.begin();
 		for (; it != temp.end(); it++){
-			size_t pos = _internalPath.find(it->first); //WARN: idk if is "first" or "seconde"
+			std::cout << it->first << std::endl;
+			size_t pos = _internalPath.find(it->first); 
 			if (pos != std::string::npos){
 				size_t end = pos + it->first.size();
-				if (end == _internalPath.size() || _internalPath[end] == '/')
-				return true;
+				if (end == _internalPath.size() || _internalPath[end] == '/'){
+					_cgiPass = it->second;
+					return true;
 				}
+			}
 		}
 		return false;
 	}
