@@ -1,4 +1,5 @@
 #include "../../include/Server.hpp"
+#include "../../include/Session.hpp"
 #include "../../include/Cgi.hpp"
 
 #include <iostream>
