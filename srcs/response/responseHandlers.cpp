@@ -40,8 +40,7 @@ void Response::handleGetMethod(Request& request){
             return ;
     }
     if (!_loc->getAutoIndex()){
-        _statusCode = FORBIDDEN;
-        buildError();
+        setError(FORBIDDEN);
         return ;
     }
     displayAutoIndex();
@@ -64,7 +63,6 @@ bool Response::serveFile() {
     _headers["Content-Type"] = extractContentType();
     return true;
 }
-
 
 /**
  * @brief Generates an HTML directory listing for _internalPath.
@@ -94,20 +92,17 @@ void Response::displayAutoIndex(){
  */
 void Response::handlePostMethod(Request& request){
     if (_remain.empty() || _remain[_remain.size() - 1] == '/') {
-        _statusCode = BAD_REQUEST;
-        buildError();
+        setError(BAD_REQUEST);
         LOG(std::cout << "can't upload body without specifying the file in URL" << std::endl);
         return;
     }
     if (request.getHeader("content-type").find("multipart/form-data") != std::string::npos){
-        _statusCode = FORBIDDEN;
-        buildError();
+        setError(FORBIDDEN);
         LOG(std::cout << "can't handle multipart without cgi" << std::endl);
         return ;
     }
     if (_loc->getUploadStore().empty()){
-        _statusCode = FORBIDDEN;
-        buildError();
+        setError(FORBIDDEN);
         LOG(std::cout << "can't upload, no upload store" << std::endl);
         return ;
     }
@@ -121,8 +116,7 @@ void Response::handlePostMethod(Request& request){
     std::string uploadPath = _loc->getUploadStore() + "/" + _remain;
     struct stat fileStat;
     if (stat(uploadPath.c_str(), &fileStat) == 0){
-        _statusCode = CONFLICT;
-        buildError();
+        setError(CONFLICT);
         LOG(std::cout << "file already exist" << std::endl);
         return ;
     }
@@ -150,7 +144,7 @@ void Response::handleDeleteMethod(Request& request){
     }
     if (S_ISDIR(sb.st_mode)){
         if (request.getPath()[request.getPath().size() - 1] != '/'){
-            _statusCode = CONFLICT;
+            setError(CONFLICT);
             return ;
         }
     }

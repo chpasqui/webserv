@@ -91,3 +91,8 @@ bool	Response::getCgiStatus(void) const {
 std::string    Response::getInternalPath(void) const {
     return this->_internalPath;
 }
+
+void Response::setError(int code){
+    _statusCode = code;
+    buildError();
+}

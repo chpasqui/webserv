@@ -46,6 +46,8 @@ class Response {
 		void 		setDefaultHeaders();
 		std::string extractContentType();
 		std::string getReasonPhrase() const;
+
+		void setError(int code);
 		
 	public:
 		Response();
