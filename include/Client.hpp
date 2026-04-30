@@ -3,6 +3,7 @@
 
 #include "../include/Request.hpp"
 #include "../include/Response.hpp"
+#include "../include/Session.hpp"
 #include <ctime>
 #include <string>
 #include <sys/types.h>
@@ -36,7 +37,7 @@ class Client
 		Response*			getResponse(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t				getTimestamp(void) const;
-		void				buildResponse();
+		void				buildResponse(Session& session, bool isNew);
 		std::string 		getResponseStr() const;
 		
 

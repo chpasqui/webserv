@@ -81,7 +81,6 @@ std::string Response::buildFileSystemPath(const std::string& url){
 	return _loc->getRoot() + _remain; 
 }
 
-
 /**
  * @brief Checks if the method is allowed by the matched location.
  */
@@ -91,7 +90,6 @@ bool Response::methodAllowed(const std::string& method){
 		return true;
 	return false;
 }
-
 
 /**
  * @brief Checks if the request targets a CGI resource by extension.
