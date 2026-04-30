@@ -84,24 +84,21 @@ bool Response::methodAllowed(const std::string& method){
  */
 bool Response::isCGI(){
 	std::map<std::string, std::string> temp = this->_loc->getCgiExtensions();
-
-	if (!temp.empty()){
-		std::map<std::string, std::string>::iterator it = temp.begin();
-		for (; it != temp.end(); it++){
-			std::cout << it->first << std::endl;
-			size_t pos = _internalPath.find(it->first); 
-			if (pos != std::string::npos){
-				size_t end = pos + it->first.size();
-				if (end == _internalPath.size() || _internalPath[end] == '/'){
-					_cgiPass = it->second;
-					return true;
-				}
+	std::map<std::string, std::string>::iterator it = temp.begin();
+	for (; it != temp.end(); it++){
+		std::cout << it->first << std::endl;
+		size_t pos = _internalPath.find(it->first); 
+		if (pos != std::string::npos){
+			size_t end = pos + it->first.size();
+			if (end == _internalPath.size() || _internalPath[end] == '/'){
+				_cgiPass = it->second;
+				return true;
 			}
 		}
-		return false;
 	}
 	return false;
 }
+
 
 /**
  * @brief Dispatches to the appropriate method handler (GET/POST/DELETE).
