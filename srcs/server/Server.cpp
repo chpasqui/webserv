@@ -1,4 +1,5 @@
 #include "../../include/Server.hpp"
+#include "../../include/Session.hpp"
 #include "../../include/Cgi.hpp"
 
 #include <iostream>
@@ -87,10 +88,14 @@ void	Server::readFromClient(int clientFd)
 
 	if (client.getParsingStatus() == CLOSEFD) {
 		closeConnection(clientFd);
+		return ;
 	}
-
 	if (client.getParsingStatus() == COMPLETE) {
-		client.buildResponse();
+		bool isNew = false;
+		Session& session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
+		// client.setResponse(session, isNew);
+		// client.getResponse()->build(*client.getRequest(), client.getServerConfig());
+		client.buildResponse(session, isNew);
 		if (client.getResponse()->getCgiStatus() == true) {
 			std::cout << "entered the case where it is cgi" << std::endl;
 			launchCgi(client);

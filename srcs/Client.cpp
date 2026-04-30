@@ -111,18 +111,6 @@ void	Client::parseRequest() {
 	return ;
 }
 
-/**
- * @brief build response will set the bool isCgi which will then be used
- * by the server to know which type of request we are dealing with.
- * 
- */
-void Client::buildResponse()
-{
-	std::cout << "entered the buildResponse function" << std::endl;
-	_response = new Response();
-	_response->build(*_request, _config);
-}
-
 int		Client::getClientFd() const {
 	return (this->_clientFd);
 }
@@ -153,6 +141,12 @@ Response* Client::getResponse(void) const {
 
 const ServerConfig* Client::getServerConfig(void) const {
 	return this->_config;
+}
+
+void Client::buildResponse(Session& session, bool isNew)
+{
+    _response = new Response(session, isNew);
+    _response->build(*_request, _config);
 }
 
 std::string Client::getResponseStr() const

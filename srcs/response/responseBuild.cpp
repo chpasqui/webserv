@@ -17,15 +17,13 @@
 void Response::build(Request& request, const ServerConfig *config){
 	_config = config;
 	_loc = findLocation(request.getPath());
-	if (_loc == NULL) {
-		_statusCode = NOT_FOUND;
-		buildError();
+	if (_loc == NULL){
+		setError(NOT_FOUND);
 		return;
 	}
 	if (request.getStatusCode() != 0){
 		std::cout << "inside ERROR" << std::endl;
-		_statusCode = request.getStatusCode();
-		buildError();
+		setError(request.getStatusCode());
 		return ;
 	}
 	 //si on met dans serverConfig config->findLocation
@@ -38,8 +36,7 @@ void Response::build(Request& request, const ServerConfig *config){
 		return ;
 	}
 	if (!methodAllowed(request.getMethod())){
-		_statusCode = METHOD_NOT_ALLOWED;
-		buildError();
+		setError(METHOD_NOT_ALLOWED);
 		return ;
 	}
 	// if (isCGI()){
@@ -81,7 +78,6 @@ std::string Response::buildFileSystemPath(const std::string& url){
 	return _loc->getRoot() + _remain; 
 }
 
-
 /**
  * @brief Checks if the method is allowed by the matched location.
  */
@@ -91,7 +87,6 @@ bool Response::methodAllowed(const std::string& method){
 		return true;
 	return false;
 }
-
 
 /**
  * @brief Checks if the request targets a CGI resource by extension.
@@ -120,8 +115,12 @@ bool Response::isCGI(){
 void Response::handleMethod(Request& request){
 	if (request.getMethod() == "GET")
 		handleGetMethod(request);
-	else if (request.getMethod() == "POST")
-		handlePostMethod(request);
+	else if (request.getMethod() == "POST"){
+		if (request.getPath() == "/login")
+			handleLogin(request);
+		else
+			handlePostMethod(request);
+	}
 	else
 		handleDeleteMethod(request);
 }
@@ -131,12 +130,11 @@ void Response::handleMethod(Request& request){
  */
 void Response::setSyscallError(){
 	if (errno == ENOENT || errno == ENOTDIR)
-		_statusCode = NOT_FOUND;
+		setError(NOT_FOUND);
 	else if (errno == EACCES)
-		_statusCode = FORBIDDEN;
+		setError(FORBIDDEN);
 	else
-		_statusCode = INTERNAL_SERVER_ERROR;
-	buildError();
+		setError(INTERNAL_SERVER_ERROR);
 }
 
 /**

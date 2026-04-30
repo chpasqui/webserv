@@ -4,6 +4,7 @@
 #include "Request.hpp"
 #include "ServerConfig.hpp"
 #include "Location.hpp"
+#include "Session.hpp"
 
 #include <map>
 #include <string>
@@ -18,6 +19,9 @@ class Response {
 		std::string 						_remain;
 		std::map<std::string, std::string> 	_headers;
 		std::string 						_body;
+
+		Session*							_session;
+		bool								_isNewSession;
 		bool								_isCgi;
 		
 
@@ -42,15 +46,21 @@ class Response {
 		void 		setDefaultHeaders();
 		std::string extractContentType();
 		std::string getReasonPhrase() const;
+
+		void setError(int code);
 		
 	public:
 		Response();
+		Response(Session& session, bool isNew);
 		~Response();
 
 		void 		build(Request& request, const ServerConfig *config);
 		std::string responseFormat(Request& request);
 		bool		getCgiStatus(void) const;
 		std::string	getInternalPath(void) const;
+
+		void serverSessionPage();
+		void handleLogin(Request& request);
 };
 
 #endif 

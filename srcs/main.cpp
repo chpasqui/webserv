@@ -14,6 +14,7 @@ int	checkResponse(const std::string &response);
 int main(int ac, char **av) {
 	std::string configFileName;
 	std::vector<ServerConfig*> configs;
+	std::srand(static_cast<unsigned int>(std::time(NULL))); //voir si laisser la
 
 	if (checkInputArgs(ac, av, configFileName) == 1)
 		return (1);
