@@ -8,7 +8,8 @@ Response::Response() :
     _statusCode(0),
     _body(""), 
     _session(NULL),
-    _isNewSession(false) {}
+    _isNewSession(false),
+	_isCgi(false) {}
 
 Response::Response(Session& session, bool isNew) : 
     _config(NULL),
@@ -16,7 +17,8 @@ Response::Response(Session& session, bool isNew) :
     _statusCode(0),
     _body(""),
     _session(&session),
-    _isNewSession(isNew) {}
+    _isNewSession(isNew),
+	_isCgi(false) {}
 
 Response::~Response(){}
 
@@ -68,8 +70,7 @@ std::string Response::extractContentType(){
     std::map<std::string, std::string>::iterator it = mime.find(_internalPath.substr(dot));
     if (it == mime.end())
         return "application/octet-stream";
-    return it->second;
-    
+    return it->second;   
 }
 
 /**
@@ -81,4 +82,12 @@ void Response::setDefaultHeaders(){
     ss << _body.size();
     _headers["Content-Length"] = ss.str();
     _headers["Server"] = "webserv";
+}
+
+bool	Response::getCgiStatus(void) const {
+    return this->_isCgi;
+}
+
+std::string    Response::getInternalPath(void) const {
+    return this->_internalPath;
 }
