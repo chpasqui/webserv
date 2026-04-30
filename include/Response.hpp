@@ -56,6 +56,9 @@ class Response {
 		std::string responseFormat(Request& request);
 		bool		getCgiStatus(void) const;
 		std::string	getInternalPath(void) const;
+
+		void serverSessionPage();
+		void handleLogin(Request& request);
 };
 
 #endif 

@@ -118,8 +118,12 @@ bool Response::isCGI(){
 void Response::handleMethod(Request& request){
 	if (request.getMethod() == "GET")
 		handleGetMethod(request);
-	else if (request.getMethod() == "POST")
-		handlePostMethod(request);
+	else if (request.getMethod() == "POST"){
+		if (request.getPath() == "/login")
+			handleLogin(request);
+		else
+			handlePostMethod(request);
+	}
 	else
 		handleDeleteMethod(request);
 }

@@ -26,6 +26,7 @@ SRCS        =   main.cpp \
 				response/responseBuild.cpp \
 				response/responseHandlers.cpp \
 				response/responseFormat.cpp \
+				response/responseSession.cpp \
 				Session.cpp \
 				cgi/Cgi.cpp \
 				cgi/cgiUtils.cpp \

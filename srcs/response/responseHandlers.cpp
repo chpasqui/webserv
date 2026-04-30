@@ -14,7 +14,11 @@
  */
 void Response::handleGetMethod(Request& request){
     struct stat sb;
-   
+    
+    if (request.getPath() == "/welcome"){
+        serverSessionPage();
+        return ;
+    }
     if (stat(_internalPath.c_str(), &sb) != 0){
         setSyscallError();
         return;

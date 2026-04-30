@@ -47,6 +47,8 @@ std::string Session::getId() const{
     return (_id);
 }
 
+
+
 Session::~Session(){}
 
 
