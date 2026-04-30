@@ -3,17 +3,30 @@
 #include "../../include/Debug.hpp"
 #include "../../include/ServerConfig.hpp"
 
-Location::Location() {
+Location::Location() :
+	_redireCode(0),
+	_path("/"),
+	_redirePath(""),
+	_cgiExtensions(),
+	_headerTimeout(0),
+	_bodyTimeout(0),
+	_maxBodysize(0),
+	_port(0),
+	_autoindex(false),
+	_serverName(""),
+	_root(""),
+	_allowedMethods(""),
+	_indexes(),
+	_errorPages() {
 	LOG(C_CSTR << "Location: Default constructor called" << RESET);
 	return ;
 }
 
 Location::Location(const ServerConfig &serverConfig) :
 	_redireCode(0),
-	_cgiEnable(false),
 	_path("/"),
 	_redirePath(""),
-	_cgiExtension(0),
+	_cgiExtensions(),
 	_headerTimeout(serverConfig.getHeaderTimeout()),
 	_bodyTimeout(serverConfig.getBodyTimeout()),
 	_maxBodysize(serverConfig.getMaxBodySize()),
@@ -39,10 +52,6 @@ void Location::setRedireCode(const int redireCode) {
 	this->_redireCode = redireCode;
 }
 
-void Location::setCgiEnable(const bool cgiEnable) {
-	this->_cgiEnable = cgiEnable;
-}
-
 void Location::setPath(const std::string path) {
 	this->_path = path;
 }
@@ -51,8 +60,8 @@ void Location::setRedirePath(const std::string redirePath) {
 	this->_redirePath = redirePath;
 }
 
-void Location::addCgiExtension(const std::string extension) {
-	this->_cgiExtension.push_back(extension);
+void Location::addCgiExtension(const std::string extension, const std::string path) {
+	this->_cgiExtensions.insert(std::map<std::string, std::string>::value_type(extension, path));
 }
 
 void Location::setBodyTimeout(const int bodyTimeout) {
@@ -89,10 +98,6 @@ int Location::getRedirCode(void) const {
 	return (this->_redireCode);
 }
 
-bool Location::getCgiEnable(void) const {
-	return (this->_cgiEnable);
-}
-
 std::string Location::getPath(void) const {
 	return (this->_path);
 }
@@ -101,8 +106,8 @@ std::string Location::getRedirPath(void) const {
 	return (this->_redirePath);
 }
 
-std::vector<std::string> Location::getCgiExtensions(void) const {
-	return (this->_cgiExtension);
+std::map<std::string, std::string> Location::getCgiExtensions(void) const {
+	return (this->_cgiExtensions);
 }
 
 int Location::getHeaderTimeout(void) const {

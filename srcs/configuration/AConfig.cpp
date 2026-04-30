@@ -16,11 +16,6 @@ void	AConfig::setRedireCode(const int redireCode){
 	throw (std::runtime_error("wrong context with \"return\" (redireCode)"));
 }
 
-void	AConfig::setCgiEnable(const bool cgiEnable){
-	(void) cgiEnable;
-	throw (std::runtime_error("wrong context"));
-}
-
 void	AConfig::setPath(const std::string path) {
 	(void) path;
 	throw (std::runtime_error("wrong context"));
@@ -31,9 +26,10 @@ void	AConfig::setRedirePath(const std::string redirePath) {
 	throw (std::runtime_error("wrong context with \"return\" (redirePath)"));
 }
 
-void	AConfig::addCgiExtension(const std::string extension) {
+void	AConfig::addCgiExtension(const std::string extension, const std::string path) {
 	(void) extension;
-	throw (std::runtime_error("wrong context"));
+	(void) path;
+	throw (std::runtime_error("wrong context with \"cgi_pass\""));
 }
 
 void	AConfig::setHeaderTimeout(const int headerTimeout) {

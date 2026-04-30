@@ -92,14 +92,14 @@ bool Response::methodAllowed(const std::string& method){
  * @brief Checks if the request targets a CGI resource by extension.
  */
 bool Response::isCGI(){
-	std::vector<std::string> temp = this->_loc->getCgiExtensions();
-	
-	if (_loc->getCgiEnable()){
-		std::vector<std::string>::iterator it = temp.begin();
-		for (; it != _loc->getCgiExtensions().end(); it++){
-			size_t pos = _internalPath.find(*it);
+	std::map<std::string, std::string> temp = this->_loc->getCgiExtensions();
+
+	if (!temp.empty()){
+		std::map<std::string, std::string>::iterator it = temp.begin();
+		for (; it != temp.end(); it++){
+			size_t pos = _internalPath.find(it->first); //WARN: idk if is "first" or "seconde"
 			if (pos != std::string::npos){
-				size_t end = pos + it->size();
+				size_t end = pos + it->first.size();
 				if (end == _internalPath.size() || _internalPath[end] == '/')
 				return true;
 				}

@@ -98,6 +98,7 @@ void	Server::readFromClient(int clientFd)
 		client.buildResponse(session, isNew);
 		if (client.getResponse()->getCgiStatus() == true) {
 			std::cout << "entered the case where it is cgi" << std::endl;
+			//create pipes
 			launchCgi(client);
 		}
 		else {

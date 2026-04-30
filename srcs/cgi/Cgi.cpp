@@ -104,6 +104,10 @@ int	Cgi::executeScript(const Request& request)
 	else {
 		if (request.getMethod() == "POST") {
 			close(stdinPipe[READ_END]);
+			// open file
+			// IF there is input from epoll 
+				// write 
+			// if there is something to write 
 			write(stdinPipe[WRITE_END], request.getBody().c_str(), request.getBody().size());
 			close(stdinPipe[WRITE_END]);		
 		}
