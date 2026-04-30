@@ -1,13 +1,13 @@
 #include "../../include/Location.hpp"
 #include "../../include/color.hpp"
-#include "../../include/debug.hpp"
+#include "../../include/Debug.hpp"
 #include "../../include/ServerConfig.hpp"
 
 Location::Location() :
 	_redireCode(0),
 	_path("/"),
 	_redirePath(""),
-	_cgiExtension(0),
+	_cgiExtensions(),
 	_headerTimeout(0),
 	_bodyTimeout(0),
 	_maxBodysize(0),
@@ -26,7 +26,7 @@ Location::Location(const ServerConfig &serverConfig) :
 	_redireCode(0),
 	_path("/"),
 	_redirePath(""),
-	_cgiExtension(0),
+	_cgiExtensions(),
 	_headerTimeout(serverConfig.getHeaderTimeout()),
 	_bodyTimeout(serverConfig.getBodyTimeout()),
 	_maxBodysize(serverConfig.getMaxBodySize()),
@@ -61,7 +61,7 @@ void Location::setRedirePath(const std::string redirePath) {
 }
 
 void Location::addCgiExtension(const std::string extension, const std::string path) {
-	this->_cgiExtensions.insert(extension, path);
+	this->_cgiExtensions.insert(std::map<std::string, std::string>::value_type(extension, path));
 }
 
 void Location::setBodyTimeout(const int bodyTimeout) {

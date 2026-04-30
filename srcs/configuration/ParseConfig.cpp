@@ -350,8 +350,12 @@ void	ParseConfig::processCgiPassToken(void) {
 
 	extension = getNextToken();
 	path = getNextToken();
-	//TODO: check if is a vlaid entension ?
-	this->_contextConfig.addCgiExtension(extension);
+
+	std::cout << C_PINK << "Inside cgiPassToken" << RESET << std::endl;
+
+	if (*(extension.begin()) != '.')
+		throw (std::invalid_argument("an extension need to start with a point"));
+	this->_contextConfig->addCgiExtension(extension, path);
 }
 
 /**
