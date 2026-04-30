@@ -11,9 +11,10 @@
 int	checkInputArgs(int ac, char **av, std::string &filename);
 int	checkResponse(const std::string &response);
 
-int main(int ac, char **av, char **env) {
+int main(int ac, char **av) {
 	std::string configFileName;
 	std::vector<ServerConfig*> configs;
+	std::srand(static_cast<unsigned int>(std::time(NULL))); //voir si laisser la
 
 	if (checkInputArgs(ac, av, configFileName) == 1)
 		return (1);
@@ -26,7 +27,7 @@ int main(int ac, char **av, char **env) {
 	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;
 	std::vector<Location *> locations = serverconfig->getLocations();
 
-	Server server(env);
+	Server server;
 
 	try {
 		/**
@@ -36,19 +37,6 @@ int main(int ac, char **av, char **env) {
 		 * 3. set it to listen to incoming connecitons on a specific port. Backllog says how many connections are allower to queue up
 		 */
 		server.setupListeningSockets(configs);
-		/**
-		 * @brief server.run is the main multiplexer loop though which everything passes. 
-		 * 1. a client (someone) will try to connect on your machine or port and that we are 
-		 * listen()ing on. The connection will be queued up waiting to be accept()ed. 
-		 * 2. when calling accept() we tell it to get the corresponding pending connection which 
-		 * will return a brand new client descritor to use for that single connection. The original
-		 * listenfd will continue to listen for new connections. The new socket is ready for recv() and send()
-		 * 3. epol will monitor listenfd to see of any I/O is possible on any of them. The epoll_wait just tells us 
-		 * which fd is ready
-		 * 4. When there is an EPOLIN event, we will look for the delimiters and status and parse the requestline,
-		 * header, and body.
-		 * 5. Once the request is parsed, it will 
-		 */
 		server.run(); // server instance out of scope if declared outside, I need it here but run does not 
 	}
 	catch(const std::exception& e) {

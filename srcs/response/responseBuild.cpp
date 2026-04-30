@@ -1,8 +1,9 @@
-#include "../include/Response.hpp"
-#include "../include/ServerConfig.hpp"
-#include "../include/statusCode.hpp"
-#include "../include/Location.hpp"
-#include "../include/Debug.hpp"
+#include "../../include/Response.hpp"
+#include "../../include/ServerConfig.hpp"
+#include "../../include/statusCode.hpp"
+#include "../../include/Location.hpp"
+#include "../../include/Debug.hpp"
+#include "../../include/Cgi.hpp"
 
 #include <sys/stat.h>
 #include <string.h>
@@ -13,22 +14,21 @@
  * @brief Builds the HTTP response from a parsed request.
  * Resolves location, checks method, dispatches to handler or CGI.
  */
-void Response::build(Request& request, const ServerConfig *config, char **envp){
-	(void)envp;
+void Response::build(Request& request, const ServerConfig *config){
 	_config = config;
 	_loc = findLocation(request.getPath());
-	if (_loc == NULL) {
-		_statusCode = NOT_FOUND;
-		buildError();
+	if (_loc == NULL){
+		setError(NOT_FOUND);
 		return;
 	}
 	if (request.getStatusCode() != 0){
-		_statusCode = request.getStatusCode();
-		buildError();
+		std::cout << "inside ERROR" << std::endl;
+		setError(request.getStatusCode());
 		return ;
 	}
 	 //si on met dans serverConfig config->findLocation
 	_internalPath = buildFileSystemPath(request.getPath());
+	std::cout << "internal path is " << _internalPath << std::endl;
 	
 	if (_loc->getRedirCode() != 0){
 		_statusCode = _loc->getRedirCode();
@@ -36,13 +36,13 @@ void Response::build(Request& request, const ServerConfig *config, char **envp){
 		return ;
 	}
 	if (!methodAllowed(request.getMethod())){
-		_statusCode = METHOD_NOT_ALLOWED;
-		buildError();
+		setError(METHOD_NOT_ALLOWED);
 		return ;
 	}
 	// if (isCGI()){
-	//     handleCGI(request, envp);
-	//     return;
+	// 	std::cout << "inside the build function, isCgi is set to true" << std::endl;
+	// 	this->_isCgi = true;
+	// 	return;
 	// }
 	handleMethod(request);
 }
@@ -71,10 +71,12 @@ Location* Response::findLocation(const std::string& url){
  * @brief Builds the filesystem path from location root and URL remainder.
  */
 std::string Response::buildFileSystemPath(const std::string& url){    
+	if (_loc->getRoot().empty())
+		std::cout << "ROOT EMPTY" << std::endl;
+	std::cout << "root :" << _loc->getRoot() << std::endl;
 	_remain = url.substr(_loc->getPath().size());
-	return _loc->getRoot() + "/" + _remain; 
+	return _loc->getRoot() + _remain; 
 }
-
 
 /**
  * @brief Checks if the method is allowed by the matched location.
@@ -85,7 +87,6 @@ bool Response::methodAllowed(const std::string& method){
 		return true;
 	return false;
 }
-
 
 /**
  * @brief Checks if the request targets a CGI resource by extension.
@@ -114,8 +115,12 @@ bool Response::isCGI(){
 void Response::handleMethod(Request& request){
 	if (request.getMethod() == "GET")
 		handleGetMethod(request);
-	else if (request.getMethod() == "POST")
-		handlePostMethod(request);
+	else if (request.getMethod() == "POST"){
+		if (request.getPath() == "/login")
+			handleLogin(request);
+		else
+			handlePostMethod(request);
+	}
 	else
 		handleDeleteMethod(request);
 }
@@ -125,12 +130,11 @@ void Response::handleMethod(Request& request){
  */
 void Response::setSyscallError(){
 	if (errno == ENOENT || errno == ENOTDIR)
-		_statusCode = NOT_FOUND;
+		setError(NOT_FOUND);
 	else if (errno == EACCES)
-		_statusCode = FORBIDDEN;
+		setError(FORBIDDEN);
 	else
-		_statusCode = INTERNAL_SERVER_ERROR;
-	buildError();
+		setError(INTERNAL_SERVER_ERROR);
 }
 
 /**

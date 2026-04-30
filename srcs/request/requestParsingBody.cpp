@@ -1,6 +1,6 @@
-#include "../include/Request.hpp"
-#include "../include/statusCode.hpp"
-#include "../include/Debug.hpp"
+#include "../../include/Request.hpp"
+#include "../../include/statusCode.hpp"
+#include "../../include/Debug.hpp"
 
 
 static bool parseChunkSize(const std::string &body, size_t &pos, long &chunkSize);
@@ -25,6 +25,7 @@ bool Request::parseBody(const std::string &body, int maxBodySize){
         return true ;
     }
     _contentLength = 0;
+    // once the body is unchunked, 
     std::cout << _body << std::endl;
     return true ;
 }
@@ -98,3 +99,4 @@ bool Request::extractChunkData(const std::string &body, size_t &pos, long chunkS
         pos += 2;
         return true ;
     }
+

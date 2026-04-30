@@ -3,6 +3,7 @@
 
 #include "../include/Request.hpp"
 #include "../include/Response.hpp"
+#include "../include/Session.hpp"
 #include <ctime>
 #include <string>
 #include <sys/types.h>
@@ -30,18 +31,21 @@ class Client
 
 		int					getClientFd() const;
 		int					getParsingStatus() const;
+		int					getCgiPipeFd(void) const;
+		void				setCgiPipeFd(int fd);
 		Request*			getRequest(void) const;
+		Response*			getResponse(void) const;
 		const ServerConfig* getServerConfig(void) const;
 		time_t				getTimestamp(void) const;
-		void				buildResponse(char **envp);
-		std::string 		getResponse() const;
-
+		void				buildResponse(Session& session, bool isNew);
+		std::string 		getResponseStr() const;
 		
 
 
 	private:
 		Client(); // client constructor is in private so that we never create a client out of nowhere
 		int					_clientFd;
+		int					_cgiPipeFd;
 		int					_writeCgiPipeEnd;
 		int					_readCgiPipeEnd;
 

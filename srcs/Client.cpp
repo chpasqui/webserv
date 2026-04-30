@@ -1,6 +1,7 @@
 #include "../include/Client.hpp"
 #include "../include/Cgi.hpp"
 #include "../include/ServerConfig.hpp"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -11,6 +12,7 @@
 
 Client::Client() :
 	_clientFd(-1),
+	_cgiPipeFd(-1),
 	_writeCgiPipeEnd(-1),
 	_readCgiPipeEnd(-1),
 	_bytesRead(-1),
@@ -25,6 +27,7 @@ Client::Client() :
 
 Client::Client(int fd, const ServerConfig* config, Request *request) :
 	_clientFd(fd),
+	_cgiPipeFd(-1),
 	_writeCgiPipeEnd(-1),
 	_readCgiPipeEnd(-1),
 	_bytesRead(-1),
@@ -39,6 +42,7 @@ Client::Client(int fd, const ServerConfig* config, Request *request) :
 
 Client::Client(const Client& other) :
 	_clientFd(other._clientFd),
+	_cgiPipeFd(other._cgiPipeFd),
 	_writeCgiPipeEnd(other._writeCgiPipeEnd),
 	_readCgiPipeEnd(other._readCgiPipeEnd),
 	_bytesRead(other._bytesRead),
@@ -65,6 +69,8 @@ bool Client::bodyRead(std::string& buffer){
 void	Client::parseRequest() {
 	char buffer[1024];
 
+	if (this->_parsingStatus == COMPLETE || this->_parsingStatus == CLOSEFD)
+		return ;
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0 || _bytesRead  == -1)
 	{
@@ -88,10 +94,10 @@ void	Client::parseRequest() {
 			return ;
 		}
 		if (_request->getContentLength() <= 0)
-    	{
-        	this->_parsingStatus = COMPLETE;
-        	return ;
-    	}
+		{
+			this->_parsingStatus = COMPLETE;
+			return ;
+		}
 		this->_parsingStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
@@ -117,25 +123,36 @@ int		Client::getParsingStatus() const {
 	return (this->_parsingStatus);
 }
 
+int		Client::getCgiPipeFd() const {
+	return (this->_cgiPipeFd);
+}
+
+void	Client::setCgiPipeFd(int fd) {
+	this->_cgiPipeFd = fd;
+}
+
 Request* Client::getRequest(void) const {
 	return (this->_request);
+}
+
+Response* Client::getResponse(void) const {
+	return (this->_response);
 }
 
 const ServerConfig* Client::getServerConfig(void) const {
 	return this->_config;
 }
 
-void Client::buildResponse(char **envp)
+void Client::buildResponse(Session& session, bool isNew)
 {
-    _response = new Response();
-    _response->build(*_request, _config, envp);
+    _response = new Response(session, isNew);
+    _response->build(*_request, _config);
 }
 
-std::string Client::getResponse() const
+std::string Client::getResponseStr() const
 {
-    return _response->responseFormat(*_request);
+	return _response->responseFormat(*_request);
 }
-
 
 /**
  * @brief Destroy the Client:: Client object

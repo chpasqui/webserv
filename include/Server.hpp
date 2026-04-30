@@ -7,6 +7,7 @@
 
 #include "ServerConfig.hpp"
 #include "Client.hpp"
+#include "Session.hpp"
 
 extern int serverSignal;
 
@@ -24,7 +25,7 @@ extern int serverSignal;
 class Server
 {
 	public:
-		Server(char **env);
+		Server();
 		void setupListeningSockets(const std::vector<ServerConfig *>& serverConfigsVec);
 		~Server();
 		void	createEpollInstance(void);
@@ -32,12 +33,13 @@ class Server
 		int		openListeningSocket(void);
 		void	bindAndListen(int& fd, int port) const;
 		void	run(void);
-		bool	addNewConnection(int listeningFd);
-		void	readFromSocket(int fd);
-		void	writeToSocket(int fd);
+		bool	acceptNewConnection(int listeningFd);
+		void	readFromClient(int fd);
+		void	launchCgi(const Client& client) const;
+		void	writeToClient(int fd);
 		void	timeoutCheck(void);
 		
-		void	removeConnection(int fd);
+		void	closeConnection(int fd);
 		static void	addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static bool	modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
 		static void	delFromEpoll(int epollFd, int fdToModify);
@@ -46,9 +48,11 @@ class Server
 
 	private:
 		int	epollFd;
-		char **env;
 		std::map<int, const ServerConfig*> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 		std::map<int, Client*> _clients;
+		std::map<std::string, Session> _sessions;
+
+		Session& resolveSession(const std::string& cookieHeader, bool& isNew);
 };
 
 #endif
