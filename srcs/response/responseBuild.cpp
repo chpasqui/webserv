@@ -128,7 +128,7 @@ void Response::setSyscallError(){
 		setError(INTERNAL_SERVER_ERROR);
 
 
-bool Response::splitOutput(const std::string& output, std::string& headers){
+bool Response::splitOutput(const std::string& output, std::string& headerSection){
 	size_t pos = output.find("\r\n\r\n");
 	if (pos != std::string::npos){
 		headers = output.substr(0, pos);
@@ -145,22 +145,27 @@ bool Response::splitOutput(const std::string& output, std::string& headers){
 }
 
 void Response::buildCgiResponse(const std::string& output){
-	std::string headers;
+	std::string headerSection;
 
-	if (!splitOutput(output, headers)){
+	if (!splitOutput(output, headerSection)){
 		setError(INTERNAL_SERVER_ERROR);
 		return ;
 	}
-
-
+	parseCgiHeaders(headerSection);
+	if (!_body.empty() && _headers.find("content-type") == _headers.end())
+		setError(INTERNAL_SERVER_ERROR);
+	if (_headers.count("status")){
+		_statusCode = std::atoi(_headers["status"].c_str())
+		_headers.erase("status");
 	}
-	//step3 : parselesheaders
-	//step4 : on definit le body en fonction du type de separation
-	//step5 : si dans le header y a pas de content type on renvoit une erreur ?
-	//step6 : si dans le header y a Status, il faut prendre la valeur du status et le mettre \
-			le statutCode et ensuite lenlever des headers
-	//step7 : sinon on set le statusCode OK
-	
+	else
+		_statusCode = OK;
+	//on pourrait faire une petite fonction utils et lutiliser partout ou on a besoin
+	if (!_body.empty()){
+		std::ostringstream ss;
+		ss << body.size();
+		headers["content-length"] = ss.str();
+	}
 }
 
 /**
