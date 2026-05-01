@@ -126,6 +126,41 @@ void Response::setSyscallError(){
 		setError(FORBIDDEN);
 	else
 		setError(INTERNAL_SERVER_ERROR);
+
+
+bool Response::splitOutput(const std::string& output, std::string& headers){
+	size_t pos = output.find("\r\n\r\n");
+	if (pos != std::string::npos){
+		headers = output.substr(0, pos);
+		_body = output.substr(pos + 4);
+		return true;
+	}
+	pos = output.find("\n\n");
+	if (pos != std::string::npos){
+		headers = output.substr(0, pos);
+		_body = output.substr(pos + 2);
+		return true;
+	}
+	return false;
+}
+
+void Response::buildCgiResponse(const std::string& output){
+	std::string headers;
+
+	if (!splitOutput(output, headers)){
+		setError(INTERNAL_SERVER_ERROR);
+		return ;
+	}
+
+
+	}
+	//step3 : parselesheaders
+	//step4 : on definit le body en fonction du type de separation
+	//step5 : si dans le header y a pas de content type on renvoit une erreur ?
+	//step6 : si dans le header y a Status, il faut prendre la valeur du status et le mettre \
+			le statutCode et ensuite lenlever des headers
+	//step7 : sinon on set le statusCode OK
+	
 }
 
 /**
