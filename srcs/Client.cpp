@@ -149,6 +149,11 @@ void Client::buildResponse(Session& session, bool isNew)
     _response->build(*_request, _config);
 }
 
+void	Client::setResponse(Session& session, bool isNew)
+{
+	this->_response = new Response(session, isNew);
+}
+
 std::string Client::getResponseStr() const
 {
 	return _response->responseFormat(*_request);

@@ -40,13 +40,18 @@ void	Server::run()
 
 	while (!serverSignal)
 	{
-		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, 0);
-		if (nFd == -1) break ;
+		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, -1);
+		if (nFd == -1)
+		{
+			if (errno == EINTR);
+				perror("Error: ");
+				break;
+		}
 		for (int i = 0; i < nFd; i++) {
 			int fd = events[i].data.fd;
 			if (_listenFds.count(fd)) { if (!acceptNewConnection(fd)) continue ; }
 			else if (events[i].events & (EPOLLERR | EPOLLHUP)) closeConnection(fd);
-			else if (events[i].events & EPOLLIN) readFromClient(fd);
+			else if (events[i].events & EPOLLIN) readFromClient(fd); // if pipecgi.count() --> read from pipe 
 			else if(events[i].events & EPOLLOUT) writeToClient(fd);
 		}
 	}
@@ -80,8 +85,10 @@ bool	Server::acceptNewConnection(int listeningFd)
 	return (true);
 }
 
+// potentially rename to treatClientRequest
 void	Server::readFromClient(int clientFd)
 {
+	// check that there is a client 
 	Client& client = *(_clients[clientFd]); // _clients[6] will give us the Client class at clientFd = 6
 	
 	client.parseRequest();
@@ -93,12 +100,23 @@ void	Server::readFromClient(int clientFd)
 	if (client.getParsingStatus() == COMPLETE) {
 		bool isNew = false;
 		Session& session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
-		// client.setResponse(session, isNew);
-		// client.getResponse()->build(*client.getRequest(), client.getServerConfig());
+		client.setResponse(session, isNew);
+		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
 		client.buildResponse(session, isNew);
 		if (client.getResponse()->getCgiStatus() == true) {
 			std::cout << "entered the case where it is cgi" << std::endl;
-			//create pipes
+			// if true CONDITION FIRST TIME ENCOUNTER avec macro 
+				// create CGI env
+				//create pipes
+				// add pipes to epoll in EPOLLIN
+				// COMPLETE PIPE SETUP
+			//  if complete pipe setup && epollin = true
+				//read and write du file ici  // 
+				// write status 
+				// EOF met // no CL because also headers  
+			// executecgi
+			// if cgi is complete, send to response
+
 			launchCgi(client);
 		}
 		else {
@@ -109,10 +127,14 @@ void	Server::readFromClient(int clientFd)
 	}
 }
 
+
+// 
+
+
 // void	Server::readFromPipe(int pipeFd)
 // {
 	// char buffer[1024];
-	// 	int contentLength = 0;
+	// 	int contentLength = 0; // no content length --> because not obly the body 
 	// 	do {
 	// 		contentLength = read(stdoutPipe[READ_END], buffer, 1024);
 	// 		if (contentLength > 0)
