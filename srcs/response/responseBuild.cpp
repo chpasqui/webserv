@@ -9,6 +9,7 @@
 #include <string.h>
 #include <fstream>
 #include <dirent.h>
+#include <algorithm>
 
 /**
  * @brief Builds the HTTP response from a parsed request.
@@ -99,7 +100,6 @@ bool Response::isCGI(){
 	return false;
 }
 
-
 /**
  * @brief Dispatches to the appropriate method handler (GET/POST/DELETE).
  */
@@ -126,18 +126,45 @@ void Response::setSyscallError(){
 		setError(FORBIDDEN);
 	else
 		setError(INTERNAL_SERVER_ERROR);
+}
 
+void Response::parseCgiHeaders(std::string& headerSection){
+	std::string line;
+	std::istringstream split(headerSection);
+
+	while(std::getline(split, line)){
+		if (!line.empty() && line[line.size() - 1] == '\r')
+			line.erase(line.size() - 1);
+		if (line.empty())
+			break ;
+
+		size_t colonPos = line.find(':');
+		if (colonPos == std::string::npos)
+			continue;
+		
+		std::string name = line.substr(0, colonPos);
+		std::string value = line.substr(colonPos + 1);
+		
+		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+		
+		size_t start = value.find_first_not_of(' ');
+		if (start != std::string::npos)
+			value = value.substr(start);
+		
+		_headers[name] = value;
+	}
+}
 
 bool Response::splitOutput(const std::string& output, std::string& headerSection){
 	size_t pos = output.find("\r\n\r\n");
 	if (pos != std::string::npos){
-		headers = output.substr(0, pos);
+		headerSection = output.substr(0, pos);
 		_body = output.substr(pos + 4);
 		return true;
 	}
 	pos = output.find("\n\n");
 	if (pos != std::string::npos){
-		headers = output.substr(0, pos);
+		headerSection = output.substr(0, pos);
 		_body = output.substr(pos + 2);
 		return true;
 	}
@@ -155,7 +182,7 @@ void Response::buildCgiResponse(const std::string& output){
 	if (!_body.empty() && _headers.find("content-type") == _headers.end())
 		setError(INTERNAL_SERVER_ERROR);
 	if (_headers.count("status")){
-		_statusCode = std::atoi(_headers["status"].c_str())
+		_statusCode = std::atoi(_headers["status"].c_str());
 		_headers.erase("status");
 	}
 	else
@@ -163,8 +190,8 @@ void Response::buildCgiResponse(const std::string& output){
 	//on pourrait faire une petite fonction utils et lutiliser partout ou on a besoin
 	if (!_body.empty()){
 		std::ostringstream ss;
-		ss << body.size();
-		headers["content-length"] = ss.str();
+		ss << _body.size();
+		_headers["content-length"] = ss.str();
 	}
 }
 
