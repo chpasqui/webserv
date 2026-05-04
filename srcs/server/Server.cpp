@@ -39,14 +39,6 @@ void Server::run()
 	while (!serverSignal)
 	{
 		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, -1);
-		if (nFd == -1)
-		{
-			if (errno == EINTR)
-			{
-				perror("Error: ");
-				break;
-			}
-		}
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd;
