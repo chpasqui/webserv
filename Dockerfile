@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
- 
+
 ENV DEBIAN_FRONTEND=noninteractive
- 
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     g++ \
@@ -12,10 +12,10 @@ RUN apt-get update && apt-get install -y \
     git \
     strace \
     curl \
-	netcat-openbsd \
+    netcat-openbsd \
     net-tools \
     && rm -rf /var/lib/apt/lists/*
- 
+
 WORKDIR /webserv
- 
+
 CMD ["/bin/bash"]

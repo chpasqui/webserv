@@ -35,6 +35,7 @@ class Client
 		void				setCgiPipeFd(int fd);
 		Request*			getRequest(void) const;
 		Response*			getResponse(void) const;
+		void				setResponse(Session& session, bool isNew);
 		const ServerConfig* getServerConfig(void) const;
 		time_t				getTimestamp(void) const;
 		void				buildResponse(Session& session, bool isNew);

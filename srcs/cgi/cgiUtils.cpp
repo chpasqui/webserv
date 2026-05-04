@@ -12,6 +12,17 @@ std::string getHeaderVariable(const std::map<std::string, std::string>& header, 
 	return "";
 }
 
+// getheader in response 
+
+// const std::string& Request::getHeader(std::string key) const{
+//     static const std::string empty = "";
+//     std::map<std::string, std::string>::const_iterator it = _headers.begin();
+// 	for(; it != _headers.end(); it++)
+//         if (it->first == key)
+//             return it->second;
+//     return empty;
+// } already exists call this functio nn 
+
 std::string parseShebang() {
 	std::ifstream filestream("/www/cgi-bin/hello.py");
 	std::string line;

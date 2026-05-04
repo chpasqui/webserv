@@ -6,7 +6,7 @@ services:
       - 8079:8081
     volumes:
       - ./www:/etc/nginx/www
-      - ./../config/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
     networks:
       - docknet
 
@@ -14,7 +14,7 @@ services:
     build: .
     container_name: webserv_dev
     volumes:
-      - .:/webserv          # mounts your local folder into /webserv
+      - ..:/webserv          # mounts your local folder into /webserv
     ports:
       - "8080:8080"         # adjust to your webserv port(s)
       - "8081:8081"
@@ -24,6 +24,8 @@ services:
       core: -1              # allow core dumps for gdb post-mortem
     cap_add:
       - SYS_PTRACE          # needed for gdb to attach to processes
+    networks:
+      - docknet
 
 networks:
   docknet:
