@@ -151,8 +151,9 @@ void Server::readFromClient(int clientFd)
 
 void Server::launchCgi(const Client &client) const
 {
-	Cgi cgi(client.getResponse()->getInternalPath());
-	int pipeFd = cgi.launch(*client.getRequest(), *client.getServerConfig());
+	Cgi cgi;
+	std::cout << "about to launch!" << std::endl;
+	int pipeFd = cgi.launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
 	addToEpoll(this->epollFd, pipeFd, EPOLLIN);
 }
 

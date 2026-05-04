@@ -17,18 +17,14 @@
  */
 void Response::build(Request &request, const ServerConfig *config)
 {
-	std::cout << "entered the build function" << std::endl;
 	_config = config;
 	_loc = findLocation(request.getPath());
 	if (request.getStatusCode() != 0)
 	{
-		std::cout << "CAME HERE" << std::endl;
 		setError(request.getStatusCode());
 		return;
 	}
-	std::cout << " I AM HERE" << std::endl;
 	_internalPath = buildFileSystemPath(request.getPath());
-	std::cout << "internal path is " << _internalPath << std::endl;
 	if (_loc->getRedirCode() != 0)
 	{
 		_statusCode = _loc->getRedirCode();
@@ -42,7 +38,6 @@ void Response::build(Request &request, const ServerConfig *config)
 	}
 	if (isCGI())
 	{
-		std::cout << "inside the build function, isCgi is set to true" << std::endl;
 		this->_isCgi = true;
 		return;
 	}

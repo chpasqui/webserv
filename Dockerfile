@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     netcat-openbsd \
     net-tools \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /webserv
