@@ -36,11 +36,11 @@ void Response::build(Request &request, const ServerConfig *config)
 		setError(METHOD_NOT_ALLOWED);
 		return;
 	}
-	// if (isCGI())
-	// {
-	// 	this->_isCgi = true;
-	// 	return;
-	// }
+	if (isCGI())
+	{
+		this->_isCgi = true;
+		return;
+	}
 	handleMethod(request);
 }
 

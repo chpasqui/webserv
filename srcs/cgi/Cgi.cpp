@@ -29,6 +29,7 @@ Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv()
 
 int Cgi::launch(const std::string &internalPath, const Request &request, const ServerConfig &config)
 {
+	std::cout << "ENtered the CGI launch function" << std::endl;
 	char cwd[1024];
 	getcwd(cwd, sizeof(cwd));
 	std::string absolutePath = std::string(cwd) + "/" + internalPath;
@@ -114,33 +115,26 @@ int Cgi::executeScript(const Request &request)
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 			std::exit(1);
 	}
-	else
+	if (request.getMethod() == "POST")
 	{
-		if (request.getMethod() == "POST")
-		{
-			close(stdinPipe[READ_END]);
-			// open file
-			// IF there is input from epoll
-			// write
-			// if there is something to write
-			write(stdinPipe[WRITE_END], request.getBody().c_str(), request.getBody().size());
-			close(stdinPipe[WRITE_END]);
-		}
-		int status;
-		waitpid(pid, &status, 0); // remove
-
-		close(stdoutPipe[WRITE_END]);
-
-		char buffer[1024];
-		int contentLength = 0;
-		do
-		{
-			contentLength = read(stdoutPipe[READ_END], buffer, 1024);
-			if (contentLength > 0)
-				responseBody.append(buffer, contentLength);
-		} while (contentLength > 0);
-		std::cout << GREEN << responseBody << RESET << std::endl;
+		close(stdinPipe[READ_END]);
+		write(stdinPipe[WRITE_END], request.getBody().c_str(), request.getBody().size());
+		close(stdinPipe[WRITE_END]);
 	}
+	int status;
+	waitpid(pid, &status, 0); // remove
+
+	close(stdoutPipe[WRITE_END]);
+
+	char buffer[1024];
+	int contentLength = 0;
+	do
+	{
+		contentLength = read(stdoutPipe[READ_END], buffer, 1024);
+		if (contentLength > 0)
+			responseBody.append(buffer, contentLength);
+	} while (contentLength > 0);
+	std::cout << GREEN << responseBody << RESET << std::endl;
 	return stdoutPipe[READ_END];
 }
 

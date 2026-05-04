@@ -145,6 +145,7 @@ void Server::launchCgi(const Client &client) const
 	Cgi cgi;
 	std::cout << "about to launch!" << std::endl;
 	int pipeFd = cgi.launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
+	// this->_pipefds[] = pipefd;
 	addToEpoll(this->epollFd, pipeFd, EPOLLIN);
 }
 
