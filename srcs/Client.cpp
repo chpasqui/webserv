@@ -155,12 +155,6 @@ const ServerConfig *Client::getServerConfig(void) const
 	return this->_config;
 }
 
-// void Client::buildResponse(Session &session, bool isNew)
-// {
-// 	_response = new Response(session, isNew);
-// 	_response->build(*_request, _config);
-// }
-
 void Client::setResponse(Session &session, bool isNew)
 {
 	this->_response = new Response(session, isNew);
