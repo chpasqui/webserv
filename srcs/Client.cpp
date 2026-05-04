@@ -69,7 +69,7 @@ bool Client::bodyRead(std::string &buffer)
 
 void Client::parseRequest()
 {
-	char buffer[1024];
+	char buffer[BUFFERSIZE];
 
 	if (this->_parsingStatus == COMPLETE || this->_parsingStatus == CLOSEFD)
 		return;
@@ -106,7 +106,7 @@ void Client::parseRequest()
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
-		if (!_request->parseBody(_buffer, 1024))
+		if (!_request->parseBody(_buffer, BUFFERSIZE))
 		{
 			this->_parsingStatus = COMPLETE;
 			return;

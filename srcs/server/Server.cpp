@@ -2,6 +2,7 @@
 #include "../../include/Session.hpp"
 #include "../../include/Cgi.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <ctime>
 #include <stdexcept>
@@ -27,7 +28,8 @@ int serverSignal = 0;
 
 Server::Server() : epollFd(-1),
 				   _listenFds(),
-				   _clients()
+				   _clients(),
+				   _pipefd()
 {
 }
 
@@ -140,13 +142,16 @@ void Server::readFromClient(int clientFd)
 // 	close(stdoutPipe[READ_END]);
 // }
 
-void Server::launchCgi(const Client &client) const
+void Server::launchCgi(const Client &client)
 {
 	Cgi cgi;
 	std::cout << "about to launch!" << std::endl;
 	int pipeFd = cgi.launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
-	// this->_pipefds[] = pipefd;
 	addToEpoll(this->epollFd, pipeFd, EPOLLIN);
+	this->_pipefd.insert(pipeFd);
+	const bool is_in = this->_pipefd.find(pipeFd) != this->_pipefd.end();
+	if (is_in)
+		std::cout << "the fd " << pipeFd << " is inside the set !" << std::endl;
 }
 
 void Server::writeToClient(int fd)
