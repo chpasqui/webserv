@@ -127,7 +127,7 @@ int Cgi::executeScript(const Request &request)
 			close(stdinPipe[WRITE_END]);
 		}
 		int status;
-		waitpid(pid, &status, 0);
+		waitpid(pid, &status, 0); // remove
 
 		close(stdoutPipe[WRITE_END]);
 

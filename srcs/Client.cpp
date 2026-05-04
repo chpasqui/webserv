@@ -1,6 +1,7 @@
 #include "../include/Client.hpp"
 #include "../include/Cgi.hpp"
 #include "../include/ServerConfig.hpp"
+#include "../include/Server.hpp"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -24,16 +25,16 @@ Client::Client() : _clientFd(-1),
 	time(&(this)->_timestamp);
 }
 
-Client::Client(int fd, const ServerConfig *config, Request *request) : _clientFd(fd),
-																	   _cgiPipeFd(-1),
-																	   _writeCgiPipeEnd(-1),
-																	   _readCgiPipeEnd(-1),
-																	   _bytesRead(-1),
-																	   _buffer(""),
-																	   _parsingStatus(PARSING_REQUEST_LINE),
-																	   _config(config),
-																	   _request(request),
-																	   _response(NULL)
+Client::Client(int fd, const ServerConfig *config) : _clientFd(fd),
+													 _cgiPipeFd(-1),
+													 _writeCgiPipeEnd(-1),
+													 _readCgiPipeEnd(-1),
+													 _bytesRead(-1),
+													 _buffer(""),
+													 _parsingStatus(PARSING_REQUEST_LINE),
+													 _config(config),
+													 _request(new Request()),
+													 _response(NULL)
 {
 	time(&(this)->_timestamp);
 }
@@ -46,8 +47,8 @@ Client::Client(const Client &other) : _clientFd(other._clientFd),
 									  _buffer(other._buffer),
 									  _parsingStatus(other._parsingStatus),
 									  _config(other._config),
-									  _request(other._request)
-//_response(NULL)
+									  _request(other._request),
+									  _response(NULL)
 {
 }
 

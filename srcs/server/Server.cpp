@@ -72,8 +72,9 @@ bool Server::acceptNewConnection(int listeningFd)
 	try
 	{
 		addToEpoll(this->epollFd, clientFd, EPOLLIN);
+		// add the multiple serverconfigs in one fd and map with the host name (multiple config for one port)
 		const ServerConfig *config = _listenFds[listeningFd];
-		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
+		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config)));
 		std::cout << "new connection with " << clientFd << "." << std::endl;
 	}
 	catch (const std::exception &e)
@@ -108,18 +109,8 @@ void Server::readFromClient(int clientFd)
 		if (client.getResponse()->getCgiStatus() == true)
 		{
 			std::cout << "entered the case where it is cgi" << std::endl;
-			// if true CONDITION FIRST TIME ENCOUNTER avec macro
-			// create CGI env
 			// create pipes
-			// add pipes to epoll in EPOLLIN
-			// COMPLETE PIPE SETUP
-			//  if complete pipe setup && epollin = true
-			// read and write du file ici  //
-			// write status
-			// EOF met // no CL because also headers
-			// executecgi
-			// if cgi is complete, send to response
-
+			// addtoEpoll
 			launchCgi(client);
 		}
 		else
