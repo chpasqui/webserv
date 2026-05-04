@@ -112,7 +112,7 @@ void Server::readFromClient(int clientFd)
 		Session &session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
 		client.setResponse(session, isNew);
 		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
-		client.buildResponse(session, isNew);
+		// client.buildResponse(session, isNew);
 		if (client.getResponse()->getCgiStatus() == true)
 		{
 			std::cout << "entered the case where it is cgi" << std::endl;
