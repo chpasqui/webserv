@@ -87,7 +87,6 @@ int	ParseConfig::parsingConfigFile(void) {
 			(this->*it->second)();
 		}
 		catch (std::exception &e) {
-			std::cerr << C_RED << "current context :" << this->_contextLevel << RESET << std::endl;
 			std::cerr << C_RED << e.what() << RESET << std::endl;
 			//TODO: free http
 			//TODO: free serverConfigsVector
@@ -118,8 +117,17 @@ int		ParseConfig::openFile(void) {
 	return (0);
 }
 
-std::string	ParseConfig::getNextToken(void) {
+//TODO:
+//- Add a default location if no onne is given
+//- Ignore the end ligne with " #" OK
+//- Add a line number for errors
+//- Display a better error message
 
+/**
+ * @biref get the next token in the config file and remove it from the file string
+ * @return the token or an empty string if the end of the file has been reached
+ */
+std::string	ParseConfig::getNextToken(void) {
 	std::string					token;
 	std::vector<ServerConfig *>	servers;
 	size_t						pos;
@@ -127,9 +135,20 @@ std::string	ParseConfig::getNextToken(void) {
 	pos = this->_configFile.find_first_not_of(" \n\r\t\v\f");
 	if (pos == std::string::npos)
 		return ("");
+
+	while (1) {
+		if (pos > 0 && this->_configFile[pos - 1] == ' ' && this->_configFile[pos] == '#') {
+			pos = this->_configFile.find_first_of("\n");
+			continue ;
+		}
+		break ;
+	}
+
 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
-	pos = this->_configFile.find_first_of(" \n");	//WARN: no protect for end, use find() to check the npos
-	LOG(pos);
+	pos = this->_configFile.find_first_of(" \n\r\t\v\f");
+	if (pos == std::string::npos)
+		return ("");
+
 	token = this->_configFile.substr(0, pos);
 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
 
@@ -373,4 +392,3 @@ int	ParseConfig::transformTokenToInt(std::string token) {
 	//LOG(C_PURPLE << "DEBUG: number is: " << nb << RESET);
 	return (nb);
 }
-
