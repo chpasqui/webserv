@@ -170,7 +170,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	}
 	if (nbytes > 0)
 	{
-		this->_tempResponse.append(buffer, BUFFER_SIZE);
+		this->_tempResponse.append(buffer);
 		return;
 	}
 	if (nbytes == 0)
