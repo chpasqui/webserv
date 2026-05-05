@@ -22,9 +22,9 @@ Location::Location() :
 	return ;
 }
 
-Location::Location(const ServerConfig &serverConfig) :
+Location::Location(const ServerConfig &serverConfig, const std::string &path) :
 	_redireCode(0),
-	_path("/"),
+	_path(path),
 	_redirePath(""),
 	_cgiExtensions(),
 	_headerTimeout(serverConfig.getHeaderTimeout()),

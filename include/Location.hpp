@@ -11,7 +11,7 @@ class ServerConfig;
 class Location : public AConfig
 {
 	public:
-		Location(const ServerConfig &serverConfig);
+		Location(const ServerConfig &serverConfig, const std::string &path);
 		virtual ~Location();
 		//----Setter----//
 		void						setRedireCode(const int redireCode);

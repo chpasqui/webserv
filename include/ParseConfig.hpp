@@ -27,6 +27,7 @@ class ParseConfig {
 	private:
 		int				openFile(void);
 		std::string		getNextToken(void);
+		bool			thereIsDefaultLocation(void) const;
 		//----ProcessToken----//
 		void				processEndBraquetToken(void);
 		void				processTokenHttp(void);
@@ -50,6 +51,7 @@ class ParseConfig {
 		//----Atributes----//
 		std::string											_filename;
 		std::string											_configFile;
+		int													_line;
 		int													_contextLevel;
 		AConfig												*_contextConfig;
 		Http												*_http;

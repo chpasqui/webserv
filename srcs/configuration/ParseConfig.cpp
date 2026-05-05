@@ -70,26 +70,23 @@ int	ParseConfig::parsingConfigFile(void) {
 	while (true)
 	{
 		token = this->getNextToken();
-		if (token.empty())
-		{
+		if (token.empty()) {
 			std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
 			break;
 		}
 		it = this->_dictionary.find(token);
-		if (it == this->_dictionary.end())
-		{
-			std::cerr << C_RED << token << ": Unknow token" << RESET  << std::endl; //TODO: Add line number
+		if (it == this->_dictionary.end()) {
+			std::cerr << C_RED << token << ": Unknow token" << RESET  << std::endl;
 			return (1);
 		}
 		
 		try {
-			LOG(token);
 			(this->*it->second)();
 		}
 		catch (std::exception &e) {
 			std::cerr << C_RED << e.what() << RESET << std::endl;
-			//TODO: free http
-			//TODO: free serverConfigsVector
+			delete this->_http;
+			//TODO: free serverConfigsVector (Locations and ServerConfigs are frees in the main ?)
 			return (1);
 		}
 	}
@@ -103,14 +100,12 @@ int		ParseConfig::openFile(void) {
 	errno = 0;
 	fileStream.open(this->_filename.c_str());
 
-	if (!fileStream.is_open())
-	{
+	if (!fileStream.is_open()) {
 		std::cerr << C_RED << "Unable to open the file " << this->_filename << " :" << strerror(errno) << RESET << std::endl;
 		return (errno);
 	}
 
-	while (getline(fileStream, buffer))
-	{
+	while (getline(fileStream, buffer)) {
 		buffer += "\n";
 		this->_configFile += buffer;
 	}
@@ -122,6 +117,7 @@ int		ParseConfig::openFile(void) {
 //- Ignore the end ligne with " #" OK
 //- Add a line number for errors
 //- Display a better error message
+//- check if the file end with ".conf"
 
 /**
  * @biref get the next token in the config file and remove it from the file string
@@ -152,8 +148,22 @@ std::string	ParseConfig::getNextToken(void) {
 	token = this->_configFile.substr(0, pos);
 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
 
-	LOG(C_PINK << token << RESET);
+	//LOG(C_PINK << token << RESET);
 	return (token);
+}
+
+bool	ParseConfig::thereIsDefaultLocation(void) const {
+	std::vector<Location*> locations;
+
+	if (!this->_serverConfigs)
+		throw (std::logic_error("No server config to check for default location"));
+
+	locations = this->_currentConfig->getLocations(); //OPTIM: Rebuil location: can we use a reference or pointer ?
+	for (std::vector<Location *>::iterator it = locations.begin(); locations.end() != it; it++) {
+		if ((*it)->getPath() == "/")
+			return (true);
+	}
+	return (false);
 }
 
 void	ParseConfig::processEndBraquetToken(void) {
@@ -163,6 +173,10 @@ void	ParseConfig::processEndBraquetToken(void) {
 			this->_http = 0;
 			break;
 		case SERVER:
+			if (!this->thereIsDefaultLocation()) {
+				LOG(C_PINK << "No default location found, create one" << RESET);
+				this->_currentConfig->addLocation(new Location(*(this)->_currentConfig, "/"));
+			}
 			this->_currentConfig = 0;
 			break;
 		case LOCATION:
@@ -178,10 +192,8 @@ void	ParseConfig::processTokenHttp(void) {
 	std::string	braquet;
 
 	braquet = getNextToken();
-	if (braquet != "{" || this->_contextLevel != NONE || this->_http) {
-		std::cerr << C_RED << "Unexcepted token after \"http\"" << RESET << std::endl;
-		return;
-	}
+	if (braquet != "{" || this->_contextLevel != NONE || this->_http)
+		throw (std::runtime_error("Unexcepted token after \"http\""));
 	this->_http = new Http();
 	this->_contextConfig = this->_http;
 	this->_contextLevel = HTTP;
@@ -191,10 +203,8 @@ void	ParseConfig::processServerToken(void) {
 		std::string	nextToken;
 
 		nextToken = getNextToken();
-		if (nextToken != "{" || this->_contextLevel != HTTP || this->_currentConfig) {
-			std::cerr << C_RED << "TEST" << RESET  << std::endl;
-			return ;
-		}
+		if (nextToken != "{" || this->_contextLevel != HTTP || this->_currentConfig)
+			throw (std::runtime_error("Unexcepted token after \"server\""));
 		this->_serverConfigs->push_back(new ServerConfig(*(this)->_http));
 		this->_currentConfig = *(this)->_serverConfigs->rbegin();
 		this->_contextConfig = this->_currentConfig;
@@ -211,11 +221,8 @@ void	ParseConfig::processLocationToken(void) {
 	if (this->_location)
 		throw std::runtime_error("Nested location is not allowed");
 
-	this->_location = new Location(*(this)->_currentConfig);
+	this->_location = new Location(*(this)->_currentConfig, path); //OPTIM: create a constructor with path in parameters
 	this->_contextConfig = this->_location;
-
-	this->_contextConfig->setPath(path);
-
 	
 	if (braquet != "{" || this->_contextLevel!= SERVER)
 		throw std::runtime_error("Unexcepted token after \"Location\"");
@@ -223,7 +230,6 @@ void	ParseConfig::processLocationToken(void) {
 	this->_contextLevel = LOCATION;
 	this->_currentConfig->addLocation(this->_location);
 }
-
 
 /**
  * @detail client_header_timeout context: http, server
