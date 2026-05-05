@@ -74,6 +74,7 @@ void Client::parseRequest()
 
 	if (this->_parsingStatus == COMPLETE || this->_parsingStatus == CLOSEFD)
 		return;
+	std::cout << "fd is " <<  _clientFd << std::endl;
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0 || _bytesRead == -1)
 	{
@@ -83,7 +84,6 @@ void Client::parseRequest()
 	_buffer += std::string(buffer, _bytesRead);
 	if (this->_parsingStatus == PARSING_REQUEST_LINE && this->_buffer.find("\r\n") != std::string::npos)
 	{
-		std::cout << _buffer << std::endl;
 		if (!_request->parseRequestLine(_buffer))
 		{
 			this->_parsingStatus = COMPLETE;

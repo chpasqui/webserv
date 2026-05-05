@@ -29,6 +29,7 @@ class Cgi
 		void launch(const std::string &internalPath, const Request &request, const ServerConfig &config);
 		int	getStdinWriteEnd() const;
 		int getStdoutReadEnd() const;
+		int getPid(void) const;
 
 	private:
 		std::string _fileSystemPath;

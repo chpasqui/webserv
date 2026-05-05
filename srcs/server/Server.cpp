@@ -18,6 +18,7 @@
 #include <csignal>
 #include <signal.h>
 #include "../include/color.hpp"
+#include <wait.h>
 
 #define MAX_EVENTS 1024
 #define TIMEOUT 10
@@ -52,27 +53,15 @@ void Server::run()
 					continue;
 			}
 			else if (events[i].events & (EPOLLERR | EPOLLHUP))
-				closeConnection(fd);
+			{
+				//std::cout << "error event is " << events[i].events << std::endl;
+				//closeConnection(fd);
+			}
 			else if (events[i].events & EPOLLIN)
 			{
 				if (this->_pipeFd.count(fd))
 				{
-					std::cout << "entered the case of EPOLLIN and pipe" << std::endl;
-					Client *client = this->_pipeFd[fd];
-					
 					readFromPipe(fd);
-					std::cout << "after read" << std::endl;
-					//std::cout << "tempresponse is " << _tempResponse << std::endl;
-					client->getResponse()->buildCgiResponse(this->_tempResponse);
-					std::cout << "after" << std::endl;
-					std::cout << "fd is " << fd << std::endl;
-					if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
-					{
-						closeConnection(this->_pipeFd[fd]->getClientFd());
-						return;
-					}
-					this->_pipeFd.erase(fd);
-					std::cout << "after EPOLLOUT mdif" << std::endl;
 				}
 				else
 					readFromClient(fd);
@@ -81,20 +70,50 @@ void Server::run()
 			{
 				if (this->_pipeFd.count(fd))
 				{
-					std::cout << "in the write to pipe function" << std::endl;
 					Client *client = this->_pipeFd[fd];
 					writeToPipe(*client, fd);
 				}
 				else
 				{
-					std::cout << "write to client entered" << std::endl;
 					writeToClient(fd);
 				}
+			}
+			if (this->_pipeFd.count(fd) && cgiDead(fd))
+			{
+				Client *client = this->_pipeFd[fd];
+
+				std::cout << "entered the isdone case after the read" << std::endl;
+				client->getResponse()->buildCgiResponse(this->_tempResponse);
+				if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
+				{
+					closeConnection(this->_pipeFd[fd]->getClientFd());
+					return;
+				}
+				this->_pipeFd.erase(fd);
+				delFromEpoll(_epollFd, fd);
 			}
 		}
 	}
 	std::cout << "signal to stop received" << std::endl;
 }
+
+bool Server::cgiDead(int fd)
+{
+	bool isdone = false;
+	Client *client = this->_pipeFd[fd];
+
+	int status = 0;
+	pid_t pid = client->getCgi()->getPid();
+	pid_t ret = ::waitpid(pid, &status, WNOHANG);
+	std::cout << "pid is " << pid  << "and ret is " << ret << std::endl;
+	if (ret == pid)
+	{
+		std::cout << "HELLOOOO" << std::endl;
+		isdone = true;
+	}
+	return isdone;
+}
+
 
 bool Server::acceptNewConnection(int listeningFd)
 {
@@ -158,27 +177,28 @@ void Server::readFromClient(int clientFd)
 	}
 }
 
-void Server::readFromPipe(int stdoutPipeReadFd)
+bool Server::readFromPipe(int stdoutPipeReadFd)
 {
 	char buffer[BUFFER_SIZE];
 	ssize_t nbytes = 0;
 	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
+
+	std::cout << "RFP enter" << std::endl;
 	if (nbytes < 0)
 	{
-		perror("Error: ");
-		return;
+		return false;
 	}
-	if (nbytes > 0)
+	else if (nbytes > 0)
 	{
-		this->_tempResponse.append(buffer);
-		return;
+		this->_tempResponse.append(buffer, nbytes);
+		std::cout << _tempResponse << std::endl;
+		return false;
 	}
-	if (nbytes == 0)
+	else if (nbytes == 0)
 	{
-		std::cout << "entered the case of EOF in read" << std::endl;
-		delFromEpoll(_epollFd, stdoutPipeReadFd);
-		return; // maybe put in server so that we send immediately to response 
+		return true;
 	}
+	return false;
 }
 
 void Server::launchCgi(Client &client)
@@ -188,15 +208,16 @@ void Server::launchCgi(Client &client)
 	cgi->launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
 	if (cgi->getStdinWriteEnd() != -1)
 	{
-		std::cout << "the stdinwriteend is " << cgi->getStdinWriteEnd() << std::endl;
 		addToEpoll(_epollFd, cgi->getStdinWriteEnd(), EPOLLOUT);
 		this->_pipeFd[cgi->getStdinWriteEnd()] = &client;
+		std::cout << "pipe to be written to is " << cgi->getStdinWriteEnd() << std::endl;
 	}
 	if (cgi->getStdoutReadEnd() != -1)
 	{
-		std::cout << "the stdoutreadend is " << cgi->getStdoutReadEnd() << std::endl;
 		addToEpoll(_epollFd, cgi->getStdoutReadEnd(), EPOLLIN);
 		this->_pipeFd[cgi->getStdoutReadEnd()] = &client;
+		std::cout << "pipe to be read from " << cgi->getStdoutReadEnd() << std::endl;
+
 	}
 	return;
 }
@@ -212,13 +233,11 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 		perror("Error: ");
 		return ;
 	}
-	if (writtenBytes > 0)
+	else if (writtenBytes > 0)
 	{
-		std::cout << "appending the offset" << std::endl;
 		this->_bodyOffset += writtenBytes;
 		if (this->_bodyOffset >= request->getBody().size())
 		{
-			std::cout << "entered the case of the writtenbytrs == 0" << std::endl;
 			this->_pipeFd.erase(stdinPipeWriteFd);
 			delFromEpoll(_epollFd,stdinPipeWriteFd);
 			return;
@@ -231,7 +250,6 @@ void Server::writeToClient(int fd)
 	Client &client = *(_clients[fd]);
 	std::string response = client.getResponseStr();
 	send(fd, response.c_str(), response.size(), 0);
-	std::cout << "response sent to the client :D" << std::endl;
 	closeConnection(fd);
 }
 

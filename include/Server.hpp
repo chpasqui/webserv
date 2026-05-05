@@ -34,11 +34,13 @@ public:
 	void run(void);
 	bool acceptNewConnection(int listeningFd);
 	void readFromClient(int fd);
-	void readFromPipe(int stdoutPipeReadFd);
+	bool readFromPipe(int stdoutPipeReadFd);
 	void launchCgi(Client &client);
 	void writeToClient(int fd);
 	void writeToPipe(Client &client, int stdinPipeWriteFd);
 	void timeoutCheck(void);
+
+	bool cgiDead(int fd);
 
 	void closeConnection(int fd);
 	static void addToEpoll(int epollFd, int fdToModify, uint32_t flag);
@@ -59,3 +61,6 @@ private:
 };
 
 #endif
+
+
+

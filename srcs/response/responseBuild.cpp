@@ -72,7 +72,6 @@ Location *Response::findLocation(const std::string &url)
  */
 std::string Response::buildFileSystemPath(const std::string &url)
 {
-	std::cout << "entered the buildFileSystemPath" << std::endl;
 	_remain = url.substr(1);
 	return _loc->getRoot() + _remain;
 }
@@ -97,7 +96,6 @@ bool Response::isCGI()
 	std::map<std::string, std::string>::iterator it = temp.begin();
 	for (; it != temp.end(); it++)
 	{
-		std::cout << it->first << std::endl;
 		size_t pos = _internalPath.find(it->first);
 		if (pos != std::string::npos)
 		{
@@ -191,11 +189,10 @@ bool Response::splitOutput(const std::string &output, std::string &headerSection
 	return false;
 }
 
-void Response::buildCgiResponse(const std::string &output)
+void Response::buildCgiResponse(std::string &output)
 {
 	std::string headerSection;
 
-	std::cout << "entered the buildCgiresposne" << std::endl;
 	if (!splitOutput(output, headerSection))
 	{
 		setError(INTERNAL_SERVER_ERROR);
@@ -218,7 +215,13 @@ void Response::buildCgiResponse(const std::string &output)
 		ss << _body.size();
 		_headers["content-length"] = ss.str();
 	}
+	std::cout << "the cgi output sent to buildCgiResp is " << output << std::endl;
+	output.clear();
 }
+// parse content length, lire le output jusqy' crlfcrclf et parser les header
+// content len saved somewhere
+// sen back only the body of content length sent by the cgi 
+// check that the cgi sends back the correct headers
 
 /**
  * @brief Populates _body with a custom or generated error page.

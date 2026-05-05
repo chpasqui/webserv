@@ -24,7 +24,6 @@ int main(int ac, char **av) {
 		return (1);
 
 	ServerConfig *serverconfig = *(configs.begin());
-	std::cout << "Route is " << serverconfig->getRoute() << " Port is " << serverconfig->getPort() << std::endl;
 	std::vector<Location *> locations = serverconfig->getLocations();
 
 	Server server;

@@ -61,7 +61,7 @@ class Response {
 		bool		getCgiStatus(void) const;
 		std::string	getInternalPath(void) const;
 		std::string	getCgiPass(void) const;
-		void 		buildCgiResponse(const std::string& output);
+		void 		buildCgiResponse(std::string& output);
 		bool		splitOutput(const std::string& output, std::string& headers);
 		void		parseCgiHeaders(std::string& headerSection);
 

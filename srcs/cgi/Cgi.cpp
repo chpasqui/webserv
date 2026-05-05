@@ -30,7 +30,7 @@ Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _
 
 void Cgi::launch(const std::string &internalPath, const Request &request, const ServerConfig &config)
 {
-	std::cout << "ENtered the CGI launch function" << std::endl;
+	std::cout << "entered the launch CGI block " << std::endl;
 	char cwd[1024];
 	getcwd(cwd, sizeof(cwd));
 	std::string absolutePath = std::string(cwd) + "/" + internalPath;
@@ -65,10 +65,16 @@ void Cgi::buildEnv(const Request &request, const ServerConfig &config)
 	_tempEnv.push_back("SERVER_PORT=" + intToString(config.getPort()));
 	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
 	_tempEnv.push_back("SERVER_NAME=" + resolveHostname());
+	std::cout << "content length sent to the cgi is " << request.getContentLength() << std::endl;
 	if (request.getContentLength() != 0)
 	{
-		_tempEnv.push_back("CONTENT_TYPE=" + getHeaderVariable(header, "content-type"));
-		_tempEnv.push_back("CONTENT_LENGTH=" + getHeaderVariable(header, "content-length"));
+		std::string contentLength = getHeaderVariable(header, "content-length");
+		std::string contentType   = getHeaderVariable(header, "content-type");
+		
+		if (!contentLength.empty())
+			_tempEnv.push_back("CONTENT_LENGTH=" + contentLength);
+		if (!contentType.empty())
+			_tempEnv.push_back("CONTENT_TYPE=" + contentType);
 	}
 
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
@@ -129,6 +135,11 @@ void Cgi::executeScript(const Request &request)
 int Cgi::getStdinWriteEnd() const
 {
 	return this->_stdinWriteEnd;
+}
+
+int Cgi::getPid(void) const
+{
+	return this->_pid;
 }
 
 int Cgi::getStdoutReadEnd() const

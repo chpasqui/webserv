@@ -67,7 +67,6 @@ int Server::openListeningSocket() {
 		close(listenFd);
 		throw std::runtime_error("Server: setsockopt() failed.");
 	}
-	//std::cout << "Server::createlisteningSocket listenFd " << listenFd << " is created" <<  std::endl;
 	return listenFd;
 }
 
