@@ -195,6 +195,7 @@ void Response::buildCgiResponse(const std::string &output)
 {
 	std::string headerSection;
 
+	std::cout << "entered the buildCgiresposne" << std::endl;
 	if (!splitOutput(output, headerSection))
 	{
 		setError(INTERNAL_SERVER_ERROR);

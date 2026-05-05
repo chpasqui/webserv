@@ -132,29 +132,19 @@ int Client::getParsingStatus() const
 	return (this->_parsingStatus);
 }
 
-int Client::getCgiPipeFd() const
-{
-	return (this->_cgiPipeFd);
-}
-
-void Client::setCgiPipeFd(int fd)
-{
-	this->_cgiPipeFd = fd;
-}
-
 Request *Client::getRequest(void) const
 {
 	return (this->_request);
 }
 
-Response *Client::getResponse(void) const
-{
-	return (this->_response);
-}
-
 const ServerConfig *Client::getServerConfig(void) const
 {
 	return this->_config;
+}
+
+Response *Client::getResponse(void) const
+{
+	return (this->_response);
 }
 
 void Client::setResponse(Session &session, bool isNew)
@@ -165,6 +155,26 @@ void Client::setResponse(Session &session, bool isNew)
 std::string Client::getResponseStr() const
 {
 	return _response->responseFormat(*_request);
+}
+
+void Client::setCgi()
+{
+	this->_cgi = new Cgi();
+}
+
+Cgi	*Client::getCgi(void) const
+{
+	return this->_cgi;
+}
+
+int Client::getCgiPipeFd() const
+{
+	return (this->_cgiPipeFd);
+}
+
+void Client::setCgiPipeFd(int fd)
+{
+	this->_cgiPipeFd = fd;
 }
 
 /**

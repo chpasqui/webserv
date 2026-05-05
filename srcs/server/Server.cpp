@@ -21,12 +21,14 @@
 
 #define MAX_EVENTS 1024
 #define TIMEOUT 10
+#define BUFFER_SIZE 1024
 
 // CONSTRUCTOR AND DESTRUCTOR
 
 int serverSignal = 0;
 
-Server::Server() : epollFd(-1),
+Server::Server() : _epollFd(-1),
+					_bodyOffset(0),
 				   _listenFds(),
 				   _clients(),
 				   _pipeFd()
@@ -40,7 +42,7 @@ void Server::run()
 
 	while (!serverSignal)
 	{
-		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, -1);
+		nFd = epoll_wait(this->_epollFd, events, MAX_EVENTS, -1);
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd;
@@ -54,16 +56,40 @@ void Server::run()
 			else if (events[i].events & EPOLLIN)
 			{
 				if (this->_pipeFd.count(fd))
-					//readFromPipe(fd);
+				{
+					std::cout << "entered the case of EPOLLIN and pipe" << std::endl;
+					Client *client = this->_pipeFd[fd];
+					
+					readFromPipe(fd);
+					std::cout << "after read" << std::endl;
+					//std::cout << "tempresponse is " << _tempResponse << std::endl;
+					client->getResponse()->buildCgiResponse(this->_tempResponse);
+					std::cout << "after" << std::endl;
+					std::cout << "fd is " << fd << std::endl;
+					if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
+					{
+						closeConnection(this->_pipeFd[fd]->getClientFd());
+						return;
+					}
+					this->_pipeFd.erase(fd);
+					std::cout << "after EPOLLOUT mdif" << std::endl;
+				}
 				else
 					readFromClient(fd);
 			}
 			else if (events[i].events & EPOLLOUT)
 			{
 				if (this->_pipeFd.count(fd))
-					//writeToPipe(fd); // this will need to belong to the cgi
+				{
+					std::cout << "in the write to pipe function" << std::endl;
+					Client *client = this->_pipeFd[fd];
+					writeToPipe(*client, fd);
+				}
 				else
+				{
+					std::cout << "write to client entered" << std::endl;
 					writeToClient(fd);
+				}
 			}
 		}
 	}
@@ -83,11 +109,10 @@ bool Server::acceptNewConnection(int listeningFd)
 
 	try
 	{
-		addToEpoll(this->epollFd, clientFd, EPOLLIN);
+		addToEpoll(this->_epollFd, clientFd, EPOLLIN);
 		// add the multiple serverconfigs in one fd and map with the host name (multiple config for one port)
 		const ServerConfig *config = _listenFds[listeningFd];
 		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config)));
-		std::cout << "new connection with " << clientFd << "." << std::endl;
 	}
 	catch (const std::exception &e)
 	{
@@ -120,12 +145,11 @@ void Server::readFromClient(int clientFd)
 		// client.buildResponse(session, isNew);
 		if (client.getResponse()->getCgiStatus() == true)
 		{
-			std::cout << "entered the case where it is cgi" << std::endl;
 			launchCgi(client);
 		}
 		else
 		{
-			if (!modifyEpoll(this->epollFd, clientFd, EPOLLOUT))
+			if (!modifyEpoll(this->_epollFd, clientFd, EPOLLOUT))
 			{
 				closeConnection(clientFd);
 				return;
@@ -134,54 +158,86 @@ void Server::readFromClient(int clientFd)
 	}
 }
 
-//
+void Server::readFromPipe(int stdoutPipeReadFd)
+{
+	char buffer[BUFFER_SIZE];
+	ssize_t nbytes = 0;
+	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
+	if (nbytes < 0)
+	{
+		perror("Error: ");
+		return;
+	}
+	if (nbytes > 0)
+	{
+		this->_tempResponse.append(buffer, BUFFER_SIZE);
+		return;
+	}
+	if (nbytes == 0)
+	{
+		std::cout << "entered the case of EOF in read" << std::endl;
+		delFromEpoll(_epollFd, stdoutPipeReadFd);
+		return; // maybe put in server so that we send immediately to response 
+	}
+}
+
 void Server::launchCgi(Client &client)
 {
-	Cgi cgi;
-	std::cout << "about to launch!" << std::endl;
-	cgi.launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
-	if (cgi.getStdinWriteEnd() != -1)
+	client.setCgi();
+	Cgi *cgi = client.getCgi();
+	cgi->launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
+	if (cgi->getStdinWriteEnd() != -1)
 	{
-		addToEpoll(epollFd, cgi.getStdinWriteEnd(), EPOLLOUT);
-		this->_pipefd[]
+		std::cout << "the stdinwriteend is " << cgi->getStdinWriteEnd() << std::endl;
+		addToEpoll(_epollFd, cgi->getStdinWriteEnd(), EPOLLOUT);
+		this->_pipeFd[cgi->getStdinWriteEnd()] = &client;
 	}
-	if (cgi.getStdoutReadEnd() != -1)
+	if (cgi->getStdoutReadEnd() != -1)
 	{
-		addToEpoll(epollFd, cgi.getStdoutReadEnd(), EPOLLIN);
+		std::cout << "the stdoutreadend is " << cgi->getStdoutReadEnd() << std::endl;
+		addToEpoll(_epollFd, cgi->getStdoutReadEnd(), EPOLLIN);
+		this->_pipeFd[cgi->getStdoutReadEnd()] = &client;
 	}
 	return;
 }
 
-void Server::readFromPipe(int pipeFd)
+void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 {
-	(void)pipeFd;
-	std::cout << "There is a pipe from the CGI that is ready to be read from!" << std::endl;
-	// char buffer[1024];
-	// 	int contentLength = 0; // no content length --> because not obly the body
-	// 	do {
-	// 		contentLength = read(stdoutPipe[READ_END], buffer, 1024);
-	// 		if (contentLength > 0)
-	// 			responseBody.append(buffer, contentLength);
-	// 	} while(contentLength > 0);
-	// 	std::string contentLengthStr = "content-length=" + std::to_string(responseBody.size()) + '\n';
-	// 	responseBody.insert(0, contentLengthStr);
-	// 	close(stdoutPipe[READ_END]);
+	Request *request = client.getRequest();
+	size_t writtenBytes = 0;
+
+	writtenBytes = write(stdinPipeWriteFd, request->getBody().c_str() + this->_bodyOffset, request->getBody().size() - this->_bodyOffset);
+	if (writtenBytes < 0)
+	{
+		perror("Error: ");
+		return ;
+	}
+	if (writtenBytes > 0)
+	{
+		std::cout << "appending the offset" << std::endl;
+		this->_bodyOffset += writtenBytes;
+		if (this->_bodyOffset >= request->getBody().size())
+		{
+			std::cout << "entered the case of the writtenbytrs == 0" << std::endl;
+			this->_pipeFd.erase(stdinPipeWriteFd);
+			delFromEpoll(_epollFd,stdinPipeWriteFd);
+			return;
+		}
+	}
 }
 
 void Server::writeToClient(int fd)
 {
-	// the response will be called here
-	// read the pipe end
 	Client &client = *(_clients[fd]);
 	std::string response = client.getResponseStr();
 	send(fd, response.c_str(), response.size(), 0);
-	std::cout << GREEN << "response sent to client succesfully!" << RESET << std::endl;
+	std::cout << "response sent to the client :D" << std::endl;
 	closeConnection(fd);
 }
 
 void Server::closeConnection(int fd)
 {
-	delFromEpoll(this->epollFd, fd);
+	delFromEpoll(this->_epollFd, fd);
 	if (close(fd) == -1)
 		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
 	if (_clients.count(fd))
@@ -195,7 +251,7 @@ void Server::closeConnection(int fd)
 
 int Server::getEpollFd(void) const
 {
-	return (this->epollFd);
+	return (this->_epollFd);
 }
 
 /**
@@ -217,9 +273,9 @@ Server::~Server()
 		close(secondIt->first);
 	}
 	_listenFds.clear();
-	if (this->epollFd != -1)
+	if (this->_epollFd != -1)
 	{
-		close(this->epollFd);
-		this->epollFd = -1;
+		close(this->_epollFd);
+		this->_epollFd = -1;
 	}
 }

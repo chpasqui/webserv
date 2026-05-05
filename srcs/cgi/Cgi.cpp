@@ -22,8 +22,9 @@
 
 #define READ_END 0
 #define WRITE_END 1
+#define BUFFER_SIZE 1024
 
-Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1)
+Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1), _pid(-1)
 {
 }
 
@@ -64,7 +65,6 @@ void Cgi::buildEnv(const Request &request, const ServerConfig &config)
 	_tempEnv.push_back("SERVER_PORT=" + intToString(config.getPort()));
 	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
 	_tempEnv.push_back("SERVER_NAME=" + resolveHostname());
-
 	if (request.getContentLength() != 0)
 	{
 		_tempEnv.push_back("CONTENT_TYPE=" + getHeaderVariable(header, "content-type"));
@@ -121,23 +121,9 @@ void Cgi::executeScript(const Request &request)
 		close(stdinPipe[READ_END]);
 		_stdinWriteEnd = stdinPipe[WRITE_END];
 	}
-	else
-	{
-		_stdinWriteEnd = -1; // if it is a get method, then we will check it inside the server function and add it to epoll
-	}
 	close(stdoutPipe[WRITE_END]);
 	_stdoutReadEnd = stdoutPipe[READ_END];
 	_pid = pid;
-}
-
-void Cgi::writeToPipe(int fd)
-{
-	(void)fd;
-}
-
-void Cgi::readFromPipe(int fd)
-{
-	(void)fd;
 }
 
 int Cgi::getStdinWriteEnd() const

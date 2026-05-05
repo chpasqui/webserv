@@ -1,10 +1,10 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
-#include "Client.hpp"
-#include "ServerConfig.hpp"
-#include "Response.hpp"
-#include "Request.hpp"
+#include "../include/Client.hpp"
+#include "../include/ServerConfig.hpp"
+#include "../include/Response.hpp"
+#include "../include/Request.hpp"
 #include <string>
 #include <vector>
 
@@ -22,32 +22,28 @@
 
 class Cgi
 {
-public:
-	// Cgi();
-	Cgi();
-	~Cgi();
-	void launch(const std::string &internalPath, const Request &request, const ServerConfig &config);
-	int	getStdinWriteEnd() const;
-	int getStdoutReadEnd() const;
+	public:
+		// Cgi();
+		Cgi();
+		~Cgi();
+		void launch(const std::string &internalPath, const Request &request, const ServerConfig &config);
+		int	getStdinWriteEnd() const;
+		int getStdoutReadEnd() const;
 
-private:
-	std::string _fileSystemPath;
-	std::vector<std::string> _tempEnv;
-	std::vector<char *> _finalEnv;
+	private:
+		std::string _fileSystemPath;
+		std::vector<std::string> _tempEnv;
+		std::vector<char *> _finalEnv;
 
-	std::string _scriptName;
-	std::string _pathInfo;
+		std::string _scriptName;
+		std::string _pathInfo;
 
-	int _stdinWriteEnd;
-	int _stdoutReadEnd;
-	pid_t _pid;
-	int _offset;
-	std::string _responseBuffer;
-	;
-	void buildEnv(const Request &request, const ServerConfig &config);
-	void executeScript(const Request &request);
-	void writeToPipe(int fd);
-	void readFromPipe(int fd);
+		int _stdinWriteEnd;
+		int _stdoutReadEnd;
+		int _pid;
+
+		void buildEnv(const Request &request, const ServerConfig &config);
+		void executeScript(const Request &request);
 };
 
 std::string getHeaderVariable(const std::map<std::string, std::string> &header, const std::string &key);
