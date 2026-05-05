@@ -16,7 +16,7 @@ void	AConfig::setRedireCode(const int redireCode){
 	throw (std::runtime_error("wrong context with \"return\" (redireCode)"));
 }
 
-void	AConfig::setPath(const std::string path) {
+void	AConfig::setPath(const std::string path) { //OPTIM: setPath is now directly called in the constructor of Location, can we remove it from AConfig ?
 	(void) path;
 	throw (std::runtime_error("wrong context"));
 }
@@ -34,52 +34,52 @@ void	AConfig::addCgiExtension(const std::string extension, const std::string pat
 
 void	AConfig::setHeaderTimeout(const int headerTimeout) {
 	(void) headerTimeout;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"client_header_timeout\""));
 }
 
 void	AConfig::setBodyTimeout(const int bodyTimeout) {
 	(void) bodyTimeout;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"client_body_timeout\""));
 }
 
 void	AConfig::setMaxBodySize(const int maxBodySize) {
 	(void) maxBodySize;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"client_max_body_size\""));
 }
 
 void	AConfig::setServerName(const std::string serverName) {
 	(void) serverName;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"server_name\""));
 }
 
 void	AConfig::setPort(const int port) {
 	(void) port;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"listen\""));
 }
 
 void	AConfig::setAutoindex(const bool autoindex) {
 	(void) autoindex;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"autoindex\""));
 }
 
 void	AConfig::setRoot(const std::string root) {
 	(void) root;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"root\""));
 }
 
 void	AConfig::setAllowedMethods(const std::string allowedMethods) {
 	(void) allowedMethods;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"allowed_methods\""));
 }
 
 void	AConfig::addIndex(const std::string index) {
 	(void) index;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"index\""));
 }
 
 void	AConfig::addErrorPage(const int code, const std::string page) {
 	(void) code;
 	(void) page;
-	throw (std::runtime_error("wrong context"));
+	throw (std::runtime_error("wrong context with \"error_page\""));
 }
 

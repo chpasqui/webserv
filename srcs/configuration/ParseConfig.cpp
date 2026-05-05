@@ -85,7 +85,7 @@ int	ParseConfig::parsingConfigFile(void) {
 		}
 		catch (std::exception &e) {
 			std::cerr << C_RED << e.what() << RESET << std::endl;
-			delete this->_http;
+			delete this->_http; //FIX: Potential leak if the exception is thrown
 			//TODO: free serverConfigsVector (Locations and ServerConfigs are frees in the main ?)
 			return (1);
 		}
@@ -124,6 +124,7 @@ int		ParseConfig::openFile(void) {
 //- Display a better error message.
 //- check if the file end with ".conf". OK
 //- Fix leaks when exception is thrown.
+//- Rename variables with wrong names
 
 /**
  * @biref get the next token in the config file and remove it from the file string
