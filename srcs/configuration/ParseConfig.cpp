@@ -94,12 +94,17 @@ int	ParseConfig::parsingConfigFile(void) {
 }
 
 int		ParseConfig::openFile(void) {
-	std::string		buffer;
-	std::ifstream	fileStream;
+	std::string				buffer;
+	std::ifstream			fileStream;
+	std::string::iterator	it;
 
 	errno = 0;
-	fileStream.open(this->_filename.c_str());
+	if (this->_filename.size() <= FILENAME_EXT_SIZE || this->_filename.compare(this->_filename.size() - FILENAME_EXT_SIZE, FILENAME_EXT_SIZE, FILENAME_EXT)) {
+		std::cerr << C_RED << "invalid extension, you're filename need to end with: \"" << FILENAME_EXT << "\"" << RESET << std::endl;
+		return (1);
+	}
 
+	fileStream.open(this->_filename.c_str());
 	if (!fileStream.is_open()) {
 		std::cerr << C_RED << "Unable to open the file " << this->_filename << " :" << strerror(errno) << RESET << std::endl;
 		return (errno);
@@ -113,11 +118,12 @@ int		ParseConfig::openFile(void) {
 }
 
 //TODO:
-//- Add a default location if no onne is given
-//- Ignore the end ligne with " #" OK
-//- Add a line number for errors
-//- Display a better error message
-//- check if the file end with ".conf"
+//- Add a default location if no onne is given. OK
+//- Ignore the end ligne with " #". OK
+//- Add a line number for errors.
+//- Display a better error message.
+//- check if the file end with ".conf". OK
+//- Fix leaks when exception is thrown.
 
 /**
  * @biref get the next token in the config file and remove it from the file string

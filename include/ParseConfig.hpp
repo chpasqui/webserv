@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+#define FILENAME_EXT ".conf"
+#define FILENAME_EXT_SIZE 5
+
 class Http;
 class ServerConfig;
 class Location;
