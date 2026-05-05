@@ -73,7 +73,11 @@ Location *Response::findLocation(const std::string &url)
 std::string Response::buildFileSystemPath(const std::string &url)
 {
 	std::cout << "entered the buildFileSystemPath" << std::endl;
-	_remain = url.substr(1);
+	const std::string& prefix = _loc->getPath();
+	_remain = url.substr(prefix.size());
+	if (!_remain.empty() && _remain[0] == '/')
+		_remain = _remain.substr(1);
+	LOG(std::cout << "prefix='" << prefix << "' remain='" << _remain << "' path='" << _loc->getRoot() + _remain << "'" << std::endl);
 	return _loc->getRoot() + _remain;
 }
 
