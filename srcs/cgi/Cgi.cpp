@@ -23,11 +23,11 @@
 #define READ_END 0
 #define WRITE_END 1
 
-Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv()
+Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1)
 {
 }
 
-int Cgi::launch(const std::string &internalPath, const Request &request, const ServerConfig &config)
+void Cgi::launch(const std::string &internalPath, const Request &request, const ServerConfig &config)
 {
 	std::cout << "ENtered the CGI launch function" << std::endl;
 	char cwd[1024];
@@ -37,17 +37,16 @@ int Cgi::launch(const std::string &internalPath, const Request &request, const S
 	if (access(absolutePath.c_str(), X_OK) == -1)
 	{
 		perror("Error: ");
-		return -1;
+		return;
 	}
 	this->_fileSystemPath = absolutePath;
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
 		std::cerr << "access issue" << std::endl;
-		return -1;
+		return;
 	}
 	buildEnv(request, config);
-	int stdoutPipe = executeScript(request);
-	return stdoutPipe;
+	executeScript(request);
 }
 
 void Cgi::buildEnv(const Request &request, const ServerConfig &config)
@@ -77,7 +76,7 @@ void Cgi::buildEnv(const Request &request, const ServerConfig &config)
 	this->_finalEnv.push_back(NULL);
 }
 
-int Cgi::executeScript(const Request &request)
+void Cgi::executeScript(const Request &request)
 {
 	int stdoutPipe[2];
 	int stdinPipe[2];
@@ -94,6 +93,8 @@ int Cgi::executeScript(const Request &request)
 		if (pipe(stdinPipe) == -1)
 			perror("Error: ");
 		if (fcntl(stdinPipe[WRITE_END], F_SETFL, O_NONBLOCK) < 0)
+			perror("Error: ");
+		if (fcntl(stdinPipe[READ_END], F_SETFL, O_NONBLOCK) < 0) // the read end is also used inside the script
 			perror("Error: ");
 	}
 
@@ -118,24 +119,35 @@ int Cgi::executeScript(const Request &request)
 	if (request.getMethod() == "POST")
 	{
 		close(stdinPipe[READ_END]);
-		write(stdinPipe[WRITE_END], request.getBody().c_str(), request.getBody().size());
-		close(stdinPipe[WRITE_END]);
+		_stdinWriteEnd = stdinPipe[WRITE_END];
 	}
-	int status;
-	waitpid(pid, &status, 0); // remove
-
-	close(stdoutPipe[WRITE_END]);
-
-	char buffer[1024];
-	int contentLength = 0;
-	do
+	else
 	{
-		contentLength = read(stdoutPipe[READ_END], buffer, 1024);
-		if (contentLength > 0)
-			responseBody.append(buffer, contentLength);
-	} while (contentLength > 0);
-	std::cout << GREEN << responseBody << RESET << std::endl;
-	return stdoutPipe[READ_END];
+		_stdinWriteEnd = -1; // if it is a get method, then we will check it inside the server function and add it to epoll
+	}
+	close(stdoutPipe[WRITE_END]);
+	_stdoutReadEnd = stdoutPipe[READ_END];
+	_pid = pid;
+}
+
+void Cgi::writeToPipe(int fd)
+{
+	(void)fd;
+}
+
+void Cgi::readFromPipe(int fd)
+{
+	(void)fd;
+}
+
+int Cgi::getStdinWriteEnd() const
+{
+	return this->_stdinWriteEnd;
+}
+
+int Cgi::getStdoutReadEnd() const
+{
+	return this->_stdoutReadEnd;
 }
 
 Cgi::~Cgi()

@@ -26,7 +26,9 @@ public:
 	// Cgi();
 	Cgi();
 	~Cgi();
-	int launch(const std::string &internalPath, const Request &request, const ServerConfig &config);
+	void launch(const std::string &internalPath, const Request &request, const ServerConfig &config);
+	int	getStdinWriteEnd() const;
+	int getStdoutReadEnd() const;
 
 private:
 	std::string _fileSystemPath;
@@ -35,9 +37,17 @@ private:
 
 	std::string _scriptName;
 	std::string _pathInfo;
+
+	int _stdinWriteEnd;
+	int _stdoutReadEnd;
+	pid_t _pid;
+	int _offset;
+	std::string _responseBuffer;
 	;
 	void buildEnv(const Request &request, const ServerConfig &config);
-	int executeScript(const Request &request);
+	void executeScript(const Request &request);
+	void writeToPipe(int fd);
+	void readFromPipe(int fd);
 };
 
 std::string getHeaderVariable(const std::map<std::string, std::string> &header, const std::string &key);

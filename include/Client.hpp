@@ -4,6 +4,7 @@
 #include "../include/Request.hpp"
 #include "../include/Response.hpp"
 #include "../include/Session.hpp"
+#include "../include/Cgi.hpp"
 #include <ctime>
 #include <string>
 #include <sys/types.h>
@@ -57,6 +58,7 @@ private:
 	const ServerConfig *_config;
 	Request *_request;
 	Response *_response;
+	Cgi *_cgi;
 };
 
 #endif

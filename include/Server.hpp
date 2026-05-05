@@ -34,7 +34,8 @@ public:
 	void run(void);
 	bool acceptNewConnection(int listeningFd);
 	void readFromClient(int fd);
-	void launchCgi(const Client &client);
+	void readFromPipe(int clientFd);
+	void launchCgi(Client &client);
 	void writeToClient(int fd);
 	void timeoutCheck(void);
 
@@ -49,7 +50,7 @@ private:
 	std::map<int, const ServerConfig *> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 	std::map<int, Client *> _clients;
 	std::map<std::string, Session> _sessions;
-	std::set<int> _pipefd;
+	std::map<int, Client *> _pipeFd;
 
 	Session &resolveSession(const std::string &cookieHeader, bool &isNew);
 };

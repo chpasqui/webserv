@@ -20,7 +20,8 @@ Client::Client() : _clientFd(-1),
 				   _parsingStatus(PARSING_REQUEST_LINE),
 				   _config(NULL),
 				   _request(NULL),
-				   _response(NULL)
+				   _response(NULL),
+				   _cgi(NULL)
 {
 	time(&(this)->_timestamp);
 }

@@ -29,7 +29,7 @@ int serverSignal = 0;
 Server::Server() : epollFd(-1),
 				   _listenFds(),
 				   _clients(),
-				   _pipefd()
+				   _pipeFd()
 {
 }
 
@@ -52,9 +52,19 @@ void Server::run()
 			else if (events[i].events & (EPOLLERR | EPOLLHUP))
 				closeConnection(fd);
 			else if (events[i].events & EPOLLIN)
-				readFromClient(fd); // if pipecgi.count() --> read from pipe
+			{
+				if (this->_pipeFd.count(fd))
+					//readFromPipe(fd);
+				else
+					readFromClient(fd);
+			}
 			else if (events[i].events & EPOLLOUT)
-				writeToClient(fd);
+			{
+				if (this->_pipeFd.count(fd))
+					//writeToPipe(fd); // this will need to belong to the cgi
+				else
+					writeToClient(fd);
+			}
 		}
 	}
 	std::cout << "signal to stop received" << std::endl;
@@ -111,8 +121,6 @@ void Server::readFromClient(int clientFd)
 		if (client.getResponse()->getCgiStatus() == true)
 		{
 			std::cout << "entered the case where it is cgi" << std::endl;
-			// create pipes
-			// addtoEpoll
 			launchCgi(client);
 		}
 		else
@@ -127,31 +135,37 @@ void Server::readFromClient(int clientFd)
 }
 
 //
-
-// void	Server::readFromPipe(int pipeFd)
-// {
-// char buffer[1024];
-// 	int contentLength = 0; // no content length --> because not obly the body
-// 	do {
-// 		contentLength = read(stdoutPipe[READ_END], buffer, 1024);
-// 		if (contentLength > 0)
-// 			responseBody.append(buffer, contentLength);
-// 	} while(contentLength > 0);
-// 	std::string contentLengthStr = "content-length=" + std::to_string(responseBody.size()) + '\n';
-// 	responseBody.insert(0, contentLengthStr);
-// 	close(stdoutPipe[READ_END]);
-// }
-
-void Server::launchCgi(const Client &client)
+void Server::launchCgi(Client &client)
 {
 	Cgi cgi;
 	std::cout << "about to launch!" << std::endl;
-	int pipeFd = cgi.launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
-	addToEpoll(this->epollFd, pipeFd, EPOLLIN);
-	this->_pipefd.insert(pipeFd);
-	const bool is_in = this->_pipefd.find(pipeFd) != this->_pipefd.end();
-	if (is_in)
-		std::cout << "the fd " << pipeFd << " is inside the set !" << std::endl;
+	cgi.launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
+	if (cgi.getStdinWriteEnd() != -1)
+	{
+		addToEpoll(epollFd, cgi.getStdinWriteEnd(), EPOLLOUT);
+		this->_pipefd[]
+	}
+	if (cgi.getStdoutReadEnd() != -1)
+	{
+		addToEpoll(epollFd, cgi.getStdoutReadEnd(), EPOLLIN);
+	}
+	return;
+}
+
+void Server::readFromPipe(int pipeFd)
+{
+	(void)pipeFd;
+	std::cout << "There is a pipe from the CGI that is ready to be read from!" << std::endl;
+	// char buffer[1024];
+	// 	int contentLength = 0; // no content length --> because not obly the body
+	// 	do {
+	// 		contentLength = read(stdoutPipe[READ_END], buffer, 1024);
+	// 		if (contentLength > 0)
+	// 			responseBody.append(buffer, contentLength);
+	// 	} while(contentLength > 0);
+	// 	std::string contentLengthStr = "content-length=" + std::to_string(responseBody.size()) + '\n';
+	// 	responseBody.insert(0, contentLengthStr);
+	// 	close(stdoutPipe[READ_END]);
 }
 
 void Server::writeToClient(int fd)
