@@ -210,13 +210,6 @@ void Response::buildCgiResponse(const std::string &output)
 	}
 	else
 		_statusCode = OK;
-	// on pourrait faire une petite fonction utils et lutiliser partout ou on a besoin
-	if (!_body.empty())
-	{
-		std::ostringstream ss;
-		ss << _body.size();
-		_headers["content-length"] = ss.str();
-	}
 }
 
 /**
