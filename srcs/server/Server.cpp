@@ -51,12 +51,12 @@ void Server::run()
 				if (!acceptNewConnection(fd))
 					continue;
 			}
-			else if (events[i].events & (EPOLLERR | EPOLLHUP))
+			else if (events[i].events & (EPOLLERR))
 			{
-				//std::cout << "error event is " << events[i].events << std::endl;
-				//closeConnection(fd);
+				std::cout << "error event is " << events[i].events << std::endl;
+				closeConnection(fd);
 			}
-			else if (events[i].events & EPOLLIN)
+			else if (events[i].events & EPOLLIN | EPOLLHUP)
 			{
 				if (this->_pipeFd.count(fd))
 				{
@@ -194,10 +194,11 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 		client->setOutput(client->getOutput().append(buffer, nbytes));
 		//return;
 	}
-	// else if (nbytes == 0)
-	// {
-	// 	return;
-	// }
+	else if (nbytes == 0)
+	{
+		std::cout << GREEN << "ENTERED THE BYTES = 0 CASE" << std::endl;
+		return;
+	}
 	return;
 }
 
