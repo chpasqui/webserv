@@ -34,9 +34,13 @@ public:
 	void run(void);
 	bool acceptNewConnection(int listeningFd);
 	void readFromClient(int fd);
-	void launchCgi(const Client &client);
+	bool readFromPipe(int stdoutPipeReadFd);
+	void launchCgi(Client &client);
 	void writeToClient(int fd);
+	void writeToPipe(Client &client, int stdinPipeWriteFd);
 	void timeoutCheck(void);
+
+	bool cgiDead(int fd);
 
 	void closeConnection(int fd);
 	static void addToEpoll(int epollFd, int fdToModify, uint32_t flag);
@@ -45,13 +49,18 @@ public:
 	static void signalHandler(int signal);
 
 private:
-	int epollFd;
+	int _epollFd;
+	size_t _bodyOffset;
 	std::map<int, const ServerConfig *> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 	std::map<int, Client *> _clients;
 	std::map<std::string, Session> _sessions;
-	std::set<int> _pipefd;
+	std::map<int, Client *> _pipeFd;
+	std::string	_tempResponse;
 
 	Session &resolveSession(const std::string &cookieHeader, bool &isNew);
 };
 
 #endif
+
+
+

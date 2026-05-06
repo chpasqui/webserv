@@ -21,12 +21,9 @@ bool Request::parseBody(const std::string &body, int maxBodySize){
         if (_contentLength > maxBodySize) 
             return (setError(PAYLOAD_TOO_LARGE, "parseBody: contentLength too long"));
         _body = body;
-        std::cout << _body << std::endl;
         return true ;
     }
     _contentLength = 0;
-    // once the body is unchunked, 
-    std::cout << _body << std::endl;
     return true ;
 }
 

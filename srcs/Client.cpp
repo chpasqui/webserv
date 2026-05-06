@@ -20,7 +20,8 @@ Client::Client() : _clientFd(-1),
 				   _parsingStatus(PARSING_REQUEST_LINE),
 				   _config(NULL),
 				   _request(NULL),
-				   _response(NULL)
+				   _response(NULL),
+				   _cgi(NULL)
 {
 	time(&(this)->_timestamp);
 }
@@ -73,6 +74,7 @@ void Client::parseRequest()
 
 	if (this->_parsingStatus == COMPLETE || this->_parsingStatus == CLOSEFD)
 		return;
+	std::cout << "fd is " <<  _clientFd << std::endl;
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0 || _bytesRead == -1)
 	{
@@ -82,7 +84,6 @@ void Client::parseRequest()
 	_buffer += std::string(buffer, _bytesRead);
 	if (this->_parsingStatus == PARSING_REQUEST_LINE && this->_buffer.find("\r\n") != std::string::npos)
 	{
-		std::cout << _buffer << std::endl;
 		if (!_request->parseRequestLine(_buffer))
 		{
 			this->_parsingStatus = COMPLETE;
@@ -131,29 +132,19 @@ int Client::getParsingStatus() const
 	return (this->_parsingStatus);
 }
 
-int Client::getCgiPipeFd() const
-{
-	return (this->_cgiPipeFd);
-}
-
-void Client::setCgiPipeFd(int fd)
-{
-	this->_cgiPipeFd = fd;
-}
-
 Request *Client::getRequest(void) const
 {
 	return (this->_request);
 }
 
-Response *Client::getResponse(void) const
-{
-	return (this->_response);
-}
-
 const ServerConfig *Client::getServerConfig(void) const
 {
 	return this->_config;
+}
+
+Response *Client::getResponse(void) const
+{
+	return (this->_response);
 }
 
 void Client::setResponse(Session &session, bool isNew)
@@ -164,6 +155,26 @@ void Client::setResponse(Session &session, bool isNew)
 std::string Client::getResponseStr() const
 {
 	return _response->responseFormat(*_request);
+}
+
+void Client::setCgi()
+{
+	this->_cgi = new Cgi();
+}
+
+Cgi	*Client::getCgi(void) const
+{
+	return this->_cgi;
+}
+
+int Client::getCgiPipeFd() const
+{
+	return (this->_cgiPipeFd);
+}
+
+void Client::setCgiPipeFd(int fd)
+{
+	this->_cgiPipeFd = fd;
 }
 
 /**

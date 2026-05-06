@@ -37,7 +37,7 @@ void Server::setupListeningSockets(const std::vector<ServerConfig *>& serverConf
 		int listenFd = openListeningSocket();
 		bindAndListen(listenFd, serverConfigsVec[i]->getPort());
 		this->_listenFds[listenFd] = serverConfigsVec[i];
-		addToEpoll(this->epollFd, listenFd, EPOLLIN);
+		addToEpoll(this->_epollFd, listenFd, EPOLLIN);
 	}
 }
 
@@ -67,7 +67,6 @@ int Server::openListeningSocket() {
 		close(listenFd);
 		throw std::runtime_error("Server: setsockopt() failed.");
 	}
-	//std::cout << "Server::createlisteningSocket listenFd " << listenFd << " is created" <<  std::endl;
 	return listenFd;
 }
 

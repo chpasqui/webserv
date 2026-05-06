@@ -22,8 +22,8 @@ void Server::createEpollInstance(void)
 {
 	std::string errorMsg;
 
-	this->epollFd = epoll_create(1);
-	if (this->epollFd == -1)
+	this->_epollFd = epoll_create(1);
+	if (this->_epollFd == -1)
 	{
 		errorMsg = std::string("Epoll_create() error: ") + strerror(errno);
 		throw(std::runtime_error(errorMsg));
@@ -34,15 +34,15 @@ void Server::createEpollInstance(void)
  * @brief Registers fdToModify with the epoll instance to monitor it for the
  * events specified by flag (e.g. EPOLLIN, EPOLLOUT).
  */
-void Server::addToEpoll(int epollFd, int newFd, uint32_t flag)
+void Server::addToEpoll(int _epollFd, int newFd, uint32_t flag)
 {
 	struct epoll_event event;
 	event.events = flag;
 	event.data.fd = newFd;
-	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, newFd, &event) == -1)
+	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, newFd, &event) == -1)
 	{
 		close(newFd);
-		close(epollFd);
+		close(_epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw(std::runtime_error(errorMsg));
 	}
@@ -51,16 +51,16 @@ void Server::addToEpoll(int epollFd, int newFd, uint32_t flag)
 /**
  * @brief Modifies fdToModify's existing flag with the new flag (e.g. EPOLIN or EPOLLOUT)
  */
-bool Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
+bool Server::modifyEpoll(int _epollFd, int fdToModify, uint32_t flag)
 {
 
 	struct epoll_event event;
 	event.events = flag;
 	event.data.fd = fdToModify;
-	if (epoll_ctl(epollFd, EPOLL_CTL_MOD, fdToModify, &event) == -1)
+	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, fdToModify, &event) == -1)
 	{
 		close(fdToModify);
-		close(epollFd);
+		close(_epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		return false;
 	}
@@ -70,17 +70,17 @@ bool Server::modifyEpoll(int epollFd, int fdToModify, uint32_t flag)
 /**
  * @brief Removes the fd from the epoll instance to stop monitoring it.
  */
-void Server::delFromEpoll(int epollFd, int fdToModify)
+void Server::delFromEpoll(int _epollFd, int fdToModify)
 {
 	struct epoll_event event;
 	event.events = 0;
 	event.data.fd = fdToModify;
-	if (epoll_ctl(epollFd, EPOLL_CTL_DEL, fdToModify, &event) == -1)
+	if (epoll_ctl(_epollFd, EPOLL_CTL_DEL, fdToModify, &event) == -1)
 	{
 		// WARN: if (errno == ENOENT) //don't close an inexistant file (Double close);
 		//			return;
 		close(fdToModify);
-		close(epollFd);
+		close(_epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw(std::runtime_error(errorMsg));
 	}
