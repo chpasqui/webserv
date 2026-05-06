@@ -15,6 +15,8 @@ Client::Client() : _clientFd(-1),
 				   _cgiPipeFd(-1),
 				   _writeCgiPipeEnd(-1),
 				   _readCgiPipeEnd(-1),
+				   _bodyoffset(0),
+				   _output(""),
 				   _bytesRead(-1),
 				   _buffer(""),
 				   _parsingStatus(PARSING_REQUEST_LINE),
@@ -30,6 +32,8 @@ Client::Client(int fd, const ServerConfig *config) : _clientFd(fd),
 													 _cgiPipeFd(-1),
 													 _writeCgiPipeEnd(-1),
 													 _readCgiPipeEnd(-1),
+													 _bodyoffset(0),
+													 _tempResponse(""),
 													 _bytesRead(-1),
 													 _buffer(""),
 													 _parsingStatus(PARSING_REQUEST_LINE),
@@ -44,6 +48,8 @@ Client::Client(const Client &other) : _clientFd(other._clientFd),
 									  _cgiPipeFd(other._cgiPipeFd),
 									  _writeCgiPipeEnd(other._writeCgiPipeEnd),
 									  _readCgiPipeEnd(other._readCgiPipeEnd),
+									  _bodyoffset(other._bodyoffset),
+									  _tempResponse(other._tempResponse),
 									  _bytesRead(other._bytesRead),
 									  _buffer(other._buffer),
 									  _parsingStatus(other._parsingStatus),
@@ -175,6 +181,26 @@ int Client::getCgiPipeFd() const
 void Client::setCgiPipeFd(int fd)
 {
 	this->_cgiPipeFd = fd;
+}
+
+void	Client::setBodyOffset(int bodyOffset)
+{
+	this->_bodyoffset = bodyOffset;
+}
+
+int		Client::getBodyOffset(void) const
+{
+	return this->_bodyoffset;
+}
+
+void	Client::setOutput(const std::string& newOutput)
+{
+	this->_output = newOutput;
+}
+
+std::string	Client::getOutput(void) const
+{
+	return this->_output;
 }
 
 /**

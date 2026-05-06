@@ -43,6 +43,11 @@ class Client
 		Cgi	*getCgi(void) const;
 		int getCgiPipeFd(void) const;
 		void setCgiPipeFd(int fd);
+		void	setBodyOffset(int bodyOffset);
+		int		getBodyOffset(void) const;
+		void	setOutput(const std::string& newOutput);
+		std::string	getOutput(void) const;
+
 
 	private:
 		Client(); // client constructor is in private so that we never create a client out of nowhere
@@ -50,6 +55,8 @@ class Client
 		int _cgiPipeFd;
 		int _writeCgiPipeEnd;
 		int _readCgiPipeEnd;
+		int _bodyoffset;
+		std::string _output;
 
 		ssize_t _bytesRead;
 		std::string _buffer;
