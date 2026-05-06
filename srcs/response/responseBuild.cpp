@@ -194,7 +194,7 @@ bool Response::splitOutput(const std::string &output, std::string &headerSection
 	return false;
 }
 
-void Response::buildCgiResponse(std::string &output)
+void Response::buildCgiResponse(const std::string &output)
 {
 	std::string headerSection;
 

@@ -34,7 +34,7 @@ public:
 	void run(void);
 	bool acceptNewConnection(int listeningFd);
 	void readFromClient(int fd);
-	bool readFromPipe(Client &client, int stdoutPipeReadFd);
+	void readFromPipe(int stdoutPipeReadFd);
 	void launchCgi(Client &client);
 	void writeToClient(int fd);
 	void writeToPipe(Client &client, int stdinPipeWriteFd);
