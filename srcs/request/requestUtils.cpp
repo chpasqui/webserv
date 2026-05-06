@@ -14,7 +14,6 @@ std::string decodeUrl(const std::string& url){
 		if (url[i] == '%' && i + 2 < url.size()){
 			std::string hex = url.substr(i + 1, 2);
 			long ascii = strtol(hex.c_str(), NULL, 16);
-			//std::cout << ascii << std::endl;
 			if ((ascii >= 0 && ascii < 32) || ascii == 127)
 				return ("-1");
 			decoded += static_cast<char>(ascii);

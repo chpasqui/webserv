@@ -2,6 +2,7 @@
 #include "../../include/Session.hpp"
 #include "../../include/Cgi.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <ctime>
 #include <stdexcept>
@@ -17,43 +18,104 @@
 #include <csignal>
 #include <signal.h>
 #include "../include/color.hpp"
-
+#include <wait.h>
 
 #define MAX_EVENTS 1024
 #define TIMEOUT 10
+#define BUFFER_SIZE 1024
 
 // CONSTRUCTOR AND DESTRUCTOR
 
 int serverSignal = 0;
 
-Server::Server() : 
-		epollFd(-1),
-		_listenFds(),
-		_clients()
+Server::Server() : _epollFd(-1),
+					_bodyOffset(0),
+				   _listenFds(),
+				   _clients(),
+				   _pipeFd()
 {
 }
 
-void	Server::run()
+void Server::run()
 {
-	struct epoll_event	events[MAX_EVENTS];
-	int					nFd;
+	struct epoll_event events[MAX_EVENTS];
+	int nFd;
 
 	while (!serverSignal)
 	{
-		nFd = epoll_wait(this->epollFd, events, MAX_EVENTS, 0);
-		if (nFd == -1) break ;
-		for (int i = 0; i < nFd; i++) {
+		nFd = epoll_wait(this->_epollFd, events, MAX_EVENTS, -1);
+		for (int i = 0; i < nFd; i++)
+		{
 			int fd = events[i].data.fd;
-			if (_listenFds.count(fd)) { if (!acceptNewConnection(fd)) continue ; }
-			else if (events[i].events & (EPOLLERR | EPOLLHUP)) closeConnection(fd);
-			else if (events[i].events & EPOLLIN) readFromClient(fd);
-			else if(events[i].events & EPOLLOUT) writeToClient(fd);
+			if (_listenFds.count(fd))
+			{
+				if (!acceptNewConnection(fd))
+					continue;
+			}
+			else if (events[i].events & (EPOLLERR | EPOLLHUP))
+			{
+				//std::cout << "error event is " << events[i].events << std::endl;
+				//closeConnection(fd);
+			}
+			else if (events[i].events & EPOLLIN)
+			{
+				if (this->_pipeFd.count(fd))
+				{
+					readFromPipe(fd);
+				}
+				else
+					readFromClient(fd);
+			}
+			else if (events[i].events & EPOLLOUT)
+			{
+				if (this->_pipeFd.count(fd))
+				{
+					Client *client = this->_pipeFd[fd];
+					writeToPipe(*client, fd);
+				}
+				else
+				{
+					writeToClient(fd);
+				}
+			}
+			if (this->_pipeFd.count(fd) && cgiDead(fd))
+			{
+				Client *client = this->_pipeFd[fd];
+
+				std::cout << "entered the isdone case after the read" << std::endl;
+				client->getResponse()->buildCgiResponse(this->_tempResponse);
+				if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
+				{
+					closeConnection(this->_pipeFd[fd]->getClientFd());
+					return;
+				}
+				this->_pipeFd.erase(fd);
+				delFromEpoll(_epollFd, fd);
+			}
 		}
 	}
 	std::cout << "signal to stop received" << std::endl;
 }
 
-bool	Server::acceptNewConnection(int listeningFd)
+bool Server::cgiDead(int fd)
+{
+	bool isdone = false;
+	Client *client = this->_pipeFd[fd];
+
+	int status = 0;
+	pid_t pid = client->getCgi()->getPid();
+	pid_t ret = ::waitpid(pid, &status, WNOHANG);
+	std::cout << "pid is " << pid  << "and ret is " << ret << std::endl;
+	if (ret == pid)
+	{
+		std::cout << "HELLOOOO" << std::endl;
+		isdone = true;
+	}
+	return isdone;
+}
+
+
+bool Server::acceptNewConnection(int listeningFd)
 {
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(client_addr);
@@ -66,12 +128,12 @@ bool	Server::acceptNewConnection(int listeningFd)
 
 	try
 	{
-		addToEpoll(this->epollFd, clientFd, EPOLLIN);
+		addToEpoll(this->_epollFd, clientFd, EPOLLIN);
+		// add the multiple serverconfigs in one fd and map with the host name (multiple config for one port)
 		const ServerConfig *config = _listenFds[listeningFd];
-		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config, new Request())));
-		std::cout <<"new connection with " << clientFd << "." << std::endl;
+		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config)));
 	}
-	catch(const std::exception& e)
+	catch (const std::exception &e)
 	{
 		std::cerr << e.what() << '\n';
 		closeConnection(clientFd);
@@ -80,67 +142,120 @@ bool	Server::acceptNewConnection(int listeningFd)
 	return (true);
 }
 
-void	Server::readFromClient(int clientFd)
+// potentially rename to treatClientRequest
+void Server::readFromClient(int clientFd)
 {
-	Client& client = *(_clients[clientFd]); // _clients[6] will give us the Client class at clientFd = 6
-	
+	// check that there is a client
+	Client &client = *(_clients[clientFd]); // _clients[6] will give us the Client class at clientFd = 6
+
 	client.parseRequest();
 
-	if (client.getParsingStatus() == CLOSEFD) {
+	if (client.getParsingStatus() == CLOSEFD)
+	{
 		closeConnection(clientFd);
-		return ;
+		return;
 	}
-	if (client.getParsingStatus() == COMPLETE) {
+	if (client.getParsingStatus() == COMPLETE)
+	{
 		bool isNew = false;
-		Session& session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
-		// client.setResponse(session, isNew);
-		// client.getResponse()->build(*client.getRequest(), client.getServerConfig());
-		client.buildResponse(session, isNew);
-		if (client.getResponse()->getCgiStatus() == true) {
-			std::cout << "entered the case where it is cgi" << std::endl;
+		Session &session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
+		client.setResponse(session, isNew);
+		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
+		// client.buildResponse(session, isNew);
+		if (client.getResponse()->getCgiStatus() == true)
+		{
 			launchCgi(client);
 		}
-		else {
-			if(!modifyEpoll(this->epollFd, clientFd, EPOLLOUT)) {
+		else
+		{
+			if (!modifyEpoll(this->_epollFd, clientFd, EPOLLOUT))
+			{
 				closeConnection(clientFd);
-				return ; }
+				return;
+			}
 		}
 	}
 }
 
-// void	Server::readFromPipe(int pipeFd)
-// {
-	// char buffer[1024];
-	// 	int contentLength = 0;
-	// 	do {
-	// 		contentLength = read(stdoutPipe[READ_END], buffer, 1024);
-	// 		if (contentLength > 0)
-	// 			responseBody.append(buffer, contentLength);
-	// 	} while(contentLength > 0);
-	// 	std::string contentLengthStr = "content-length=" + std::to_string(responseBody.size()) + '\n';
-	// 	responseBody.insert(0, contentLengthStr);
-	// 	close(stdoutPipe[READ_END]);
-// }
+bool Server::readFromPipe(int stdoutPipeReadFd)
+{
+	char buffer[BUFFER_SIZE];
+	ssize_t nbytes = 0;
+	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
 
-void	Server::launchCgi(const Client& client) const {
-	Cgi cgi(client.getResponse()->getInternalPath());
-	int pipeFd = cgi.launch(*client.getRequest(), *client.getServerConfig());
-	addToEpoll(this->epollFd, pipeFd, EPOLLIN);
+	std::cout << "RFP enter" << std::endl;
+	if (nbytes < 0)
+	{
+		return false;
+	}
+	else if (nbytes > 0)
+	{
+		this->_tempResponse.append(buffer, nbytes);
+		std::cout << _tempResponse << std::endl;
+		return false;
+	}
+	else if (nbytes == 0)
+	{
+		return true;
+	}
+	return false;
 }
 
-void	Server::writeToClient(int fd)
+void Server::launchCgi(Client &client)
 {
-	// the response will be called here
-	// read the pipe end
-	Client& client = *(_clients[fd]);
+	client.setCgi();
+	Cgi *cgi = client.getCgi();
+	cgi->launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
+	if (cgi->getStdinWriteEnd() != -1)
+	{
+		addToEpoll(_epollFd, cgi->getStdinWriteEnd(), EPOLLOUT);
+		this->_pipeFd[cgi->getStdinWriteEnd()] = &client;
+		std::cout << "pipe to be written to is " << cgi->getStdinWriteEnd() << std::endl;
+	}
+	if (cgi->getStdoutReadEnd() != -1)
+	{
+		addToEpoll(_epollFd, cgi->getStdoutReadEnd(), EPOLLIN);
+		this->_pipeFd[cgi->getStdoutReadEnd()] = &client;
+		std::cout << "pipe to be read from " << cgi->getStdoutReadEnd() << std::endl;
+
+	}
+	return;
+}
+
+void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
+{
+	Request *request = client.getRequest();
+	size_t writtenBytes = 0;
+
+	writtenBytes = write(stdinPipeWriteFd, request->getBody().c_str() + this->_bodyOffset, request->getBody().size() - this->_bodyOffset);
+	if (writtenBytes < 0)
+	{
+		perror("Error: ");
+		return ;
+	}
+	else if (writtenBytes > 0)
+	{
+		this->_bodyOffset += writtenBytes;
+		if (this->_bodyOffset >= request->getBody().size())
+		{
+			this->_pipeFd.erase(stdinPipeWriteFd);
+			delFromEpoll(_epollFd,stdinPipeWriteFd);
+			return;
+		}
+	}
+}
+
+void Server::writeToClient(int fd)
+{
+	Client &client = *(_clients[fd]);
 	std::string response = client.getResponseStr();
 	send(fd, response.c_str(), response.size(), 0);
 	closeConnection(fd);
 }
 
-void	Server::closeConnection(int fd)
+void Server::closeConnection(int fd)
 {
-	delFromEpoll(this->epollFd, fd);
+	delFromEpoll(this->_epollFd, fd);
 	if (close(fd) == -1)
 		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
 	if (_clients.count(fd))
@@ -152,32 +267,33 @@ void	Server::closeConnection(int fd)
 
 // EPOLL HELPER FUNCTIONS
 
-int		Server::getEpollFd(void) const
+int Server::getEpollFd(void) const
 {
-	return (this->epollFd);
+	return (this->_epollFd);
 }
 
 /**
  * @brief Destroy the Server:: Server object
- * 
+ *
  */
-Server::~Server() {
-	std::map<int, Client*>::iterator it = this->_clients.begin();
-	for ( ; it != this->_clients.end(); ++it)
+Server::~Server()
+{
+	std::map<int, Client *>::iterator it = this->_clients.begin();
+	for (; it != this->_clients.end(); ++it)
 	{
 		close(it->first);
 	}
 	_clients.clear();
 
-	std::map<int, const ServerConfig*>::iterator secondIt = this->_listenFds.begin();
-	for ( ; secondIt != this->_listenFds.end(); ++secondIt)
+	std::map<int, const ServerConfig *>::iterator secondIt = this->_listenFds.begin();
+	for (; secondIt != this->_listenFds.end(); ++secondIt)
 	{
 		close(secondIt->first);
 	}
 	_listenFds.clear();
-	if (this->epollFd != -1)
+	if (this->_epollFd != -1)
 	{
-		close(this->epollFd);
-		this->epollFd = -1;
+		close(this->_epollFd);
+		this->_epollFd = -1;
 	}
 }

@@ -72,7 +72,6 @@ static std::string extractHeaderSection(std::string request){
 bool Request::validateCRLF(const std::string &line){
 	std::string::const_iterator it = line.end() - 1;
 	if (*it != '\r'){
-		std::cout << line << std::endl;
 		return(setError(BAD_REQUEST, "validateCRLF: missing \\r"));
 	}
 	return true;

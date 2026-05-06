@@ -1,7 +1,7 @@
-GET cgi-bin/hello.py HTTP/1.1
+POST /cgi-bin/pink.py HTTP/1.1
 Host: localhost
 Content-Type: text/plain
-Content-Length: 12
+Content-Length: 22
 Connection: close
 
-Hello World!
+Hello My name is Alice

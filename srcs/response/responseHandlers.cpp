@@ -107,13 +107,16 @@ void Response::handlePostMethod(Request& request){
         return ;
     }
     std::string uploadDir = _loc->getUploadStore();
+    if(!uploadDir.empty() && uploadDir[uploadDir.size() - 1] == '/')
+        uploadDir = uploadDir.substr(0, uploadDir.size() - 1);
     struct stat dirStat;
     if (stat(uploadDir.c_str(), &dirStat) != 0 || !S_ISDIR(dirStat.st_mode)){
         setSyscallError();
         LOG(std::cout << "upload folder doesnt exist" << std::endl);
         return ;
     }
-    std::string uploadPath = _loc->getUploadStore() + "/" + _remain;
+    std::string uploadPath = uploadDir + "/" + _remain;
+    LOG(std::cout << "uploadDir='" << uploadDir << "' uploadPath='" << uploadPath << "'" << std::endl);
     struct stat fileStat;
     if (stat(uploadPath.c_str(), &fileStat) == 0){
         setError(CONFLICT);
