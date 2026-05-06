@@ -30,22 +30,24 @@ Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _
 
 void Cgi::launch(const std::string &internalPath, const Request &request, const ServerConfig &config)
 {
-	std::cout << "entered the launch CGI block " << std::endl;
-	char cwd[1024];
-	getcwd(cwd, sizeof(cwd));
-	std::string absolutePath = std::string(cwd) + "/" + internalPath;
+	// std::cout << "entered the launch CGI block " << std::endl;
+	// char cwd[1024];
+	// getcwd(cwd, sizeof(cwd));
+	// std::string absolutePath = std::string(cwd) + "/" + internalPath;
 
-	if (access(absolutePath.c_str(), X_OK) == -1)
-	{
-		perror("Error: ");
-		return;
-	}
-	this->_fileSystemPath = absolutePath;
+	// if (access(absolutePath.c_str(), X_OK) == -1)
+	// {
+	// 	perror("Error: ");
+	// 	return;
+	// }
+	std::cout << "internal path received is " << internalPath << std::endl;
+	this->_fileSystemPath = internalPath;
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
 		std::cerr << "access issue" << std::endl;
 		return;
 	}
+	std::cout << "no access issue anymore" << std::endl;
 	buildEnv(request, config);
 	executeScript(request);
 }
@@ -66,7 +68,7 @@ void Cgi::buildEnv(const Request &request, const ServerConfig &config)
 	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
 	_tempEnv.push_back("SERVER_NAME=" + resolveHostname());
 	std::cout << "content length sent to the cgi is " << request.getContentLength() << std::endl;
-	if (request.getContentLength() != 0)
+	if (request.getMethod() == "POST" && request.getContentLength() != 0)
 	{
 		std::string contentType   = getHeaderVariable(header, "content-type");
 	
@@ -124,9 +126,11 @@ void Cgi::executeScript(const Request &request)
 	{
 		close(stdinPipe[READ_END]);
 		_stdinWriteEnd = stdinPipe[WRITE_END];
+		std::cout << "POST CASE the stdinwrite end is " << _stdinWriteEnd << std::endl;
 	}
 	close(stdoutPipe[WRITE_END]);
 	_stdoutReadEnd = stdoutPipe[READ_END];
+	std::cout << "ALL CASES the _stdoutReadEnd end is " << _stdoutReadEnd << std::endl;
 	_pid = pid;
 }
 

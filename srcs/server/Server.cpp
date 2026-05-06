@@ -208,6 +208,7 @@ void Server::launchCgi(Client &client)
 	cgi->launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
 	if (cgi->getStdinWriteEnd() != -1)
 	{
+		std::cout << "GET METHPD ENTERED ALERT" << std::endl;
 		addToEpoll(_epollFd, cgi->getStdinWriteEnd(), EPOLLOUT);
 		this->_pipeFd[cgi->getStdinWriteEnd()] = &client;
 		std::cout << "pipe to be written to is " << cgi->getStdinWriteEnd() << std::endl;
@@ -219,6 +220,7 @@ void Server::launchCgi(Client &client)
 		std::cout << "pipe to be read from " << cgi->getStdoutReadEnd() << std::endl;
 
 	}
+	std::cout << "the stinread end should contain a number " <<  cgi->getStdoutReadEnd() << " and the stdinpipe should be -1: VALUE " <<   cgi->getStdoutReadEnd() << std::endl;
 	return;
 }
 
@@ -236,13 +238,15 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 	else if (writtenBytes > 0)
 	{
 		this->_bodyOffset += writtenBytes;
-		if (this->_bodyOffset >= request->getBody().size())
+		if (this->_bodyOffset >= request->getContentLength())
 		{
 			this->_pipeFd.erase(stdinPipeWriteFd);
 			delFromEpoll(_epollFd,stdinPipeWriteFd);
 			return;
 		}
 	}
+
+	// 
 }
 
 void Server::writeToClient(int fd)
