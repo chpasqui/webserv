@@ -1,4 +1,5 @@
 #include "../../include/ParseConfig.hpp"
+#include <algorithm>
 #include <errno.h>
 #include <fstream>
 #include <iostream>
@@ -17,6 +18,7 @@
 ParseConfig::ParseConfig() :
 	_filename(""),
 	_configFile(""),
+	_line(0),
 	_contextLevel(0),
 	_contextConfig(0),
 	_http(0),
@@ -30,6 +32,7 @@ ParseConfig::ParseConfig() :
 ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *> *serverConfigs) :
 	_filename(filename),
 	_configFile(""),
+	_line(1),
 	_contextLevel(NONE),
 	_contextConfig(0),
 	_http(0),
@@ -53,11 +56,13 @@ ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *
 	_dictionary["return"] = &ParseConfig::processRedirectionToken;
 	_dictionary["cgi_pass"] = &ParseConfig::processCgiPassToken;
 	_dictionary["upload_store"] = &ParseConfig::processUploadStoreToken;
+	this->_serverConfigs = 0;
 	LOG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
 }
 
 ParseConfig::~ParseConfig() {
 	LOG(C_DSTR << "ParseConfig: Destructor called" << RESET);
+	//TODO: Safely destroy non-null pointers
 }
 
 int	ParseConfig::parsingConfigFile(void) {
@@ -72,12 +77,11 @@ int	ParseConfig::parsingConfigFile(void) {
 	{
 		token = this->getNextToken();
 		if (token.empty()) {
-			std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
 			break;
 		}
 		it = this->_dictionary.find(token);
 		if (it == this->_dictionary.end()) {
-			std::cerr << C_RED << token << ": Unknow token" << RESET  << std::endl;
+			std::cerr << C_RED << token << ": Unknow token on line: " << this->_line << RESET  << std::endl;
 			return (1);
 		}
 		
@@ -85,12 +89,17 @@ int	ParseConfig::parsingConfigFile(void) {
 			(this->*it->second)();
 		}
 		catch (std::exception &e) {
-			std::cerr << C_RED << e.what() << RESET << std::endl;
+			std::cerr << C_RED << e.what() << "on line: " << this->_line << RESET << std::endl;
 			delete this->_http; //FIX: Potential leak if the exception is thrown
-			//TODO: free serverConfigsVector (Locations and ServerConfigs are frees in the main ?)
+			//TODO: free serverConfigsVector
 			return (1);
 		}
 	}
+	if (this->_serverConfigs == 0) {
+		std::cerr << C_RED << "Error: no config file provided" << RESET << std::endl;
+		return (1);
+	}
+	std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
 	return (0);
 }
 
@@ -126,6 +135,8 @@ int		ParseConfig::openFile(void) {
 //- check if the file end with ".conf". OK
 //- Fix leaks when exception is thrown.
 //- Rename variables with wrong names
+//- Read word by word the config file
+//- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
 
 /**
  * @biref get the next token in the config file and remove it from the file string
@@ -139,10 +150,12 @@ std::string	ParseConfig::getNextToken(void) {
 	pos = this->_configFile.find_first_not_of(" \n\r\t\v\f");
 	if (pos == std::string::npos)
 		return ("");
+	this->_line += std::count(this->_configFile.begin(), this->_configFile.begin() + pos, '\n');
 
 	while (1) {
-		if (pos > 0 && this->_configFile[pos - 1] == ' ' && this->_configFile[pos] == '#') {
-			pos = this->_configFile.find_first_of("\n");
+		if (pos > 0 && (this->_configFile[pos - 1] == ' ' || this->_configFile[pos - 1] == '\n') && this->_configFile[pos] == '#') { //BUG: if the '#' is on the beginning of the line, this dosent work
+			pos = this->_configFile.find_first_of("\n"); //BUG: when we check the '#' character, we dont move "pos"
+			this->_line++;
 			continue ;
 		}
 		break ;
@@ -156,7 +169,7 @@ std::string	ParseConfig::getNextToken(void) {
 	token = this->_configFile.substr(0, pos);
 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
 
-	//LOG(C_PINK << token << RESET);
+	LOG(C_PINK << token << RESET);
 	return (token);
 }
 
@@ -166,7 +179,7 @@ bool	ParseConfig::thereIsDefaultLocation(void) const {
 	if (!this->_serverConfigs)
 		throw (std::logic_error("No server config to check for default location"));
 
-	locations = this->_currentConfig->getLocations(); //OPTIM: Rebuil location: can we use a reference or pointer ?
+	locations = this->_currentConfig->getLocations(); //OPTIM: Rebuild location: can we use a reference or pointer ?
 	for (std::vector<Location *>::iterator it = locations.begin(); locations.end() != it; it++) {
 		if ((*it)->getPath() == "/")
 			return (true);
@@ -383,9 +396,6 @@ void	ParseConfig::processCgiPassToken(void) {
 
 	extension = getNextToken();
 	path = getNextToken();
-
-	std::cout << C_PINK << "Inside cgiPassToken" << RESET << std::endl;
-
 	if (*(extension.begin()) != '.')
 		throw (std::invalid_argument("an extension need to start with a point"));
 	this->_contextConfig->addCgiExtension(extension, path);
