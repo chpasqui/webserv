@@ -46,6 +46,7 @@ class Client
 		void	setOutput(const std::string& newOutput);
 		std::string	getOutput(void) const;
 		int bodyoffset;
+		int sendoffset;
 
 	private:
 		Client(); // client constructor is in private so that we never create a client out of nowhere

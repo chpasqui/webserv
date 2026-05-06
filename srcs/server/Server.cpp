@@ -77,20 +77,20 @@ void Server::run()
 					writeToClient(fd);
 				}
 			}
-			if (this->_pipeFd.count(fd) && cgiDead(fd))
-			{
-				Client *client = this->_pipeFd[fd];
+			// if (this->_pipeFd.count(fd) && cgiDead(fd))
+			// {
+			// 	Client *client = this->_pipeFd[fd];
 
-				std::cout << "entered the isdone case after the read" << std::endl;
-				client->getResponse()->buildCgiResponse(client->getOutput());
-				if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
-				{
-					closeConnection(this->_pipeFd[fd]->getClientFd());
-					return;
-				}
-				this->_pipeFd.erase(fd);
-				delFromEpoll(_epollFd, fd);
-			}
+			// 	std::cout << "entered the isdone case after the read" << std::endl;
+			// 	client->getResponse()->buildCgiResponse(client->getOutput());
+			// 	if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
+			// 	{
+			// 		closeConnection(this->_pipeFd[fd]->getClientFd());
+			// 		return;
+			// 	}
+			// 	this->_pipeFd.erase(fd);
+			// 	delFromEpoll(_epollFd, fd);
+			// }
 		}
 	}
 	std::cout << "signal to stop received" << std::endl;
@@ -246,16 +246,29 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 			return;
 		}
 	}
-
-	// 
 }
 
 void Server::writeToClient(int fd)
 {
 	Client &client = *(_clients[fd]);
 	std::string response = client.getResponseStr();
-	send(fd, response.c_str(), response.size(), 0);
-	closeConnection(fd);
+	// Just like the write call, then i will need ot use the offset --> I need to keep the offset in client 
+	ssize_t nbytes = send(fd, response.c_str(), response.size(), 0);
+	if (nbytes < 0)
+	{
+		// handle the error message
+		// if the send system call fails, does that mean that we need to close evryhting and come back to the main loop?
+		return ;
+	}
+	else if (nbytes  > 0)
+	{
+		client.sendoffset += nbytes;
+		if (client.sendoffset >= response.size())
+		{
+			closeConnection(fd);
+			return ;
+		}
+	}
 }
 
 void Server::closeConnection(int fd)
