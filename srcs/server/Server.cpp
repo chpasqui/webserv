@@ -29,7 +29,6 @@
 int serverSignal = 0;
 
 Server::Server() : _epollFd(-1),
-					_bodyOffset(0),
 				   _listenFds(),
 				   _clients(),
 				   _pipeFd()
@@ -177,7 +176,7 @@ void Server::readFromClient(int clientFd)
 	}
 }
 
-bool Server::readFromPipe(int stdoutPipeReadFd)
+bool Server::readFromPipe(Client &client, int stdoutPipeReadFd)
 {
 	char buffer[BUFFER_SIZE];
 	ssize_t nbytes = 0;
@@ -190,7 +189,7 @@ bool Server::readFromPipe(int stdoutPipeReadFd)
 	}
 	else if (nbytes > 0)
 	{
-		this->_tempResponse.append(buffer, nbytes);
+		append(buffer, nbytes);
 		std::cout << _tempResponse << std::endl;
 		return false;
 	}
