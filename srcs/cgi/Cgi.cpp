@@ -68,11 +68,9 @@ void Cgi::buildEnv(const Request &request, const ServerConfig &config)
 	std::cout << "content length sent to the cgi is " << request.getContentLength() << std::endl;
 	if (request.getContentLength() != 0)
 	{
-		std::string contentLength = getHeaderVariable(header, "content-length");
 		std::string contentType   = getHeaderVariable(header, "content-type");
-		
-		if (!contentLength.empty())
-			_tempEnv.push_back("CONTENT_LENGTH=" + contentLength);
+	
+		_tempEnv.push_back("CONTENT_LENGTH=" + getHeaderVariable(header, "content-length"));
 		if (!contentType.empty())
 			_tempEnv.push_back("CONTENT_TYPE=" + contentType);
 	}
