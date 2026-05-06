@@ -54,7 +54,7 @@ class ParseConfig {
 		//----Atributes----//
 		std::string											_filename;
 		std::string											_configFile;
-		//int													_line;
+		int													_line;
 		int													_contextLevel;
 		AConfig												*_contextConfig;
 		Http												*_http;
