@@ -82,7 +82,7 @@ void Server::run()
 				Client *client = this->_pipeFd[fd];
 
 				std::cout << "entered the isdone case after the read" << std::endl;
-				client->getResponse()->buildCgiResponse(this->_tempResponse);
+				client->getResponse()->buildCgiResponse(client->getOutput());
 				if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
 				{
 					closeConnection(this->_pipeFd[fd]->getClientFd());
@@ -176,8 +176,9 @@ void Server::readFromClient(int clientFd)
 	}
 }
 
-bool Server::readFromPipe(Client &client, int stdoutPipeReadFd)
+void Server::readFromPipe(int stdoutPipeReadFd)
 {
+	Client *client = this->_pipeFd[stdoutPipeReadFd];
 	char buffer[BUFFER_SIZE];
 	ssize_t nbytes = 0;
 	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
@@ -185,19 +186,19 @@ bool Server::readFromPipe(Client &client, int stdoutPipeReadFd)
 	std::cout << "RFP enter" << std::endl;
 	if (nbytes < 0)
 	{
-		return false;
+		// throw an error 
+		// return;
 	}
 	else if (nbytes > 0)
 	{
-		append(buffer, nbytes);
-		std::cout << _tempResponse << std::endl;
-		return false;
+		client->setOutput(client->getOutput().append(buffer, nbytes));
+		//return;
 	}
-	else if (nbytes == 0)
-	{
-		return true;
-	}
-	return false;
+	// else if (nbytes == 0)
+	// {
+	// 	return;
+	// }
+	return;
 }
 
 void Server::launchCgi(Client &client)
@@ -228,7 +229,7 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 	Request *request = client.getRequest();
 	size_t writtenBytes = 0;
 
-	writtenBytes = write(stdinPipeWriteFd, request->getBody().c_str() + this->_bodyOffset, request->getBody().size() - this->_bodyOffset);
+	writtenBytes = write(stdinPipeWriteFd, request->getBody().c_str() + client.bodyoffset, request->getBody().size() - client.bodyoffset);
 	if (writtenBytes < 0)
 	{
 		perror("Error: ");
@@ -236,8 +237,8 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 	}
 	else if (writtenBytes > 0)
 	{
-		this->_bodyOffset += writtenBytes;
-		if (this->_bodyOffset >= request->getContentLength())
+		client.bodyoffset += writtenBytes;
+		if (client.bodyoffset >= request->getContentLength())
 		{
 			this->_pipeFd.erase(stdinPipeWriteFd);
 			delFromEpoll(_epollFd,stdinPipeWriteFd);
