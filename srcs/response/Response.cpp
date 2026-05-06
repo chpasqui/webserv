@@ -80,10 +80,13 @@ std::string Response::extractContentType(){
  */
 // To decide whether we want to put the date or not
 void Response::setDefaultHeaders(){
-    std::ostringstream ss;
-    ss << _body.size();
-    _headers["Content-Length"] = ss.str();
-    _headers["Server"] = "webserv";
+    if (_headers.count("Content-Length") == 0 && !_body.empty()){
+        std::ostringstream ss;
+        ss << _body.size();
+        _headers["Content-Length"] = ss.str();
+    }
+    if (_headers.count("Server") == 0)
+        _headers["Server"] = "webserv";
 }
 
 bool	Response::getCgiStatus(void) const {

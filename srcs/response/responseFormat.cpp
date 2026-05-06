@@ -17,6 +17,8 @@ std::string Response::responseFormat(Request& request){
 		response << it->first << ": " << it->second << "\r\n";
 	if (_isNewSession && _session)
 		response << "Set-Cookie: " << _session->toSetCookieString() << "\r\n";
-	response << "\r\n" << _body;
+	if ()
+	response << "\r\n" << _body.substr(0, );
+
 	return response.str();
 }
