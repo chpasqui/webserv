@@ -1,9 +1,10 @@
 #include "../../include/ParseConfig.hpp"
 #include <algorithm>
 #include <errno.h>
-#include <fstream>
+#include <ios>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <stdexcept>
 #include <stdlib.h>
 #include <cstring>
@@ -105,7 +106,6 @@ int	ParseConfig::parsingConfigFile(void) {
 
 int		ParseConfig::openFile(void) {
 	std::string				buffer;
-	std::ifstream			fileStream;
 	std::string::iterator	it;
 
 	errno = 0;
@@ -114,16 +114,12 @@ int		ParseConfig::openFile(void) {
 		return (1);
 	}
 
-	fileStream.open(this->_filename.c_str());
-	if (!fileStream.is_open()) {
+	this->_configFile.open(this->_filename.c_str());
+	if (!this->_configFile.is_open()) {
 		std::cerr << C_RED << "Unable to open the file " << this->_filename << " :" << strerror(errno) << RESET << std::endl;
 		return (errno);
 	}
-
-	while (getline(fileStream, buffer)) {
-		buffer += "\n";
-		this->_configFile += buffer;
-	}
+	
 	return (0);
 }
 
@@ -137,41 +133,49 @@ int		ParseConfig::openFile(void) {
 //- Rename variables with wrong names
 //- Read word by word the config file
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
+//- remove the setPath function in location
 
 /**
  * @biref get the next token in the config file and remove it from the file string
  * @return the token or an empty string if the end of the file has been reached
  */
-std::string	ParseConfig::getNextToken(void) {
-	std::string					token;
-	std::vector<ServerConfig *>	servers;
-	size_t						pos;
-
-	pos = this->_configFile.find_first_not_of(" \n\r\t\v\f");
-	if (pos == std::string::npos)
-		return ("");
-	this->_line += std::count(this->_configFile.begin(), this->_configFile.begin() + pos, '\n');
-
-	while (1) {
-		if (pos > 0 && (this->_configFile[pos - 1] == ' ' || this->_configFile[pos - 1] == '\n') && this->_configFile[pos] == '#') { //BUG: if the '#' is on the beginning of the line, this dosent work
-			pos = this->_configFile.find_first_of("\n"); //BUG: when we check the '#' character, we dont move "pos"
-			this->_line++;
-			continue ;
-		}
-		break ;
-	}
-
-	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
-	pos = this->_configFile.find_first_of(" \n\r\t\v\f");
-	if (pos == std::string::npos)
-		return ("");
-
-	token = this->_configFile.substr(0, pos);
-	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
-
-	LOG(C_PINK << token << RESET);
-	return (token);
+int ParseConfig::getNextToken(std::string &token) {
+	std::string::iterator it;
+	this->_configFile >> token;
+	
+	if (*(token.begin()) == '#')
+		this->_configFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
+// std::string	ParseConfig::getNextToken(void) {
+// 	std::string					token;
+// 	std::vector<ServerConfig *>	servers;
+// 	size_t						pos;
+//
+// 	pos = this->_configFile.find_first_not_of(" \n\r\t\v\f");
+// 	if (pos == std::string::npos)
+// 		return ("");
+// 	this->_line += std::count(this->_configFile.begin(), this->_configFile.begin() + pos, '\n');
+//
+// 	while (1) {
+// 		if (pos > 0 && (this->_configFile[pos - 1] == ' ' || this->_configFile[pos - 1] == '\n') && this->_configFile[pos] == '#') { //BUG: if the '#' is on the beginning of the line, this dosent work
+// 			pos = this->_configFile.find_first_of("\n"); //BUG: when we check the '#' character, we dont move "pos"
+// 			this->_line++;
+// 			continue ;
+// 		}
+// 		break ;
+// 	}
+//
+// 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
+// 	pos = this->_configFile.find_first_of(" \n\r\t\v\f");
+// 	if (pos == std::string::npos)
+// 		return ("");
+//
+// 	token = this->_configFile.substr(0, pos);
+// 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
+//
+// 	LOG(C_PINK << "Token read: " << token << RESET);
+// 	return (token);
+// }
 
 bool	ParseConfig::thereIsDefaultLocation(void) const {
 	std::vector<Location*> locations;
@@ -212,7 +216,8 @@ void	ParseConfig::processEndBraquetToken(void) {
 void	ParseConfig::processTokenHttp(void) {
 	std::string	braquet;
 
-	braquet = getNextToken();
+	if (!getNextToken(braquet))
+		throw (std::invalid_argument("fail to get a token"));
 	if (braquet != "{" || this->_contextLevel != NONE || this->_http)
 		throw (std::runtime_error("Unexcepted token after \"http\""));
 	this->_http = new Http();
@@ -223,22 +228,22 @@ void	ParseConfig::processTokenHttp(void) {
 void	ParseConfig::processServerToken(void) {
 		std::string	nextToken;
 
-		nextToken = getNextToken();
-		if (nextToken != "{" || this->_contextLevel != HTTP || this->_currentConfig)
-			throw (std::runtime_error("Unexcepted token after \"server\""));
-		this->_serverConfigs->push_back(new ServerConfig(*(this)->_http));
-		this->_currentConfig = *(this)->_serverConfigs->rbegin();
-		this->_contextConfig = this->_currentConfig;
-		this->_contextLevel = SERVER;
+	if (!getNextToken(nextToken))
+		throw (std::invalid_argument("fail to get a token"));
+	if (nextToken != "{" || this->_contextLevel != HTTP || this->_currentConfig)
+		throw (std::runtime_error("Unexcepted token after \"server\""));
+	this->_serverConfigs->push_back(new ServerConfig(*(this)->_http));
+	this->_currentConfig = *(this)->_serverConfigs->rbegin();
+	this->_contextConfig = this->_currentConfig;
+	this->_contextLevel = SERVER;
 }
 
 void	ParseConfig::processLocationToken(void) {
 	std::string	path;
 	std::string	braquet;
 
-	path = getNextToken();
-	braquet = getNextToken();
-
+	if (!getNextToken(path) || !getNextToken(braquet))
+		throw (std::invalid_argument("fail to get a token"));
 	if (this->_location)
 		throw std::runtime_error("Nested location is not allowed");
 
@@ -259,7 +264,8 @@ void	ParseConfig::processHeaderTimeoutToken(void) {
 	int			timeout;
 	std::string	nextToken;
 
-	nextToken = getNextToken();
+	if (!getNextToken(nextToken))
+		throw (std::invalid_argument("fail to get a token"));
 	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
 		return ;
 	this->_contextConfig->setHeaderTimeout(timeout);
@@ -272,7 +278,9 @@ void	ParseConfig::processBodyTimeoutToken(void) {
 	int			timeout;
 	std::string	nextToken;
 
-	nextToken = getNextToken();
+
+	if (!getNextToken(nextToken))
+		throw (std::invalid_argument("fail to get a token"));
 	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
 		return ;
 	this->_contextConfig->setBodyTimeout(timeout);
@@ -286,7 +294,8 @@ void	ParseConfig::processMaxBodySizeToken(void) {
 	int			maxBodySize;
 	std::string	nextToken;
 
-	nextToken = getNextToken();
+	if (!getNextToken(nextToken))
+		throw (std::invalid_argument("fail to get a token"));
 	if ((maxBodySize = ParseConfig::transformTokenToInt(nextToken)) == -1) //FIX: need to mutiplie this later
 		return ;
 	this->_contextConfig->setMaxBodySize(maxBodySize);
@@ -298,7 +307,8 @@ void	ParseConfig::processMaxBodySizeToken(void) {
 void	ParseConfig::processRootToken(void) {
 	std::string nextToken;
 
-	nextToken = getNextToken();
+	if (!getNextToken(nextToken))
+		throw (std::invalid_argument("fail to get a token"));
 	this->_contextConfig->setRoot(nextToken);
 	return;
 }
@@ -310,16 +320,17 @@ void	ParseConfig::processListenToken(void) {
 		int 		port;
 		std::string	nextToken;
 
-		nextToken = getNextToken();
-		if (this->_contextLevel != SERVER)
-		{
-			std::cerr << C_RED << "Using token \"listen\" in wrong context" << RESET << std::endl;
-			return;
-		}
-		if ((port = ParseConfig::transformTokenToInt(nextToken)) == -1)
-			return;
-		this->_contextConfig->setPort(port);
+	if (!getNextToken(nextToken))
+		throw (std::invalid_argument("fail to get a token"));
+	if (this->_contextLevel != SERVER)
+	{
+		std::cerr << C_RED << "Using token \"listen\" in wrong context" << RESET << std::endl;
 		return;
+	}
+	if ((port = ParseConfig::transformTokenToInt(nextToken)) == -1)
+		return;
+	this->_contextConfig->setPort(port);
+	return;
 }
 
 /**
@@ -329,7 +340,8 @@ void	ParseConfig::processListenToken(void) {
 void	ParseConfig::processAutoindexToken(void) {
 	std::string value;
 
-	value = getNextToken();
+	if (!getNextToken(value))
+		throw (std::invalid_argument("fail to get a token"));
 	if (value == "on")
 		this->_contextConfig->setAutoindex(true);
 	else if (value == "off")
@@ -346,8 +358,8 @@ void	ParseConfig::processErrorPageToken(void) {
 	int			code;
 	std::string	codeToken, pageToken;
 
-	codeToken = getNextToken();
-	pageToken = getNextToken();
+	if (!getNextToken(codeToken) || !getNextToken(pageToken))
+		throw (std::invalid_argument("fail to get a token"));
 
 	code = ParseConfig::transformTokenToInt(codeToken);
 	this->_contextConfig->addErrorPage(code, pageToken);
@@ -359,7 +371,8 @@ void	ParseConfig::processErrorPageToken(void) {
 void	ParseConfig::processServerNameToken(void) {
 	std::string serverName;
 
-	serverName = getNextToken();
+	if (!getNextToken(serverName))
+		throw (std::invalid_argument("fail to get a token"));
 	this->_contextConfig->setServerName(serverName);
 }
 
@@ -367,14 +380,16 @@ void	ParseConfig::processServerNameToken(void) {
 void	ParseConfig::processAllowedMethodsToken(void) {
 	std::string allowedMethods;
 
-	allowedMethods = getNextToken();
+	if (!getNextToken(allowedMethods))
+		throw (std::invalid_argument("fail to get a token"));
 	this->_contextConfig->setAllowedMethods(allowedMethods);
 }
 
 void	ParseConfig::processIndexToken(void) {
 	std::string index;
 
-	index = getNextToken();
+	if (!getNextToken(index))
+		throw (std::invalid_argument("fail to get a token"));
 	this->_contextConfig->addIndex(index);
 }
 
@@ -383,8 +398,8 @@ void	ParseConfig::processRedirectionToken(void) {
 	std::string	codeToken;
 	std::string	redirectionPath;
 
-	codeToken = getNextToken();
-	redirectionPath = getNextToken();
+	if (!getNextToken(codeToken) || !getNextToken(redirectionPath))
+		throw (std::invalid_argument("fail to get a token"));
 	code = ParseConfig::transformTokenToInt(codeToken);
 	this->_contextConfig->setRedireCode(code);
 	this->_contextConfig->setRedirePath(redirectionPath);
@@ -394,8 +409,8 @@ void	ParseConfig::processCgiPassToken(void) {
 	std::string	extension;
 	std::string	path;
 
-	extension = getNextToken();
-	path = getNextToken();
+	if (!getNextToken(extension) || !getNextToken(path))
+		throw (std::invalid_argument("fail to get a token"));
 	if (*(extension.begin()) != '.')
 		throw (std::invalid_argument("an extension need to start with a point"));
 	this->_contextConfig->addCgiExtension(extension, path);
@@ -404,7 +419,8 @@ void	ParseConfig::processCgiPassToken(void) {
 void	ParseConfig::processUploadStoreToken(void) {
 	std::string uploadStorePath;
 
-	uploadStorePath = getNextToken();
+	if (!getNextToken(uploadStorePath))
+		throw (std::invalid_argument("fail to get a token"));
 	this->_contextConfig->setUploadStore(uploadStorePath);
 }
 

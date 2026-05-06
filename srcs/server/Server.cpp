@@ -56,7 +56,7 @@ void Server::run()
 				std::cout << "error event is " << events[i].events << std::endl;
 				closeConnection(fd);
 			}
-			else if (events[i].events & EPOLLIN | EPOLLHUP)
+			else if (events[i].events & (EPOLLIN | EPOLLHUP))
 			{
 				if (this->_pipeFd.count(fd))
 				{
