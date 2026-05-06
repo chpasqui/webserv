@@ -52,6 +52,7 @@ ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *
 	_dictionary["index"] = &ParseConfig::processIndexToken;
 	_dictionary["return"] = &ParseConfig::processRedirectionToken;
 	_dictionary["cgi_pass"] = &ParseConfig::processCgiPassToken;
+	_dictionary["upload_store"] = &ParseConfig::processUploadStoreToken;
 	LOG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
 }
 
@@ -204,7 +205,7 @@ void	ParseConfig::processTokenHttp(void) {
 	this->_http = new Http();
 	this->_contextConfig = this->_http;
 	this->_contextLevel = HTTP;
-}
+	}
 
 void	ParseConfig::processServerToken(void) {
 		std::string	nextToken;
@@ -228,7 +229,7 @@ void	ParseConfig::processLocationToken(void) {
 	if (this->_location)
 		throw std::runtime_error("Nested location is not allowed");
 
-	this->_location = new Location(*(this)->_currentConfig, path); //OPTIM: create a constructor with path in parameters
+	this->_location = new Location(*(this)->_currentConfig, path);
 	this->_contextConfig = this->_location;
 	
 	if (braquet != "{" || this->_contextLevel!= SERVER)
@@ -388,6 +389,13 @@ void	ParseConfig::processCgiPassToken(void) {
 	if (*(extension.begin()) != '.')
 		throw (std::invalid_argument("an extension need to start with a point"));
 	this->_contextConfig->addCgiExtension(extension, path);
+}
+
+void	ParseConfig::processUploadStoreToken(void) {
+	std::string uploadStorePath;
+
+	uploadStorePath = getNextToken();
+	this->_contextConfig->setUploadStore(uploadStorePath);
 }
 
 /**

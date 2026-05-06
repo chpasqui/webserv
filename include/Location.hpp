@@ -11,12 +11,13 @@ class ServerConfig;
 class Location : public AConfig
 {
 	public:
-		Location(const ServerConfig &serverConfig, const std::string &path);
+		Location(const ServerConfig &serverConfig, const std::string path);
 		virtual ~Location();
 		//----Setter----//
 		void						setRedireCode(const int redireCode);
 		void						setPath(const std::string path);
 		void						setRedirePath(const std::string redirePath);
+		void						setUploadStore(const std::string uploadDir);
 		void						addCgiExtension(const std::string extension, const std::string path);
 		void						setBodyTimeout(const int bodyTimeout);
 		void						setMaxBodySize(const int maxBodySize);
@@ -29,6 +30,7 @@ class Location : public AConfig
 		int							getRedirCode(void) const;
 		std::string					getPath(void) const;
 		std::string					getRedirPath(void) const;
+		std::string					getUploadStore() const;
 		std::map<std::string, std::string>	getCgiExtensions(void) const;
 		int							getHeaderTimeout(void) const;
 		int							getBodyTimeout(void) const;
@@ -40,7 +42,6 @@ class Location : public AConfig
 		std::string 				getAllowedMethods(void) const;
 		std::vector<std::string> 	getIndexes(void) const;
 		std::string					getErrorPage(int code) const;
-		std::string					getUploadStore() const;
 
 	private:
 		Location();
@@ -54,9 +55,9 @@ class Location : public AConfig
 		int									_headerTimeout;
 		int									_bodyTimeout;
 		int									_maxBodysize;
-		int									_port; //OPTIM: Location probably doesn't need that
+		int									_port;
 		bool								_autoindex;
-		std::string							_serverName; //OPTIM: Location probably doesn't need that
+		std::string							_serverName;
 		std::string							_root;
 		std::string							_allowedMethods;
 		std::vector<std::string>			_indexes;

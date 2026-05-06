@@ -22,7 +22,7 @@ Location::Location() :
 	return ;
 }
 
-Location::Location(const ServerConfig &serverConfig, const std::string &path) :
+Location::Location(const ServerConfig &serverConfig, const std::string path) :
 	_redireCode(0),
 	_path(path),
 	_redirePath(""),
@@ -58,6 +58,10 @@ void Location::setPath(const std::string path) {
 
 void Location::setRedirePath(const std::string redirePath) {
 	this->_redirePath = redirePath;
+}
+
+void Location::setUploadStore(const std::string UploadDir) {
+	this->_uploadStore = UploadDir;
 }
 
 void Location::addCgiExtension(const std::string extension, const std::string path) {

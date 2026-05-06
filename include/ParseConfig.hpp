@@ -48,13 +48,13 @@ class ParseConfig {
 		void				processErrorPageToken(void);
 		void				processRedirectionToken(void);
 		void				processCgiPassToken(void);
-		void				procesaUploadStoreToken(void);
+		void				processUploadStoreToken(void);
 		//----Static functions----//
 		static int		transformTokenToInt(std::string token);
 		//----Atributes----//
 		std::string											_filename;
 		std::string											_configFile;
-		int													_line;
+		//int													_line;
 		int													_contextLevel;
 		AConfig												*_contextConfig;
 		Http												*_http;
