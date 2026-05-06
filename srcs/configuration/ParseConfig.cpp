@@ -56,11 +56,13 @@ ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *
 	_dictionary["return"] = &ParseConfig::processRedirectionToken;
 	_dictionary["cgi_pass"] = &ParseConfig::processCgiPassToken;
 	_dictionary["upload_store"] = &ParseConfig::processUploadStoreToken;
+	this->_serverConfigs = 0;
 	LOG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
 }
 
 ParseConfig::~ParseConfig() {
 	LOG(C_DSTR << "ParseConfig: Destructor called" << RESET);
+	//TODO: Safely destroy non-null pointers
 }
 
 int	ParseConfig::parsingConfigFile(void) {
@@ -75,7 +77,6 @@ int	ParseConfig::parsingConfigFile(void) {
 	{
 		token = this->getNextToken();
 		if (token.empty()) {
-			std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
 			break;
 		}
 		it = this->_dictionary.find(token);
@@ -94,6 +95,11 @@ int	ParseConfig::parsingConfigFile(void) {
 			return (1);
 		}
 	}
+	if (this->_serverConfigs == 0) {
+		std::cerr << C_RED << "Error: no config file provided" << RESET << std::endl;
+		return (1);
+	}
+	std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
 	return (0);
 }
 
@@ -130,6 +136,7 @@ int		ParseConfig::openFile(void) {
 //- Fix leaks when exception is thrown.
 //- Rename variables with wrong names
 //- Read word by word the config file
+//- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
 
 /**
  * @biref get the next token in the config file and remove it from the file string
@@ -146,8 +153,8 @@ std::string	ParseConfig::getNextToken(void) {
 	this->_line += std::count(this->_configFile.begin(), this->_configFile.begin() + pos, '\n');
 
 	while (1) {
-		if (pos > 0 && this->_configFile[pos - 1] == ' ' && this->_configFile[pos] == '#') { //BUG: if the '#' is on the beginning of the line, this dosent work
-			pos = this->_configFile.find_first_of("\n");
+		if (pos > 0 && (this->_configFile[pos - 1] == ' ' || this->_configFile[pos - 1] == '\n') && this->_configFile[pos] == '#') { //BUG: if the '#' is on the beginning of the line, this dosent work
+			pos = this->_configFile.find_first_of("\n"); //BUG: when we check the '#' character, we dont move "pos"
 			this->_line++;
 			continue ;
 		}
@@ -162,7 +169,7 @@ std::string	ParseConfig::getNextToken(void) {
 	token = this->_configFile.substr(0, pos);
 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
 
-	//LOG(C_PINK << token << RESET);
+	LOG(C_PINK << token << RESET);
 	return (token);
 }
 
