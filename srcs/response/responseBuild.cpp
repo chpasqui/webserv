@@ -204,7 +204,7 @@ void Response::buildCgiResponse(std::string &output)
 		return;
 	}
 	parseCgiHeaders(headerSection);
-	if (!_body.empty() && _headers.find("content-type") == _headers.end())
+	if (!_body.empty() && !_headers.count("content-type"))
 		setError(INTERNAL_SERVER_ERROR);
 	if (_headers.count("status"))
 	{
@@ -214,10 +214,7 @@ void Response::buildCgiResponse(std::string &output)
 	else
 		_statusCode = OK;
 }
-// parse content length, lire le output jusqy' crlfcrclf et parser les header
-// content len saved somewhere
-// sen back only the body of content length sent by the cgi 
-// check that the cgi sends back the correct headers
+
 
 /**
  * @brief Populates _body with a custom or generated error page.
