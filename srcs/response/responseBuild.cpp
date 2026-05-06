@@ -72,7 +72,12 @@ Location *Response::findLocation(const std::string &url)
  */
 std::string Response::buildFileSystemPath(const std::string &url)
 {
-	_remain = url.substr(1);
+	std::cout << "entered the buildFileSystemPath" << std::endl;
+	const std::string& prefix = _loc->getPath();
+	_remain = url.substr(prefix.size());
+	if (!_remain.empty() && _remain[0] == '/')
+		_remain = _remain.substr(1);
+	LOG(std::cout << "prefix='" << prefix << "' remain='" << _remain << "' path='" << _loc->getRoot() + _remain << "'" << std::endl);
 	return _loc->getRoot() + _remain;
 }
 
@@ -208,15 +213,6 @@ void Response::buildCgiResponse(std::string &output)
 	}
 	else
 		_statusCode = OK;
-	// on pourrait faire une petite fonction utils et lutiliser partout ou on a besoin
-	if (!_body.empty())
-	{
-		std::ostringstream ss;
-		ss << _body.size();
-		_headers["content-length"] = ss.str();
-	}
-	std::cout << "the cgi output sent to buildCgiResp is " << output << std::endl;
-	output.clear();
 }
 // parse content length, lire le output jusqy' crlfcrclf et parser les header
 // content len saved somewhere
