@@ -146,6 +146,15 @@ void Response::setSyscallError()
 		setError(INTERNAL_SERVER_ERROR);
 }
 
+void normalizeHeaders(std::string& name){
+		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+		name[0] = toupper(name[0]);
+		for (size_t i = 0; i < name.length(); i++){
+			if (name[i] == '-')
+				name[i + 1] = toupper(name[i + 1]);
+		}
+}
+
 void Response::parseCgiHeaders(std::string &headerSection)
 {
 	std::string line;
@@ -165,7 +174,7 @@ void Response::parseCgiHeaders(std::string &headerSection)
 		std::string name = line.substr(0, colonPos);
 		std::string value = line.substr(colonPos + 1);
 
-		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+		normalizeHeaders(name);
 
 		size_t start = value.find_first_not_of(' ');
 		if (start != std::string::npos)
