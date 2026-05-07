@@ -229,8 +229,23 @@ void Server::writeToClient(int fd)
 {
 	Client &client = *(_clients[fd]);
 	std::string response = client.getResponseStr();
-	send(fd, response.c_str(), response.size(), 0);
-	closeConnection(fd);
+	// Just like the write call, then i will need ot use the offset --> I need to keep the offset in client 
+	ssize_t nbytes = send(fd, response.c_str(), response.size(), 0);
+	if (nbytes < 0)
+	{
+		// handle the error message
+		// if the send system call fails, does that mean that we need to close evryhting and come back to the main loop?
+		return ;
+	}
+	else if (nbytes  > 0)
+	{
+		client.sendoffset += nbytes;
+		if (client.sendoffset >= response.size())
+		{
+			closeConnection(fd);
+			return ;
+		}
+	}
 }
 
 void Server::closeConnection(int fd)
