@@ -90,29 +90,26 @@ void Cgi::executeScript(const Request &request)
 
 	if (pipe(stdoutPipe) == -1)
 		perror("Error: ");
+	if (pipe(stdinPipe) == -1)
+		perror("Error: ");
 
 	if (fcntl(stdoutPipe[READ_END], F_SETFL, O_NONBLOCK) < 0)
 		perror("Error: ");
 
-	if (request.getMethod() == "POST")
-	{
-		if (pipe(stdinPipe) == -1)
-			perror("Error: ");
-		if (fcntl(stdinPipe[WRITE_END], F_SETFL, O_NONBLOCK) < 0)
-			perror("Error: ");
-		if (fcntl(stdinPipe[READ_END], F_SETFL, O_NONBLOCK) < 0) // the read end is also used inside the script
-			perror("Error: ");
-	}
+	if (pipe(stdinPipe) == -1)
+		perror("Error: ");
+	if (fcntl(stdinPipe[WRITE_END], F_SETFL, O_NONBLOCK) < 0)
+		perror("Error: ");
+	if (fcntl(stdinPipe[READ_END], F_SETFL, O_NONBLOCK) < 0) // the read end is also used inside the script
+		perror("Error: ");
 
 	pid_t pid = fork(); //
 	if (pid == 0)
 	{
-		if (request.getMethod() == "POST")
-		{
-			safeClose(stdinPipe[WRITE_END]);
-			dup2(stdinPipe[READ_END], STDIN_FILENO);
-			safeClose(stdinPipe[READ_END]);
-		}
+		safeClose(stdinPipe[WRITE_END]);
+		dup2(stdinPipe[READ_END], STDIN_FILENO);
+		safeClose(stdinPipe[READ_END]);
+
 		safeClose(stdoutPipe[READ_END]);
 		dup2(stdoutPipe[WRITE_END], STDOUT_FILENO);
 		safeClose(stdoutPipe[WRITE_END]);
@@ -122,17 +119,21 @@ void Cgi::executeScript(const Request &request)
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 			std::exit(1);
 	}
+	safeClose(stdinPipe[READ_END]);
 	if (request.getMethod() == "POST")
 	{
-		safeClose(stdinPipe[READ_END]);
 		_stdinWriteEnd = stdinPipe[WRITE_END];
 		std::cout << "POST CASE the stdinwrite end is " << _stdinWriteEnd << std::endl;
 	}
+	else
+		safeClose(stdinPipe[WRITE_END]);
+	
 	safeClose(stdoutPipe[WRITE_END]);
 	_stdoutReadEnd = stdoutPipe[READ_END];
 	std::cout << "ALL CASES the _stdoutReadEnd end is " << _stdoutReadEnd << std::endl;
 	_pid = pid;
 }
+
 
 int Cgi::getStdinWriteEnd() const
 {
