@@ -230,7 +230,7 @@ void Server::writeToClient(int fd)
 	Client &client = *(_clients[fd]);
 	std::string response = client.getResponseStr();
 	// Just like the write call, then i will need ot use the offset --> I need to keep the offset in client 
-	ssize_t nbytes = send(fd, response.c_str(), response.size(), 0);
+	ssize_t nbytes = send(fd, response.c_str() + client.sendoffset, response.size() - client.sendoffset, 0);
 	if (nbytes < 0)
 	{
 		// handle the error message
