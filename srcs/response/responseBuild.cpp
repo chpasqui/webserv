@@ -215,11 +215,11 @@ void Response::buildCgiResponse(const std::string &output)
 		return;
 	}
 	parseCgiHeaders(headerSection);
-	if (!_body.empty() && !_headers.count("content-type"))
+	if (!_body.empty() && !_headers.count("Content-Type"))
 		setError(INTERNAL_SERVER_ERROR);
 	if (_headers.count("status"))
 	{
-		_statusCode = std::atoi(_headers["status"].c_str());
+		_statusCode = std::atoi(_headers["Status"].c_str());
 		_headers.erase("status");
 	}
 	else
