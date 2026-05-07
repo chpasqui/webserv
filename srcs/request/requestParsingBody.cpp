@@ -10,16 +10,16 @@ static bool parseChunkSize(const std::string &body, size_t &pos, long &chunkSize
  * @param body The raw request buffer.
  * @param maxBodySize Maximum allowed body size.
  */
-bool Request::parseBody(const std::string &body, int maxBodySize){
-    
+bool Request::parseBody(const std::string &body){
+
     if (_headers.count("transfer-encoding")){
         if (!unchunkedBody(body))
             return(setError(BAD_REQUEST, "parseBody: unchunked failed"));
         return true ;
     }
     else if (_headers.count("content-length")){
-        if (_contentLength > maxBodySize) 
-            return (setError(PAYLOAD_TOO_LARGE, "parseBody: contentLength too long"));
+        if ((int)body.size() != _contentLength) 
+            return (setError(BAD_REQUEST, "parseBody: bodySize does not correspond to contentLength"));
         _body = body;
         return true ;
     }
