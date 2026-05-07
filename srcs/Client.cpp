@@ -116,7 +116,7 @@ void Client::parseRequest()
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
-		if (!_request->parseBody(_buffer, BUFFERSIZE))
+		if (!_request->parseBody(_buffer))
 		{
 			this->_parsingStatus = COMPLETE;
 			return;

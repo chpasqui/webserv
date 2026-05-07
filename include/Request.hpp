@@ -32,7 +32,7 @@ class Request
 		bool parseRequestLine(const std::string &message);
 		bool parseHeader(const std::string &request);
 		bool validateHeader();
-		bool parseBody(const std::string &request, int maxBodySize);
+		bool parseBody(const std::string &request);
 
 	private:
 		std::string _method;

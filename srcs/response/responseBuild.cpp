@@ -24,6 +24,8 @@ void Response::build(Request &request, const ServerConfig *config)
 		setError(request.getStatusCode());
 		return;
 	}
+	if (request.getContentLength() > _loc->getMaxBodySize())
+		return (setError(PAYLOAD_TOO_LARGE));
 	_internalPath = buildFileSystemPath(request.getPath());
 	if (_loc->getRedirCode() != 0)
 	{
