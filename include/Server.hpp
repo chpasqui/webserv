@@ -11,6 +11,7 @@
 #include "Session.hpp"
 
 extern int serverSignal;
+extern void safeClose(int fd);
 
 // Client lives in server
 // ServerConfig lives in Client
