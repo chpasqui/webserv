@@ -77,40 +77,9 @@ void Server::run()
 					writeToClient(fd);
 				}
 			}
-			if (this->_pipeFd.count(fd) && cgiDead(fd))
-			{
-				Client *client = this->_pipeFd[fd];
-
-				std::cout << "entered the isdone case after the read" << std::endl;
-				client->getResponse()->buildCgiResponse(client->getOutput());
-				if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
-				{
-					closeConnection(this->_pipeFd[fd]->getClientFd());
-					return;
-				}
-				this->_pipeFd.erase(fd);
-				delFromEpoll(_epollFd, fd);
-			}
 		}
 	}
 	std::cout << "signal to stop received" << std::endl;
-}
-
-bool Server::cgiDead(int fd)
-{
-	bool isdone = false;
-	Client *client = this->_pipeFd[fd];
-
-	int status = 0;
-	pid_t pid = client->getCgi()->getPid();
-	pid_t ret = ::waitpid(pid, &status, WNOHANG);
-	std::cout << "pid is " << pid  << "and ret is " << ret << std::endl;
-	if (ret == pid)
-	{
-		std::cout << "HELLOOOO" << std::endl;
-		isdone = true;
-	}
-	return isdone;
 }
 
 
@@ -160,7 +129,6 @@ void Server::readFromClient(int clientFd)
 		Session &session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
 		client.setResponse(session, isNew);
 		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
-		// client.buildResponse(session, isNew);
 		if (client.getResponse()->getCgiStatus() == true)
 		{
 			launchCgi(client);
@@ -182,24 +150,33 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	char buffer[BUFFER_SIZE];
 	ssize_t nbytes = 0;
 	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
-
-	std::cout << "RFP enter" << std::endl;
-	if (nbytes < 0)
-	{
-		// throw an error 
-		// return;
-	}
-	else if (nbytes > 0)
-	{
+	if (nbytes > 0){
 		client->setOutput(client->getOutput().append(buffer, nbytes));
-		//return;
+		return;
 	}
 	else if (nbytes == 0)
 	{
-		std::cout << GREEN << "ENTERED THE BYTES = 0 CASE" << std::endl;
-		return;
+		std::cout << "entered the isdone case after the read" << std::endl;
+		client->getResponse()->buildCgiResponse(client->getOutput());
+		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
+		{
+			closeConnection(client->getClientFd());
+			return;
+		}
+		pid_t pid = client->getCgi()->getPid();
+		waitpid(pid, NULL, 0);
 	}
-	return;
+	else {
+		client->getResponse()->setError(502);
+        if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
+		{
+			closeConnection(client->getClientFd());
+			return;
+		}
+	}
+	delFromEpoll(_epollFd, stdoutPipeReadFd);
+    close(stdoutPipeReadFd);
+    _pipeFd.erase(stdoutPipeReadFd);
 }
 
 void Server::launchCgi(Client &client)
@@ -246,8 +223,6 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 			return;
 		}
 	}
-
-	// 
 }
 
 void Server::writeToClient(int fd)

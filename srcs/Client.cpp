@@ -204,4 +204,6 @@ Client::~Client()
 		delete this->_request;
 	if (this->_response)
 		delete this->_response;
+	if (this->_cgi)
+		delete this->_cgi;
 }

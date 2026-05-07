@@ -48,8 +48,6 @@ class Response {
 		void 		setDefaultHeaders();
 		std::string extractContentType();
 		std::string getReasonPhrase() const;
-
-		void setError(int code);
 		
 	public:
 		Response();
@@ -64,6 +62,7 @@ class Response {
 		void 		buildCgiResponse(const std::string& output);
 		bool		splitOutput(const std::string& output, std::string& headers);
 		void		parseCgiHeaders(std::string& headerSection);
+		void 		setError(int code);
 
 		void serverSessionPage();
 		void handleLogin(Request& request);
