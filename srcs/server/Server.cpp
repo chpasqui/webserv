@@ -88,7 +88,7 @@ bool Server::acceptNewConnection(int listeningFd)
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(client_addr);
 	int clientFd = accept(listeningFd, (struct sockaddr *)&client_addr, &client_len);
-	if (clientFd == -1) // here we did a perror and not a try catch?
+	if (clientFd == -1)
 	{
 		perror("accept error");
 		return false;
@@ -113,8 +113,7 @@ bool Server::acceptNewConnection(int listeningFd)
 // potentially rename to treatClientRequest
 void Server::readFromClient(int clientFd)
 {
-	// check that there is a client
-	Client &client = *(_clients[clientFd]); // _clients[6] will give us the Client class at clientFd = 6
+	Client &client = *(_clients[clientFd]);
 
 	client.parseRequest();
 
@@ -168,15 +167,15 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	}
 	else {
 		client->getResponse()->setError(502);
-        if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
+		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{
 			closeConnection(client->getClientFd());
 			return;
 		}
 	}
 	delFromEpoll(_epollFd, stdoutPipeReadFd);
-    close(stdoutPipeReadFd);
-    _pipeFd.erase(stdoutPipeReadFd);
+	safeClose(stdoutPipeReadFd);
+	_pipeFd.erase(stdoutPipeReadFd);
 }
 
 void Server::launchCgi(Client &client)
@@ -220,6 +219,7 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 		{
 			this->_pipeFd.erase(stdinPipeWriteFd);
 			delFromEpoll(_epollFd,stdinPipeWriteFd);
+			safeClose(stdinPipeWriteFd);
 			return;
 		}
 	}
@@ -251,8 +251,7 @@ void Server::writeToClient(int fd)
 void Server::closeConnection(int fd)
 {
 	delFromEpoll(this->_epollFd, fd);
-	if (close(fd) == -1)
-		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
+	safeClose(fd);
 	if (_clients.count(fd))
 	{
 		delete _clients[fd];
@@ -276,19 +275,15 @@ Server::~Server()
 	std::map<int, Client *>::iterator it = this->_clients.begin();
 	for (; it != this->_clients.end(); ++it)
 	{
-		close(it->first);
+		safeClose(it->first);
 	}
 	_clients.clear();
 
 	std::map<int, const ServerConfig *>::iterator secondIt = this->_listenFds.begin();
 	for (; secondIt != this->_listenFds.end(); ++secondIt)
 	{
-		close(secondIt->first);
+		safeClose(secondIt->first);
 	}
 	_listenFds.clear();
-	if (this->_epollFd != -1)
-	{
-		close(this->_epollFd);
-		this->_epollFd = -1;
-	}
+	safeClose(this->_epollFd);
 }

@@ -109,13 +109,13 @@ void Cgi::executeScript(const Request &request)
 	{
 		if (request.getMethod() == "POST")
 		{
-			close(stdinPipe[WRITE_END]);
+			safeClose(stdinPipe[WRITE_END]);
 			dup2(stdinPipe[READ_END], STDIN_FILENO);
-			close(stdinPipe[READ_END]);
+			safeClose(stdinPipe[READ_END]);
 		}
-		close(stdoutPipe[READ_END]);
+		safeClose(stdoutPipe[READ_END]);
 		dup2(stdoutPipe[WRITE_END], STDOUT_FILENO);
-		close(stdoutPipe[WRITE_END]);
+		safeClose(stdoutPipe[WRITE_END]);
 		std::string executable = parseShebang(this->_fileSystemPath);
 
 		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileSystemPath.c_str()), NULL}; // NULL marks the end of the array
@@ -124,11 +124,11 @@ void Cgi::executeScript(const Request &request)
 	}
 	if (request.getMethod() == "POST")
 	{
-		close(stdinPipe[READ_END]);
+		safeClose(stdinPipe[READ_END]);
 		_stdinWriteEnd = stdinPipe[WRITE_END];
 		std::cout << "POST CASE the stdinwrite end is " << _stdinWriteEnd << std::endl;
 	}
-	close(stdoutPipe[WRITE_END]);
+	safeClose(stdoutPipe[WRITE_END]);
 	_stdoutReadEnd = stdoutPipe[READ_END];
 	std::cout << "ALL CASES the _stdoutReadEnd end is " << _stdoutReadEnd << std::endl;
 	_pid = pid;
