@@ -41,7 +41,8 @@ Client::Client(int fd, const ServerConfig *config) : bodyoffset(0),
 													 _parsingStatus(PARSING_REQUEST_LINE),
 													 _config(config),
 													 _request(new Request()),
-													 _response(NULL)
+													 _response(NULL),
+													_cgi(NULL)
 {
 	time(&(this)->_timestamp);
 }
