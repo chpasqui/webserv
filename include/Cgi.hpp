@@ -28,7 +28,7 @@ class Cgi
 		// Cgi();
 		Cgi();
 		~Cgi();
-		pid_t launch(const std::string &internalPath, const Request &request, const ServerConfig &config);
+		void launch(const std::string &internalPath, const Request &request, const ServerConfig &config);
 		int	getStdinWriteEnd() const;
 		int getStdoutReadEnd() const;
 		int getPid(void) const;
@@ -43,10 +43,10 @@ class Cgi
 
 		int _stdinWriteEnd;
 		int _stdoutReadEnd;
-		// int _pid;
+		int _pid;
 
 		void buildEnv(const Request &request, const ServerConfig &config);
-		pid_t executeScript(const Request &request);
+		void executeScript(const Request &request);
 		void openPipes(int *stdinPipe, int * stdoutPipe);
 };
 

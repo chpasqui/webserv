@@ -23,7 +23,8 @@ Client::Client() :	bodyoffset(0),
 					_parsingStatus(PARSING_REQUEST_LINE),
 					_config(NULL),
 					_request(NULL),
-					_response(NULL)
+					_response(NULL),
+					_cgi(NULL)
 {
 	time(&(this)->_timestamp);
 }
@@ -165,15 +166,25 @@ std::string Client::getResponseStr() const
 	return _response->responseFormat(*_request);
 }
 
-void Client::setPid(pid_t pid)
+Cgi *Client::getCgi(void) const
 {
-	this->_pid = pid;
+	return this->_cgi;
 }
 
-pid_t	Client::getPid(void) const
+void	Client::setCgi(void)
 {
-	return (this->_pid);
+	this->_cgi = new Cgi();
 }
+
+// void Client::setPid(pid_t pid)
+// {
+// 	this->_pid = pid;
+// }
+
+// pid_t	Client::getPid(void) const
+// {
+// 	return (this->_pid);
+// }
 
 int Client::getCgiPipeFd() const
 {
@@ -206,6 +217,6 @@ Client::~Client()
 		delete this->_request;
 	if (this->_response)
 		delete this->_response;
-	// if (this->_cgi)
-	// 	delete this->_cgi;
+	if (this->_cgi)
+		delete this->_cgi;
 }
