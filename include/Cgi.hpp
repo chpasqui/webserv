@@ -27,8 +27,9 @@ class Cgi
 	public:
 		// Cgi();
 		Cgi();
+		Cgi(Response *response, Request *request);
 		~Cgi();
-		void launch(const std::string &internalPath, const Request &request, const ServerConfig &config);
+		void launch(const ServerConfig &config);
 		int	getStdinWriteEnd() const;
 		int getStdoutReadEnd() const;
 		int getPid(void) const;
@@ -45,9 +46,12 @@ class Cgi
 		int _stdoutReadEnd;
 		int _pid;
 
-		void buildEnv(const Request &request, const ServerConfig &config);
-		void executeScript(const Request &request);
+		void buildEnv(const ServerConfig &config);
+		void executeScript();
 		void openPipes(int *stdinPipe, int * stdoutPipe);
+
+		Response *_response;
+		Request *_request;
 };
 
 std::string getHeaderVariable(const std::map<std::string, std::string> &header, const std::string &key);

@@ -40,7 +40,7 @@ class Client
 		void setResponse(Session &session, bool isNew);
 		std::string getResponseStr() const;
 		Cgi *getCgi(void) const;
-		void	setCgi(void);
+		void	setCgi(Response *response, Request *request);
 		// void setPid(pid_t pid);
 		// pid_t	getPid(void) const;
 		int getCgiPipeFd(void) const;

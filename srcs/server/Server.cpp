@@ -146,9 +146,14 @@ void Server::readFromClient(int clientFd)
 
 void Server::launchCgi(Client &client)
 {
-	client.setCgi();
+	client.setCgi(client.getResponse(), client.getRequest());
 	Cgi *cgi = client.getCgi();
-	cgi->launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
+	cgi->launch(*client.getServerConfig());
+	if (errno)
+	{
+		closeConnection(client.getClientFd());
+		return ;
+	}
 	if (cgi->getStdinWriteEnd() != -1)
 	{
 		std::cout << "GET METHPD ENTERED ALERT" << std::endl;
@@ -187,7 +192,13 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 			return;
 		}
 		pid_t pid = client->getCgi()->getPid();
-		waitpid(pid, NULL, 0);
+		int status = 0;
+		waitpid(pid, &status, 0);
+		// if ( ! (WIFEXITED(status) && (WEXITSTATUS(status) == 0)))
+		// {
+		// 	client->getResponse().
+		// close the connection in this case
+		// }
 	}
 	else {
 		client->getResponse()->setError(502);

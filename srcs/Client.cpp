@@ -171,9 +171,9 @@ Cgi *Client::getCgi(void) const
 	return this->_cgi;
 }
 
-void	Client::setCgi(void)
+void	Client::setCgi(Response *response, Request *request)
 {
-	this->_cgi = new Cgi();
+	this->_cgi = new Cgi(response, request);
 }
 
 // void Client::setPid(pid_t pid)
