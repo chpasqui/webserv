@@ -24,22 +24,22 @@
 #define WRITE_END 1
 #define BUFFER_SIZE 1024
 
-Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1), _pid(-1)
+Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1)
 {
 }
 
-void Cgi::launch(const std::string &internalPath, const Request &request, const ServerConfig &config)
+pid_t Cgi::launch(const std::string &internalPath, const Request &request, const ServerConfig &config)
 {
 	std::cout << "internal path received is " << internalPath << std::endl;
 	this->_fileSystemPath = internalPath;
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
 		std::cerr << "access issue" << std::endl;
-		return;
+		return (-1);
 	}
 	std::cout << "no access issue anymore" << std::endl;
 	buildEnv(request, config);
-	executeScript(request);
+	return(executeScript(request));
 }
 
 void Cgi::buildEnv(const Request &request, const ServerConfig &config)
@@ -89,7 +89,7 @@ void	Cgi::openPipes(int *stdinPipe, int * stdoutPipe)
 
 }
 
-void Cgi::executeScript(const Request &request)
+pid_t Cgi::executeScript(const Request &request)
 {
 	int stdoutPipe[2];
 	int stdinPipe[2];
@@ -124,7 +124,7 @@ void Cgi::executeScript(const Request &request)
 	safeClose(stdoutPipe[WRITE_END]);
 	_stdoutReadEnd = stdoutPipe[READ_END];
 	std::cout << "ALL CASES the _stdoutReadEnd end is " << _stdoutReadEnd << std::endl;
-	_pid = pid;
+	return pid;
 }
 
 
@@ -133,10 +133,10 @@ int Cgi::getStdinWriteEnd() const
 	return this->_stdinWriteEnd;
 }
 
-int Cgi::getPid(void) const
-{
-	return this->_pid;
-}
+// int Cgi::getPid(void) const
+// {
+// 	return this->_pid;
+// }
 
 int Cgi::getStdoutReadEnd() const
 {

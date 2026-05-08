@@ -39,8 +39,8 @@ class Client
 		Response *getResponse(void) const;
 		void setResponse(Session &session, bool isNew);
 		std::string getResponseStr() const;
-		void setCgi();
-		Cgi	*getCgi(void) const;
+		void setPid(pid_t pid);
+		pid_t	getPid(void) const;
 		int getCgiPipeFd(void) const;
 		void setCgiPipeFd(int fd);
 		void	setOutput(const std::string& newOutput);
@@ -60,12 +60,14 @@ class Client
 		std::string _buffer;
 		id_t _parsingStatus;
 
+		pid_t _pid;
+
 		time_t _timestamp;
 
 		const ServerConfig *_config;
 		Request *_request;
 		Response *_response;
-		Cgi *_cgi;
 };
 
 #endif
+        
