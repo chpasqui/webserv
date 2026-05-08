@@ -130,6 +130,7 @@ void Server::readFromClient(int clientFd)
 		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
 		if (client.getResponse()->getCgiStatus() == true)
 		{
+			std::cout << "launch cgi entered" << std::endl;
 			launchCgi(client);
 		}
 		else

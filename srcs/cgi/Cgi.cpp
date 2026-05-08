@@ -30,16 +30,6 @@ Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _
 
 void Cgi::launch(const std::string &internalPath, const Request &request, const ServerConfig &config)
 {
-	// std::cout << "entered the launch CGI block " << std::endl;
-	// char cwd[1024];
-	// getcwd(cwd, sizeof(cwd));
-	// std::string absolutePath = std::string(cwd) + "/" + internalPath;
-
-	// if (access(absolutePath.c_str(), X_OK) == -1)
-	// {
-	// 	perror("Error: ");
-	// 	return;
-	// }
 	std::cout << "internal path received is " << internalPath << std::endl;
 	this->_fileSystemPath = internalPath;
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
@@ -92,10 +82,8 @@ void Cgi::executeScript(const Request &request)
 		perror("Error: ");
 	if (pipe(stdinPipe) == -1)
 		perror("Error: ");
-
 	if (fcntl(stdoutPipe[READ_END], F_SETFL, O_NONBLOCK) < 0)
 		perror("Error: ");
-
 	if (pipe(stdinPipe) == -1)
 		perror("Error: ");
 	if (fcntl(stdinPipe[WRITE_END], F_SETFL, O_NONBLOCK) < 0)
@@ -109,7 +97,6 @@ void Cgi::executeScript(const Request &request)
 		safeClose(stdinPipe[WRITE_END]);
 		dup2(stdinPipe[READ_END], STDIN_FILENO);
 		safeClose(stdinPipe[READ_END]);
-
 		safeClose(stdoutPipe[READ_END]);
 		dup2(stdoutPipe[WRITE_END], STDOUT_FILENO);
 		safeClose(stdoutPipe[WRITE_END]);
