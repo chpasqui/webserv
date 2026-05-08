@@ -144,6 +144,33 @@ void Server::readFromClient(int clientFd)
 	}
 }
 
+void Server::launchCgi(Client &client)
+{
+	// client.setCgi();
+	// Cgi *cgi = client.getCgi();
+	Cgi cgi;
+	pid_t tempPid;
+	if ((tempPid = cgi.launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig())) == -1)
+		return ; //WARN: Check this error later !!!
+	client.setPid(tempPid);
+	if (cgi.getStdinWriteEnd() != -1)
+	{
+		std::cout << "GET METHPD ENTERED ALERT" << std::endl;
+		addToEpoll(_epollFd, cgi.getStdinWriteEnd(), EPOLLOUT);
+		this->_pipeFd[cgi.getStdinWriteEnd()] = &client;
+		std::cout << "pipe to be written to is " << cgi.getStdinWriteEnd() << std::endl;
+	}
+	if (cgi.getStdoutReadEnd() != -1)
+	{
+		addToEpoll(_epollFd, cgi.getStdoutReadEnd(), EPOLLIN);
+		this->_pipeFd[cgi.getStdoutReadEnd()] = &client;
+		std::cout << "pipe to be read from " << cgi.getStdoutReadEnd() << std::endl;
+
+	}
+	std::cout << "the stinread end should contain a number " <<  cgi.getStdoutReadEnd() << " and the stdinpipe should be -1: VALUE " <<   cgi.getStdoutReadEnd() << std::endl;
+	return;
+}
+
 void Server::readFromPipe(int stdoutPipeReadFd)
 {
 	Client *client = this->_pipeFd[stdoutPipeReadFd];
@@ -163,7 +190,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 			closeConnection(client->getClientFd());
 			return;
 		}
-		pid_t pid = client->getCgi()->getPid();
+		pid_t pid = client->getPid();
 		waitpid(pid, NULL, 0);
 	}
 	else {
@@ -177,29 +204,6 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	delFromEpoll(_epollFd, stdoutPipeReadFd);
 	safeClose(stdoutPipeReadFd);
 	_pipeFd.erase(stdoutPipeReadFd);
-}
-
-void Server::launchCgi(Client &client)
-{
-	client.setCgi();
-	Cgi *cgi = client.getCgi();
-	cgi->launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
-	if (cgi->getStdinWriteEnd() != -1)
-	{
-		std::cout << "GET METHPD ENTERED ALERT" << std::endl;
-		addToEpoll(_epollFd, cgi->getStdinWriteEnd(), EPOLLOUT);
-		this->_pipeFd[cgi->getStdinWriteEnd()] = &client;
-		std::cout << "pipe to be written to is " << cgi->getStdinWriteEnd() << std::endl;
-	}
-	if (cgi->getStdoutReadEnd() != -1)
-	{
-		addToEpoll(_epollFd, cgi->getStdoutReadEnd(), EPOLLIN);
-		this->_pipeFd[cgi->getStdoutReadEnd()] = &client;
-		std::cout << "pipe to be read from " << cgi->getStdoutReadEnd() << std::endl;
-
-	}
-	std::cout << "the stinread end should contain a number " <<  cgi->getStdoutReadEnd() << " and the stdinpipe should be -1: VALUE " <<   cgi->getStdoutReadEnd() << std::endl;
-	return;
 }
 
 void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
