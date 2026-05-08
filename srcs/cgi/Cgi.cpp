@@ -72,12 +72,8 @@ void Cgi::buildEnv(const Request &request, const ServerConfig &config)
 	this->_finalEnv.push_back(NULL);
 }
 
-void Cgi::executeScript(const Request &request)
+void	Cgi::openPipes(int *stdinPipe, int * stdoutPipe)
 {
-	int stdoutPipe[2];
-	int stdinPipe[2];
-	std::string responseBody;
-
 	if (pipe(stdoutPipe) == -1)
 		perror("Error: ");
 	if (pipe(stdinPipe) == -1)
@@ -91,6 +87,16 @@ void Cgi::executeScript(const Request &request)
 	if (fcntl(stdinPipe[READ_END], F_SETFL, O_NONBLOCK) < 0) // the read end is also used inside the script
 		perror("Error: ");
 
+}
+
+void Cgi::executeScript(const Request &request)
+{
+	int stdoutPipe[2];
+	int stdinPipe[2];
+	std::string responseBody;
+	
+	openPipes(stdinPipe, stdoutPipe);
+	
 	pid_t pid = fork(); //
 	if (pid == 0)
 	{

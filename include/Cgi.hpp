@@ -47,6 +47,7 @@ class Cgi
 
 		void buildEnv(const Request &request, const ServerConfig &config);
 		void executeScript(const Request &request);
+		void openPipes(int *stdinPipe, int * stdoutPipe);
 };
 
 std::string getHeaderVariable(const std::map<std::string, std::string> &header, const std::string &key);
