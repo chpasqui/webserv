@@ -216,10 +216,10 @@ void Response::buildCgiResponse(const std::string &output)
 	parseCgiHeaders(headerSection);
 	if (!_body.empty() && !_headers.count("Content-Type"))
 		setError(INTERNAL_SERVER_ERROR);
-	if (_headers.count("status"))
+	if (_headers.count("Status"))
 	{
 		_statusCode = std::atoi(_headers["Status"].c_str());
-		_headers.erase("status");
+		_headers.erase("Status");
 	}
 	else
 		_statusCode = OK;
