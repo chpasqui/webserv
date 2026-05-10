@@ -43,6 +43,9 @@ void Server::run()
 	while (!serverSignal)
 	{
 		nFd = epoll_wait(this->_epollFd, events, MAX_EVENTS, -1);
+		//check if nFd equals -1 if signals arrived
+		//need to change the timeout of epoll_wait for checks 
+		//timeoutCheck();
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd;
@@ -114,7 +117,7 @@ bool Server::acceptNewConnection(int listeningFd)
 void Server::readFromClient(int clientFd)
 {
 	Client &client = *(_clients[clientFd]);
-
+	//update timestamp for TimeoutCheck
 	client.parseRequest();
 
 	if (client.getParsingStatus() == CLOSEFD)
@@ -251,6 +254,7 @@ void Server::writeToClient(int fd)
 	}
 	else if (nbytes  > 0)
 	{
+		//update timestamp for timeoutCheck
 		client.sendoffset += nbytes;
 		if (client.sendoffset >= response.size())
 		{
