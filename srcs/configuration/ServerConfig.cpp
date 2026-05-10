@@ -38,11 +38,11 @@ ServerConfig::ServerConfig(const Http &http) :
 }
 
 ServerConfig::~ServerConfig(){
-	LOG(C_DSTR << "ServerConfig: Destructor called" << RESET);
 	for (std::vector<Location *>::iterator it = this->_locations.begin(); it != this->_locations.end(); it++)
 		delete (*it);
 	this->_locations.clear();
 	return ;
+	LOG(C_DSTR << "ServerConfig: Destructor called" << RESET);
 }
 
 //----Setter---//

@@ -14,7 +14,7 @@ services:
     build: .
     container_name: webserv_dev
     volumes:
-      - ../:/webserv          # mounts your local folder into /webserv
+      - .:/webserv          # mounts your local folder into /webserv
     ports:
       - "8080:8080"         # adjust to your webserv port(s)
       - "8081:8081"

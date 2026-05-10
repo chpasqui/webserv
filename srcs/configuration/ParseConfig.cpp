@@ -57,7 +57,6 @@ ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *
 	_dictionary["return"] = &ParseConfig::processRedirectionToken;
 	_dictionary["cgi_pass"] = &ParseConfig::processCgiPassToken;
 	_dictionary["upload_store"] = &ParseConfig::processUploadStoreToken;
-	this->_serverConfigs = 0;
 	LOG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
 }
 
@@ -76,10 +75,8 @@ int	ParseConfig::parsingConfigFile(void) {
 
 	while (true)
 	{
-		token = this->getNextToken();
-		if (token.empty()) {
+		if (!this->getNextToken(token))
 			break;
-		}
 		it = this->_dictionary.find(token);
 		if (it == this->_dictionary.end()) {
 			std::cerr << C_RED << token << ": Unknow token on line: " << this->_line << RESET  << std::endl;
@@ -134,6 +131,7 @@ int		ParseConfig::openFile(void) {
 //- Read word by word the config file
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
 //- remove the setPath function in location
+//- add default index.html if no one is provided
 
 /**
  * @biref get the next token in the config file and remove it from the file string
@@ -142,9 +140,13 @@ int		ParseConfig::openFile(void) {
 int ParseConfig::getNextToken(std::string &token) {
 	std::string::iterator it;
 	this->_configFile >> token;
+	if (this->_configFile.eof() || this->_configFile.fail())
+		return (0);
 	
 	if (*(token.begin()) == '#')
 		this->_configFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	LOG(C_PINK << "Token: " << token << RESET);
+	return (1);
 }
 // std::string	ParseConfig::getNextToken(void) {
 // 	std::string					token;
@@ -232,7 +234,7 @@ void	ParseConfig::processServerToken(void) {
 		throw (std::invalid_argument("fail to get a token"));
 	if (nextToken != "{" || this->_contextLevel != HTTP || this->_currentConfig)
 		throw (std::runtime_error("Unexcepted token after \"server\""));
-	this->_serverConfigs->push_back(new ServerConfig(*(this)->_http));
+	this->_serverConfigs->push_back(new ServerConfig( *(this)->_http));
 	this->_currentConfig = *(this)->_serverConfigs->rbegin();
 	this->_contextConfig = this->_currentConfig;
 	this->_contextLevel = SERVER;
@@ -429,7 +431,7 @@ void	ParseConfig::processUploadStoreToken(void) {
  * @param the token you want to convert
  * @return the converted int or -1 if an error occurs 
  */
-int	ParseConfig::transformTokenToInt(std::string token) {
+int	ParseConfig::transformTokenToInt(std::string token) { //OPTIM: Use std::stringstream to get ints
 	int					nb;
 	std::stringstream	ss(token);
 	
