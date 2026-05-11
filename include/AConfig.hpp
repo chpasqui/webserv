@@ -11,7 +11,6 @@ class AConfig
 
 		//----Setter----//
 		virtual void						setRedireCode(const int redireCode);
-		virtual void						setPath(const std::string path);
 		virtual void						setRedirePath(const std::string redirePath);
 		virtual void						setUploadStore(const std::string dir);
 		virtual void						addCgiExtension(const std::string extension, const std::string path);

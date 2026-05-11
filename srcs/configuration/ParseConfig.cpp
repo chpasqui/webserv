@@ -131,15 +131,15 @@ int		ParseConfig::openFile(void) {
 //TODO:
 //- Add a default location if no one is given. OK
 //- Ignore the end ligne with " #". OK
-//- Add a line number for errors.
+//- Add a line number for errors. : Use a ss to get the line, and overload getNextToken() to take int
 //- Display a better error message.
 //- check if the file end with ".conf". OK
-//- Fix leaks when exception is thrown. OK
+//- Fix leaks when exception is thrown. Still some leaks
 //- Rename variables with wrong names
 //- Read word by word the config file OK
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
-//- remove the setPath function in location
-//- add default index.html if no one is provided
+//- remove the setPath function in location OK
+//- add default index.html if no one is provided OK
 
 /**
  * @biref get the next token in the config file and remove it from the file string

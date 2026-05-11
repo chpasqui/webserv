@@ -52,10 +52,6 @@ void Location::setRedireCode(const int redireCode) {
 	_redireCode = redireCode;
 }
 
-void Location::setPath(const std::string path) {
-	_path = path;
-}
-
 void Location::setRedirePath(const std::string redirePath) {
 	_redirePath = redirePath;
 }
