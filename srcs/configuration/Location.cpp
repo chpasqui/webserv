@@ -49,109 +49,109 @@ Location::~Location() {
 //----Setter----//
 
 void Location::setRedireCode(const int redireCode) {
-	this->_redireCode = redireCode;
+	_redireCode = redireCode;
 }
 
 void Location::setPath(const std::string path) {
-	this->_path = path;
+	_path = path;
 }
 
 void Location::setRedirePath(const std::string redirePath) {
-	this->_redirePath = redirePath;
+	_redirePath = redirePath;
 }
 
 void Location::setUploadStore(const std::string UploadDir) {
-	this->_uploadStore = UploadDir;
+	_uploadStore = UploadDir;
 }
 
 void Location::addCgiExtension(const std::string extension, const std::string path) {
-	this->_cgiExtensions.insert(std::map<std::string, std::string>::value_type(extension, path));
+	_cgiExtensions.insert(std::map<std::string, std::string>::value_type(extension, path));
 }
 
 void Location::setBodyTimeout(const int bodyTimeout) {
-	this->_bodyTimeout = bodyTimeout;
+	_bodyTimeout = bodyTimeout;
 }
 
 void Location::setMaxBodySize(const int maxBodySize) {
-	this->_maxBodysize = maxBodySize;
+	_maxBodysize = maxBodySize;
 }
 
 void Location::setAutoindex(const bool autoindex) {
-	this->_autoindex = autoindex;
+	_autoindex = autoindex;
 }
 
 void Location::setRoot(const std::string root) {
-	this->_root = root;
+	_root = root;
 }
 
 void Location::setAllowedMethods(const std::string allowedMethods) {
-	this->_allowedMethods = allowedMethods;
+	_allowedMethods = allowedMethods;
 }
 
 void Location::addIndex(const std::string index) {
-	this->_indexes.push_back(index);
+	_indexes.push_back(index);
 }
 
 void Location::addErrorPage(const int code, const std::string page) {
-	this->_errorPages.insert(std::map<int, std::string>::value_type(code, page));
+	_errorPages.insert(std::map<int, std::string>::value_type(code, page));
 }
 
 //----Getter----//
 
 int Location::getRedirCode(void) const {
-	return (this->_redireCode);
+	return (_redireCode);
 }
 
 std::string Location::getPath(void) const {
-	return (this->_path);
+	return (_path);
 }
 
 std::string Location::getRedirPath(void) const {
-	return (this->_redirePath);
+	return (_redirePath);
 }
 
 std::map<std::string, std::string> Location::getCgiExtensions(void) const {
-	return (this->_cgiExtensions);
+	return (_cgiExtensions);
 }
 
 int Location::getHeaderTimeout(void) const {
-	return (this->_headerTimeout);
+	return (_headerTimeout);
 }
 
 int Location::getBodyTimeout(void) const {
-	return (this->_bodyTimeout);
+	return (_bodyTimeout);
 }
 
 int Location::getMaxBodySize(void) const {
-	return (this->_maxBodysize);
+	return (_maxBodysize);
 }
 
 int Location::getPort(void) const {
-	return (this->_port);
+	return (_port);
 }
 
 bool Location::getAutoIndex(void) const {
-	return (this->_autoindex);
+	return (_autoindex);
 }
 
 std::string Location::getServerName(void) const {
-	return (this->_serverName);
+	return (_serverName);
 }
 
 std::string Location::getRoot(void) const {
-	return (this->_root);
+	return (_root);
 }
 
 std::string Location::getAllowedMethods(void) const {
-	return (this->_allowedMethods);
+	return (_allowedMethods);
 }
 
 std::vector<std::string> Location::getIndexes(void) const {
-	return (this->_indexes);
+	return (_indexes);
 }
 
 std::string Location::getUploadStore() const{
-	return (this->_uploadStore);
+	return (_uploadStore);
 }
 
 std::string Location::getErrorPage(int code) const

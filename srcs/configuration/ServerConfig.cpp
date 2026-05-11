@@ -38,9 +38,9 @@ ServerConfig::ServerConfig(const Http &http) :
 }
 
 ServerConfig::~ServerConfig(){
-	for (std::vector<Location *>::iterator it = this->_locations.begin(); it != this->_locations.end(); it++)
+	for (std::vector<Location *>::iterator it = _locations.begin(); it != _locations.end(); it++)
 		delete (*it);
-	this->_locations.clear();
+	_locations.clear();
 	return ;
 	LOG(C_DSTR << "ServerConfig: Destructor called" << RESET);
 }
@@ -48,93 +48,93 @@ ServerConfig::~ServerConfig(){
 //----Setter---//
 
 void ServerConfig::setPort(const int port) {
-	this->_port = port;
+	_port = port;
 }
 
 void ServerConfig::setServerName(const std::string serverName) {
-	this->_serverName = serverName;
+	_serverName = serverName;
 }
 
 void ServerConfig::addLocation(Location *location) {
-	this->_locations.push_back(location);
+	_locations.push_back(location);
 }
 
 void ServerConfig::setHeaderTimeout(int headerTimeout) {
-	this->_headerTimeout = headerTimeout;
+	_headerTimeout = headerTimeout;
 }
 
 void ServerConfig::setBodyTimeout(int bodyTimeout) {
-	this->_bodyTimeout = bodyTimeout;
+	_bodyTimeout = bodyTimeout;
 }
 
 void ServerConfig::setMaxBodySize(int maxBodySize) {
-	this->_maxBodysize = maxBodySize;
+	_maxBodysize = maxBodySize;
 }
 
 void ServerConfig::setAutoindex(bool autoindex) {
-	this->_autoindex = autoindex;
+	_autoindex = autoindex;
 }
 
 void ServerConfig::setRoot(const std::string route) {
-	this->_root = route;
+	_root = route;
 }
 
 void ServerConfig::setAllowedMethods(const std::string allowedMethods) {
-	this->_allowedMethods = allowedMethods;
+	_allowedMethods = allowedMethods;
 }
 
 void ServerConfig::addIndex(const std::string index) {
-	this->_indexes.push_back(index);
+	_indexes.push_back(index);
 }
 
 std::map<int, std::string> ServerConfig::getErrorPages(void) const
 {
-	return (this->_errorPages);
+	return (_errorPages);
 }
 
 //----Getter----//
 
 int	ServerConfig::getPort(void) const {
-	return (this->_port);
+	return (_port);
 }
 
 std::string ServerConfig::getServerName(void) const {
-	return (this->_serverName);
+	return (_serverName);
 }
 
 std::vector<Location *> ServerConfig::getLocations(void) const {
-	return (this->_locations);
+	return (_locations);
 }
 
 int ServerConfig::getHeaderTimeout(void) const {
-	return (this->_headerTimeout);
+	return (_headerTimeout);
 }
 
 int ServerConfig::getBodyTimeout(void) const {
-	return (this->_bodyTimeout);
+	return (_bodyTimeout);
 }
 
 int ServerConfig::getMaxBodySize(void) const {
-	return (this->_maxBodysize);
+	return (_maxBodysize);
 }
 
 bool ServerConfig::getAutoindex(void) const {
-	return (this->_autoindex);
+	return (_autoindex);
 }
 
 std::string ServerConfig::getRoute(void) const {
-	return (this->_root);
+	return (_root);
 }
 
 std::string ServerConfig::getAllowedMethods(void) const {
-	return (this->_allowedMethods);
+	return (_allowedMethods);
 }
 
 std::vector<std::string> ServerConfig::getIndexes(void) const {
-	return (this->_indexes);
+	return (_indexes);
 }
 
 void ServerConfig::addErrorPage(int code, std::string page) {
-	this->_errorPages.insert(std::map<int, std::string>::value_type(code, page));
+	_errorPages.insert(std::map<int, std::string>::value_type(code, page));
 }
 

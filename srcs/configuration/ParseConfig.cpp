@@ -70,16 +70,16 @@ int	ParseConfig::parsingConfigFile(void) {
 	std::map<std::string, void (ParseConfig::*)(void)>::iterator	it;
 
 	errno = 0;
-	if (this->openFile() != 0)
+	if (openFile() != 0)
 		return (1);
 
 	while (true)
 	{
-		if (!this->getNextToken(token))
+		if (!getNextToken(token))
 			break;
-		it = this->_dictionary.find(token);
-		if (it == this->_dictionary.end()) {
-			std::cerr << C_RED << token << ": Unknow token on line: " << this->_line << RESET  << std::endl;
+		it = _dictionary.find(token);
+		if (it == _dictionary.end()) {
+			std::cerr << C_RED << token << ": Unknow token on line: " << _line << RESET  << std::endl;
 			return (1);
 		}
 		
@@ -87,13 +87,13 @@ int	ParseConfig::parsingConfigFile(void) {
 			(this->*it->second)();
 		}
 		catch (std::exception &e) {
-			std::cerr << C_RED << e.what() << "on line: " << this->_line << RESET << std::endl;
-			delete this->_http; //FIX: Potential leak if the exception is thrown
+			std::cerr << C_RED << e.what() << "on line: " << _line << RESET << std::endl;
+			delete _http; //FIX: Potential leak if the exception is thrown
 			//TODO: free serverConfigsVector
 			return (1);
 		}
 	}
-	if (this->_serverConfigs == 0) {
+	if (_serverConfigs == 0) {
 		std::cerr << C_RED << "Error: no config file provided" << RESET << std::endl;
 		return (1);
 	}
@@ -106,14 +106,14 @@ int		ParseConfig::openFile(void) {
 	std::string::iterator	it;
 
 	errno = 0;
-	if (this->_filename.size() <= FILENAME_EXT_SIZE || this->_filename.compare(this->_filename.size() - FILENAME_EXT_SIZE, FILENAME_EXT_SIZE, FILENAME_EXT)) {
+	if (_filename.size() <= FILENAME_EXT_SIZE || _filename.compare(_filename.size() - FILENAME_EXT_SIZE, FILENAME_EXT_SIZE, FILENAME_EXT)) {
 		std::cerr << C_RED << "invalid extension, you're filename need to end with: \"" << FILENAME_EXT << "\"" << RESET << std::endl;
 		return (1);
 	}
 
-	this->_configFile.open(this->_filename.c_str());
-	if (!this->_configFile.is_open()) {
-		std::cerr << C_RED << "Unable to open the file " << this->_filename << " :" << strerror(errno) << RESET << std::endl;
+	_configFile.open(_filename.c_str());
+	if (!_configFile.is_open()) {
+		std::cerr << C_RED << "Unable to open the file " << _filename << " :" << strerror(errno) << RESET << std::endl;
 		return (errno);
 	}
 	
@@ -139,12 +139,12 @@ int		ParseConfig::openFile(void) {
  */
 int ParseConfig::getNextToken(std::string &token) {
 	std::string::iterator it;
-	this->_configFile >> token;
-	if (this->_configFile.eof() || this->_configFile.fail())
+	_configFile >> token;
+	if (_configFile.eof() || _configFile.fail())
 		return (0);
 	
 	if (*(token.begin()) == '#')
-		this->_configFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		_configFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	LOG(C_PINK << "Token: " << token << RESET);
 	return (1);
 }
@@ -152,10 +152,10 @@ int ParseConfig::getNextToken(std::string &token) {
 bool	ParseConfig::thereIsDefaultLocation(void) const {
 	std::vector<Location*> locations;
 
-	if (!this->_currentConfig)
+	if (!_currentConfig)
 		throw (std::logic_error("No server config to check for default location"));
 
-	locations = this->_currentConfig->getLocations();
+	locations = _currentConfig->getLocations();
 	for (std::vector<Location *>::iterator it = locations.begin(); locations.end() != it; it++) {
 		if ((*it)->getPath() == "/")
 			return (true);
@@ -164,38 +164,38 @@ bool	ParseConfig::thereIsDefaultLocation(void) const {
 }
 
 bool	ParseConfig::thereIsIndex(void) const {
-	if (!this->_location)
+	if (!_location)
 		throw (std::logic_error("No location to check for index"));
 
-	if (this->_location->getIndexes().empty())
+	if (_location->getIndexes().empty())
 		return (false);
 	return (true);
 }
 
 void	ParseConfig::processEndBraquetToken(void) {
-	switch (this->_contextLevel) {
+	switch (_contextLevel) {
 		case HTTP:
-			delete (this->_http);
-			this->_http = 0;
+			delete (_http);
+			_http = 0;
 			break;
 		case SERVER:
-			if (!this->thereIsDefaultLocation()) {
+			if (!thereIsDefaultLocation()) {
 				LOG(C_PINK << "No default location found, create one" << RESET);
-				this->_currentConfig->addLocation(new Location(*(this)->_currentConfig, "/"));
+				_currentConfig->addLocation(new Location(*_currentConfig, "/"));
 			}
-			this->_currentConfig = 0;
+			_currentConfig = 0;
 			break;
 		case LOCATION:
-			if (!this->thereIsIndex()) {
-				LOG(C_PINK << "No index found for location " << this->_location->getPath() << ", add default index \"index.html\"" << RESET);
-				this->_location->addIndex("index.html");
+			if (!thereIsIndex()) {
+				LOG(C_PINK << "No index found for location " << _location->getPath() << ", add default index \"index.html\"" << RESET);
+				_location->addIndex("index.html");
 			}
-			this->_location = 0;
+			_location = 0;
 			break;
 		default:
-			throw std::runtime_error("Unexcepted token \"}\"";
+			throw std::runtime_error("Unexcepted token \"}\"");
 	}
-	this->_contextLevel -= 1;
+	_contextLevel -= 1;
 }
 
 void	ParseConfig::processTokenHttp(void) {
@@ -203,11 +203,11 @@ void	ParseConfig::processTokenHttp(void) {
 
 	if (!getNextToken(braquet))
 		throw (std::invalid_argument("fail to get a token"));
-	if (braquet != "{" || this->_contextLevel != NONE || this->_http)
+	if (braquet != "{" || _contextLevel != NONE || _http)
 		throw (std::runtime_error("Unexcepted token after \"http\""));
-	this->_http = new Http();
-	this->_contextConfig = this->_http;
-	this->_contextLevel = HTTP;
+	_http = new Http();
+	_contextConfig = _http;
+	_contextLevel = HTTP;
 	}
 
 void	ParseConfig::processServerToken(void) {
@@ -215,12 +215,12 @@ void	ParseConfig::processServerToken(void) {
 
 	if (!getNextToken(nextToken))
 		throw (std::invalid_argument("fail to get a token"));
-	if (nextToken != "{" || this->_contextLevel != HTTP || this->_currentConfig)
+	if (nextToken != "{" || _contextLevel != HTTP || _currentConfig)
 		throw (std::runtime_error("Unexcepted token after \"server\""));
-	this->_serverConfigs->push_back(new ServerConfig( *(this)->_http));
-	this->_currentConfig = *(this)->_serverConfigs->rbegin();
-	this->_contextConfig = this->_currentConfig;
-	this->_contextLevel = SERVER;
+	_serverConfigs->push_back(new ServerConfig( *_http));
+	_currentConfig = *_serverConfigs->rbegin();
+	_contextConfig = _currentConfig;
+	_contextLevel = SERVER;
 }
 
 void	ParseConfig::processLocationToken(void) {
@@ -229,17 +229,17 @@ void	ParseConfig::processLocationToken(void) {
 
 	if (!getNextToken(path) || !getNextToken(braquet))
 		throw (std::invalid_argument("fail to get a token"));
-	if (this->_location)
+	if (_location)
 		throw std::runtime_error("Nested location is not allowed");
 
-	this->_location = new Location(*(this)->_currentConfig, path);
-	this->_contextConfig = this->_location;
+	_location = new Location(*_currentConfig, path);
+	_contextConfig = _location;
 	
-	if (braquet != "{" || this->_contextLevel!= SERVER)
+	if (braquet != "{" || _contextLevel!= SERVER)
 		throw std::runtime_error("Unexcepted token after \"Location\"");
 
-	this->_contextLevel = LOCATION;
-	this->_currentConfig->addLocation(this->_location);
+	_contextLevel = LOCATION;
+	_currentConfig->addLocation(_location);
 }
 
 /**
@@ -253,7 +253,7 @@ void	ParseConfig::processHeaderTimeoutToken(void) {
 		throw (std::invalid_argument("fail to get a token"));
 	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
 		return ;
-	this->_contextConfig->setHeaderTimeout(timeout);
+	_contextConfig->setHeaderTimeout(timeout);
 }
 
 /**
@@ -268,7 +268,7 @@ void	ParseConfig::processBodyTimeoutToken(void) {
 		throw (std::invalid_argument("fail to get a token"));
 	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
 		return ;
-	this->_contextConfig->setBodyTimeout(timeout);
+	_contextConfig->setBodyTimeout(timeout);
 	return ;
 }
 
@@ -283,7 +283,7 @@ void	ParseConfig::processMaxBodySizeToken(void) {
 		throw (std::invalid_argument("fail to get a token"));
 	if ((maxBodySize = ParseConfig::transformTokenToInt(nextToken)) == -1) //FIX: need to mutiplie this later
 		return ;
-	this->_contextConfig->setMaxBodySize(maxBodySize);
+	_contextConfig->setMaxBodySize(maxBodySize);
 }
 
 /**
@@ -294,7 +294,7 @@ void	ParseConfig::processRootToken(void) {
 
 	if (!getNextToken(nextToken))
 		throw (std::invalid_argument("fail to get a token"));
-	this->_contextConfig->setRoot(nextToken);
+	_contextConfig->setRoot(nextToken);
 	return;
 }
 
@@ -307,14 +307,14 @@ void	ParseConfig::processListenToken(void) {
 
 	if (!getNextToken(nextToken))
 		throw (std::invalid_argument("fail to get a token"));
-	if (this->_contextLevel != SERVER)
+	if (_contextLevel != SERVER)
 	{
 		std::cerr << C_RED << "Using token \"listen\" in wrong context" << RESET << std::endl;
 		return;
 	}
 	if ((port = ParseConfig::transformTokenToInt(nextToken)) == -1)
 		return;
-	this->_contextConfig->setPort(port);
+	_contextConfig->setPort(port);
 	return;
 }
 
@@ -328,9 +328,9 @@ void	ParseConfig::processAutoindexToken(void) {
 	if (!getNextToken(value))
 		throw (std::invalid_argument("fail to get a token"));
 	if (value == "on")
-		this->_contextConfig->setAutoindex(true);
+		_contextConfig->setAutoindex(true);
 	else if (value == "off")
-		this->_contextConfig->setAutoindex(false);
+		_contextConfig->setAutoindex(false);
 	else
 		throw std::runtime_error("value " + value + " unrecognized after autoindex");
 	return;
@@ -347,7 +347,7 @@ void	ParseConfig::processErrorPageToken(void) {
 		throw (std::invalid_argument("fail to get a token"));
 
 	code = ParseConfig::transformTokenToInt(codeToken);
-	this->_contextConfig->addErrorPage(code, pageToken);
+	_contextConfig->addErrorPage(code, pageToken);
 }
 
 /**
@@ -358,7 +358,7 @@ void	ParseConfig::processServerNameToken(void) {
 
 	if (!getNextToken(serverName))
 		throw (std::invalid_argument("fail to get a token"));
-	this->_contextConfig->setServerName(serverName);
+	_contextConfig->setServerName(serverName);
 }
 
 
@@ -367,7 +367,7 @@ void	ParseConfig::processAllowedMethodsToken(void) {
 
 	if (!getNextToken(allowedMethods))
 		throw (std::invalid_argument("fail to get a token"));
-	this->_contextConfig->setAllowedMethods(allowedMethods);
+	_contextConfig->setAllowedMethods(allowedMethods);
 }
 
 void	ParseConfig::processIndexToken(void) {
@@ -375,7 +375,7 @@ void	ParseConfig::processIndexToken(void) {
 
 	if (!getNextToken(index))
 		throw (std::invalid_argument("fail to get a token"));
-	this->_contextConfig->addIndex(index);
+	_contextConfig->addIndex(index);
 }
 
 void	ParseConfig::processRedirectionToken(void) {
@@ -386,8 +386,8 @@ void	ParseConfig::processRedirectionToken(void) {
 	if (!getNextToken(codeToken) || !getNextToken(redirectionPath))
 		throw (std::invalid_argument("fail to get a token"));
 	code = ParseConfig::transformTokenToInt(codeToken);
-	this->_contextConfig->setRedireCode(code);
-	this->_contextConfig->setRedirePath(redirectionPath);
+	_contextConfig->setRedireCode(code);
+	_contextConfig->setRedirePath(redirectionPath);
 }
 
 void	ParseConfig::processCgiPassToken(void) {
@@ -398,7 +398,7 @@ void	ParseConfig::processCgiPassToken(void) {
 		throw (std::invalid_argument("fail to get a token"));
 	if (*(extension.begin()) != '.')
 		throw (std::invalid_argument("an extension need to start with a point"));
-	this->_contextConfig->addCgiExtension(extension, path);
+	_contextConfig->addCgiExtension(extension, path);
 }
 
 void	ParseConfig::processUploadStoreToken(void) {
@@ -406,7 +406,7 @@ void	ParseConfig::processUploadStoreToken(void) {
 
 	if (!getNextToken(uploadStorePath))
 		throw (std::invalid_argument("fail to get a token"));
-	this->_contextConfig->setUploadStore(uploadStorePath);
+	_contextConfig->setUploadStore(uploadStorePath);
 }
 
 /**
