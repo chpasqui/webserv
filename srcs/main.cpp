@@ -23,9 +23,6 @@ int main(int ac, char **av) {
 	if (pc.parsingConfigFile() == 1)
 		return (1);
 
-	ServerConfig *serverconfig = *(configs.begin());
-	std::vector<Location *> locations = serverconfig->getLocations();
-
 	Server server;
 
 	try {

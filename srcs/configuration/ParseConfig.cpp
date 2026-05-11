@@ -61,8 +61,13 @@ ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *
 }
 
 ParseConfig::~ParseConfig() {
+	if (_http)
+		delete (_http);
+	if (_currentConfig)
+		delete (_currentConfig);
+	if (_location)
+		delete (_location);
 	LOG(C_DSTR << "ParseConfig: Destructor called" << RESET);
-	//TODO: Safely destroy non-null pointers
 }
 
 int	ParseConfig::parsingConfigFile(void) {
@@ -88,8 +93,11 @@ int	ParseConfig::parsingConfigFile(void) {
 		}
 		catch (std::exception &e) {
 			std::cerr << C_RED << e.what() << "on line: " << _line << RESET << std::endl;
-			delete _http; //FIX: Potential leak if the exception is thrown
-			//TODO: free serverConfigsVector
+			if (_serverConfigs && !_serverConfigs->empty()) {
+				for (std::vector<ServerConfig *>::iterator it = _serverConfigs->begin(); it != _serverConfigs->end(); it++)
+						delete *it;
+				_currentConfig = 0;
+			}
 			return (1);
 		}
 	}
@@ -121,12 +129,12 @@ int		ParseConfig::openFile(void) {
 }
 
 //TODO:
-//- Add a default location if no onne is given. OK
+//- Add a default location if no one is given. OK
 //- Ignore the end ligne with " #". OK
 //- Add a line number for errors.
 //- Display a better error message.
 //- check if the file end with ".conf". OK
-//- Fix leaks when exception is thrown.
+//- Fix leaks when exception is thrown. OK
 //- Rename variables with wrong names
 //- Read word by word the config file OK
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
@@ -143,8 +151,11 @@ int ParseConfig::getNextToken(std::string &token) {
 	if (_configFile.eof() || _configFile.fail())
 		return (0);
 	
-	if (*(token.begin()) == '#')
+	if (*(token.begin()) == '#') {
+		LOG(C_PINK << "character # encounter, ignore line");
 		_configFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		_configFile >> token;
+	}
 	LOG(C_PINK << "Token: " << token << RESET);
 	return (1);
 }
@@ -232,12 +243,11 @@ void	ParseConfig::processLocationToken(void) {
 	if (_location)
 		throw std::runtime_error("Nested location is not allowed");
 
-	_location = new Location(*_currentConfig, path);
-	_contextConfig = _location;
-	
-	if (braquet != "{" || _contextLevel!= SERVER)
+	if (braquet != "{" || _contextLevel!= SERVER || _currentConfig)
 		throw std::runtime_error("Unexcepted token after \"Location\"");
 
+	_location = new Location(*_currentConfig, path);
+	_contextConfig = _location;
 	_contextLevel = LOCATION;
 	_currentConfig->addLocation(_location);
 }

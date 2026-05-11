@@ -63,7 +63,7 @@ class ParseConfig {
 		Http												*_http;
 		ServerConfig										*_currentConfig;
 		Location											*_location;
-		std::vector<ServerConfig*>							*_serverConfigs; //OPTIM: We really need to save that here ?
+		std::vector<ServerConfig*>							*_serverConfigs;
 		std::map<std::string, void (ParseConfig::*)(void)>	_dictionary;
 };
 
