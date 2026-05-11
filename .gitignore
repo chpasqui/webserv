@@ -41,6 +41,7 @@
 *.hex
 *.txt
 core
+vgcore*
 webserv
 
 # Debug files
