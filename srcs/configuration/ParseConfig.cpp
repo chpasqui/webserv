@@ -128,7 +128,7 @@ int		ParseConfig::openFile(void) {
 //- check if the file end with ".conf". OK
 //- Fix leaks when exception is thrown.
 //- Rename variables with wrong names
-//- Read word by word the config file
+//- Read word by word the config file OK
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
 //- remove the setPath function in location
 //- add default index.html if no one is provided
@@ -148,49 +148,28 @@ int ParseConfig::getNextToken(std::string &token) {
 	LOG(C_PINK << "Token: " << token << RESET);
 	return (1);
 }
-// std::string	ParseConfig::getNextToken(void) {
-// 	std::string					token;
-// 	std::vector<ServerConfig *>	servers;
-// 	size_t						pos;
-//
-// 	pos = this->_configFile.find_first_not_of(" \n\r\t\v\f");
-// 	if (pos == std::string::npos)
-// 		return ("");
-// 	this->_line += std::count(this->_configFile.begin(), this->_configFile.begin() + pos, '\n');
-//
-// 	while (1) {
-// 		if (pos > 0 && (this->_configFile[pos - 1] == ' ' || this->_configFile[pos - 1] == '\n') && this->_configFile[pos] == '#') { //BUG: if the '#' is on the beginning of the line, this dosent work
-// 			pos = this->_configFile.find_first_of("\n"); //BUG: when we check the '#' character, we dont move "pos"
-// 			this->_line++;
-// 			continue ;
-// 		}
-// 		break ;
-// 	}
-//
-// 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
-// 	pos = this->_configFile.find_first_of(" \n\r\t\v\f");
-// 	if (pos == std::string::npos)
-// 		return ("");
-//
-// 	token = this->_configFile.substr(0, pos);
-// 	this->_configFile.erase(this->_configFile.begin(), this->_configFile.begin() + pos);
-//
-// 	LOG(C_PINK << "Token read: " << token << RESET);
-// 	return (token);
-// }
 
 bool	ParseConfig::thereIsDefaultLocation(void) const {
 	std::vector<Location*> locations;
 
-	if (!this->_serverConfigs)
+	if (!this->_currentConfig)
 		throw (std::logic_error("No server config to check for default location"));
 
-	locations = this->_currentConfig->getLocations(); //OPTIM: Rebuild location: can we use a reference or pointer ?
+	locations = this->_currentConfig->getLocations();
 	for (std::vector<Location *>::iterator it = locations.begin(); locations.end() != it; it++) {
 		if ((*it)->getPath() == "/")
 			return (true);
 	}
 	return (false);
+}
+
+bool	ParseConfig::thereIsIndex(void) const {
+	if (!this->_location)
+		throw (std::logic_error("No location to check for index"));
+
+	if (this->_location->getIndexes().empty())
+		return (false);
+	return (true);
 }
 
 void	ParseConfig::processEndBraquetToken(void) {
@@ -207,10 +186,14 @@ void	ParseConfig::processEndBraquetToken(void) {
 			this->_currentConfig = 0;
 			break;
 		case LOCATION:
+			if (!this->thereIsIndex()) {
+				LOG(C_PINK << "No index found for location " << this->_location->getPath() << ", add default index \"index.html\"" << RESET);
+				this->_location->addIndex("index.html");
+			}
 			this->_location = 0;
 			break;
 		default:
-			throw std::runtime_error("Unexcepted token \"}\"");
+			throw std::runtime_error("Unexcepted token \"}\"";
 	}
 	this->_contextLevel -= 1;
 }

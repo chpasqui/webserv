@@ -33,6 +33,7 @@ class ParseConfig {
 		int				getNextToken(std::string &token);
 		// std::string		getNextToken(void);
 		bool			thereIsDefaultLocation(void) const;
+		bool			thereIsIndex(void) const;
 		//----ProcessToken----//
 		void				processEndBraquetToken(void);
 		void				processTokenHttp(void);
