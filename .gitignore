@@ -39,6 +39,9 @@
 *.i*86
 *.x86_64
 *.hex
+*.txt
+core
+vgcore*
 webserv
 
 # Debug files
@@ -46,6 +49,7 @@ webserv
 *.su
 *.idb
 *.pdb
+*.log
 
 # Kernel Module Compile Results
 *.mod*
@@ -124,6 +128,7 @@ Temporary Items
 *.icloud
 
 ### VisualStudioCode ###
+.vscode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
