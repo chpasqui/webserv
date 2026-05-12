@@ -39,13 +39,16 @@ class Client
 		Response *getResponse(void) const;
 		void setResponse(Session &session, bool isNew);
 		std::string getResponseStr() const;
-		void setCgi();
-		Cgi	*getCgi(void) const;
+		Cgi *getCgi(void) const;
+		void	setCgi(Response *response, Request *request);
+		// void setPid(pid_t pid);
+		// pid_t	getPid(void) const;
 		int getCgiPipeFd(void) const;
 		void setCgiPipeFd(int fd);
 		void	setOutput(const std::string& newOutput);
 		std::string	getOutput(void) const;
 		int bodyoffset;
+		size_t sendoffset;
 
 	private:
 		Client(); // client constructor is in private so that we never create a client out of nowhere
@@ -68,3 +71,4 @@ class Client
 };
 
 #endif
+        

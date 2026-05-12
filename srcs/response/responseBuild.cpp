@@ -24,6 +24,8 @@ void Response::build(Request &request, const ServerConfig *config)
 		setError(request.getStatusCode());
 		return;
 	}
+	if (request.getContentLength() > _loc->getMaxBodySize())
+		return (setError(PAYLOAD_TOO_LARGE));
 	_internalPath = buildFileSystemPath(request.getPath());
 	if (_loc->getRedirCode() != 0)
 	{
@@ -72,7 +74,6 @@ Location *Response::findLocation(const std::string &url)
  */
 std::string Response::buildFileSystemPath(const std::string &url)
 {
-	std::cout << "entered the buildFileSystemPath" << std::endl;
 	const std::string& prefix = _loc->getPath();
 	_remain = url.substr(prefix.size());
 	if (!_remain.empty() && _remain[0] == '/')
@@ -146,6 +147,15 @@ void Response::setSyscallError()
 		setError(INTERNAL_SERVER_ERROR);
 }
 
+void normalizeHeaders(std::string& name){
+		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+		name[0] = toupper(name[0]);
+		for (size_t i = 0; i < name.length(); i++){
+			if (name[i] == '-')
+				name[i + 1] = toupper(name[i + 1]);
+		}
+}
+
 void Response::parseCgiHeaders(std::string &headerSection)
 {
 	std::string line;
@@ -165,7 +175,7 @@ void Response::parseCgiHeaders(std::string &headerSection)
 		std::string name = line.substr(0, colonPos);
 		std::string value = line.substr(colonPos + 1);
 
-		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+		normalizeHeaders(name);
 
 		size_t start = value.find_first_not_of(' ');
 		if (start != std::string::npos)
@@ -204,12 +214,12 @@ void Response::buildCgiResponse(const std::string &output)
 		return;
 	}
 	parseCgiHeaders(headerSection);
-	if (!_body.empty() && !_headers.count("content-type"))
+	if (!_body.empty() && !_headers.count("Content-Type"))
 		setError(INTERNAL_SERVER_ERROR);
-	if (_headers.count("status"))
+	if (_headers.count("Status"))
 	{
-		_statusCode = std::atoi(_headers["status"].c_str());
-		_headers.erase("status");
+		_statusCode = std::atoi(_headers["Status"].c_str());
+		_headers.erase("Status");
 	}
 	else
 		_statusCode = OK;

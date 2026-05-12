@@ -141,6 +141,7 @@ void Response::handlePostMethod(Request& request){
 void Response::handleDeleteMethod(Request& request){
     struct stat sb;
    
+    LOG(std::cout << "internal path is : " << _internalPath << std::endl);
     if (stat(_internalPath.c_str(), &sb) != 0){
         setSyscallError();
         return;

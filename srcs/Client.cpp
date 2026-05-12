@@ -11,24 +11,26 @@
 
 #define BUFFERSIZE 1024
 
-Client::Client() : bodyoffset(0),
-				   _clientFd(-1),
-				   _cgiPipeFd(-1),
-				   _writeCgiPipeEnd(-1),
-				   _readCgiPipeEnd(-1),
-				   _output(""),
-				   _bytesRead(-1),
-				   _buffer(""),
-				   _parsingStatus(PARSING_REQUEST_LINE),
-				   _config(NULL),
-				   _request(NULL),
-				   _response(NULL),
-				   _cgi(NULL)
+Client::Client() :	bodyoffset(0),
+					sendoffset(0),
+					_clientFd(-1),
+					_cgiPipeFd(-1),
+					_writeCgiPipeEnd(-1),
+					_readCgiPipeEnd(-1),
+					_output(""),
+					_bytesRead(-1),
+					_buffer(""),
+					_parsingStatus(PARSING_REQUEST_LINE),
+					_config(NULL),
+					_request(NULL),
+					_response(NULL),
+					_cgi(NULL)
 {
 	time(&(this)->_timestamp);
 }
 
 Client::Client(int fd, const ServerConfig *config) : bodyoffset(0),
+													sendoffset(0),
 													_clientFd(fd),
 													 _cgiPipeFd(-1),
 													 _writeCgiPipeEnd(-1),
@@ -39,23 +41,25 @@ Client::Client(int fd, const ServerConfig *config) : bodyoffset(0),
 													 _parsingStatus(PARSING_REQUEST_LINE),
 													 _config(config),
 													 _request(new Request()),
-													 _response(NULL)
+													 _response(NULL),
+													_cgi(NULL)
 {
 	time(&(this)->_timestamp);
 }
 
-Client::Client(const Client &other) : bodyoffset(other.bodyoffset),
-									  _clientFd(other._clientFd),
-									  _cgiPipeFd(other._cgiPipeFd),
-									  _writeCgiPipeEnd(other._writeCgiPipeEnd),
-									  _readCgiPipeEnd(other._readCgiPipeEnd),
-									  _output(other._output),
-									  _bytesRead(other._bytesRead),
-									  _buffer(other._buffer),
-									  _parsingStatus(other._parsingStatus),
-									  _config(other._config),
-									  _request(other._request),
-									  _response(NULL)
+Client::Client(const Client &other) :	bodyoffset(other.bodyoffset),
+										sendoffset(0),
+										_clientFd(other._clientFd),
+										_cgiPipeFd(other._cgiPipeFd),
+										_writeCgiPipeEnd(other._writeCgiPipeEnd),
+										_readCgiPipeEnd(other._readCgiPipeEnd),
+										_output(other._output),
+										_bytesRead(other._bytesRead),
+										_buffer(other._buffer),
+										_parsingStatus(other._parsingStatus),
+										_config(other._config),
+										_request(other._request),
+										_response(NULL)
 {
 }
 
@@ -80,7 +84,6 @@ void Client::parseRequest()
 
 	if (this->_parsingStatus == COMPLETE || this->_parsingStatus == CLOSEFD)
 		return;
-	std::cout << "fd is " <<  _clientFd << std::endl;
 	this->_bytesRead = recv(_clientFd, buffer, sizeof(buffer), MSG_DONTWAIT);
 	if (_bytesRead == 0 || _bytesRead == -1)
 	{
@@ -113,7 +116,7 @@ void Client::parseRequest()
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
-		if (!_request->parseBody(_buffer, BUFFERSIZE))
+		if (!_request->parseBody(_buffer))
 		{
 			this->_parsingStatus = COMPLETE;
 			return;
@@ -163,15 +166,25 @@ std::string Client::getResponseStr() const
 	return _response->responseFormat(*_request);
 }
 
-void Client::setCgi()
-{
-	this->_cgi = new Cgi();
-}
-
-Cgi	*Client::getCgi(void) const
+Cgi *Client::getCgi(void) const
 {
 	return this->_cgi;
 }
+
+void	Client::setCgi(Response *response, Request *request)
+{
+	this->_cgi = new Cgi(response, request);
+}
+
+// void Client::setPid(pid_t pid)
+// {
+// 	this->_pid = pid;
+// }
+
+// pid_t	Client::getPid(void) const
+// {
+// 	return (this->_pid);
+// }
 
 int Client::getCgiPipeFd() const
 {
@@ -204,4 +217,6 @@ Client::~Client()
 		delete this->_request;
 	if (this->_response)
 		delete this->_response;
+	if (this->_cgi)
+		delete this->_cgi;
 }

@@ -62,7 +62,6 @@ bool Server::modifyEpoll(int _epollFd, int fdToModify, uint32_t flag)
 		close(fdToModify);
 		close(_epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
-		return false;
 	}
 	return true;
 }

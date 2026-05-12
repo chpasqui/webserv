@@ -43,6 +43,9 @@ void Server::run()
 	while (!serverSignal)
 	{
 		nFd = epoll_wait(this->_epollFd, events, MAX_EVENTS, -1);
+		//check if nFd equals -1 if signals arrived
+		//need to change the timeout of epoll_wait for checks 
+		//timeoutCheck();
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd;
@@ -77,40 +80,9 @@ void Server::run()
 					writeToClient(fd);
 				}
 			}
-			if (this->_pipeFd.count(fd) && cgiDead(fd))
-			{
-				Client *client = this->_pipeFd[fd];
-
-				std::cout << "entered the isdone case after the read" << std::endl;
-				client->getResponse()->buildCgiResponse(client->getOutput());
-				if (!modifyEpoll(this->_epollFd, this->_pipeFd[fd]->getClientFd(), EPOLLOUT))
-				{
-					closeConnection(this->_pipeFd[fd]->getClientFd());
-					return;
-				}
-				this->_pipeFd.erase(fd);
-				delFromEpoll(_epollFd, fd);
-			}
 		}
 	}
 	std::cout << "signal to stop received" << std::endl;
-}
-
-bool Server::cgiDead(int fd)
-{
-	bool isdone = false;
-	Client *client = this->_pipeFd[fd];
-
-	int status = 0;
-	pid_t pid = client->getCgi()->getPid();
-	pid_t ret = ::waitpid(pid, &status, WNOHANG);
-	std::cout << "pid is " << pid  << "and ret is " << ret << std::endl;
-	if (ret == pid)
-	{
-		std::cout << "HELLOOOO" << std::endl;
-		isdone = true;
-	}
-	return isdone;
 }
 
 
@@ -119,7 +91,7 @@ bool Server::acceptNewConnection(int listeningFd)
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(client_addr);
 	int clientFd = accept(listeningFd, (struct sockaddr *)&client_addr, &client_len);
-	if (clientFd == -1) // here we did a perror and not a try catch?
+	if (clientFd == -1)
 	{
 		perror("accept error");
 		return false;
@@ -144,9 +116,8 @@ bool Server::acceptNewConnection(int listeningFd)
 // potentially rename to treatClientRequest
 void Server::readFromClient(int clientFd)
 {
-	// check that there is a client
-	Client &client = *(_clients[clientFd]); // _clients[6] will give us the Client class at clientFd = 6
-
+	Client &client = *(_clients[clientFd]);
+	//update timestamp for TimeoutCheck
 	client.parseRequest();
 
 	if (client.getParsingStatus() == CLOSEFD)
@@ -160,9 +131,9 @@ void Server::readFromClient(int clientFd)
 		Session &session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
 		client.setResponse(session, isNew);
 		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
-		// client.buildResponse(session, isNew);
 		if (client.getResponse()->getCgiStatus() == true)
 		{
+			std::cout << "launch cgi entered" << std::endl;
 			launchCgi(client);
 		}
 		else
@@ -176,37 +147,16 @@ void Server::readFromClient(int clientFd)
 	}
 }
 
-void Server::readFromPipe(int stdoutPipeReadFd)
-{
-	Client *client = this->_pipeFd[stdoutPipeReadFd];
-	char buffer[BUFFER_SIZE];
-	ssize_t nbytes = 0;
-	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
-
-	std::cout << "RFP enter" << std::endl;
-	if (nbytes < 0)
-	{
-		// throw an error 
-		// return;
-	}
-	else if (nbytes > 0)
-	{
-		client->setOutput(client->getOutput().append(buffer, nbytes));
-		//return;
-	}
-	else if (nbytes == 0)
-	{
-		std::cout << GREEN << "ENTERED THE BYTES = 0 CASE" << std::endl;
-		return;
-	}
-	return;
-}
-
 void Server::launchCgi(Client &client)
 {
-	client.setCgi();
+	client.setCgi(client.getResponse(), client.getRequest());
 	Cgi *cgi = client.getCgi();
-	cgi->launch(client.getResponse()->getInternalPath(), *client.getRequest(), *client.getServerConfig());
+	cgi->launch(*client.getServerConfig());
+	if (errno)
+	{
+		closeConnection(client.getClientFd());
+		return ;
+	}
 	if (cgi->getStdinWriteEnd() != -1)
 	{
 		std::cout << "GET METHPD ENTERED ALERT" << std::endl;
@@ -223,6 +173,47 @@ void Server::launchCgi(Client &client)
 	}
 	std::cout << "the stinread end should contain a number " <<  cgi->getStdoutReadEnd() << " and the stdinpipe should be -1: VALUE " <<   cgi->getStdoutReadEnd() << std::endl;
 	return;
+}
+
+void Server::readFromPipe(int stdoutPipeReadFd)
+{
+	Client *client = this->_pipeFd[stdoutPipeReadFd];
+	char buffer[BUFFER_SIZE];
+	ssize_t nbytes = 0;
+	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
+	if (nbytes > 0){
+		client->setOutput(client->getOutput().append(buffer, nbytes));
+		return;
+	}
+	else if (nbytes == 0)
+	{
+		std::cout << "entered the isdone case after the read" << std::endl;
+		client->getResponse()->buildCgiResponse(client->getOutput());
+		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
+		{
+			closeConnection(client->getClientFd());
+			return;
+		}
+		pid_t pid = client->getCgi()->getPid();
+		int status = 0;
+		waitpid(pid, &status, 0);
+		// if ( ! (WIFEXITED(status) && (WEXITSTATUS(status) == 0)))
+		// {
+		// 	client->getResponse().
+		// close the connection in this case
+		// }
+	}
+	else {
+		client->getResponse()->setError(502);
+		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
+		{
+			closeConnection(client->getClientFd());
+			return;
+		}
+	}
+	delFromEpoll(_epollFd, stdoutPipeReadFd);
+	safeClose(stdoutPipeReadFd);
+	_pipeFd.erase(stdoutPipeReadFd);
 }
 
 void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
@@ -243,26 +234,40 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 		{
 			this->_pipeFd.erase(stdinPipeWriteFd);
 			delFromEpoll(_epollFd,stdinPipeWriteFd);
+			safeClose(stdinPipeWriteFd);
 			return;
 		}
 	}
-
-	// 
 }
 
 void Server::writeToClient(int fd)
 {
 	Client &client = *(_clients[fd]);
 	std::string response = client.getResponseStr();
-	send(fd, response.c_str(), response.size(), 0);
-	closeConnection(fd);
+	// Just like the write call, then i will need ot use the offset --> I need to keep the offset in client 
+	ssize_t nbytes = send(fd, response.c_str() + client.sendoffset, response.size() - client.sendoffset, 0);
+	if (nbytes < 0)
+	{
+		// handle the error message
+		// if the send system call fails, does that mean that we need to close evryhting and come back to the main loop?
+		return ;
+	}
+	else if (nbytes  > 0)
+	{
+		//update timestamp for timeoutCheck
+		client.sendoffset += nbytes;
+		if (client.sendoffset >= response.size())
+		{
+			closeConnection(fd);
+			return ;
+		}
+	}
 }
 
 void Server::closeConnection(int fd)
 {
 	delFromEpoll(this->_epollFd, fd);
-	if (close(fd) == -1)
-		std::cerr << "Close failed" << std::endl; // check if we mannage this differently or not
+	safeClose(fd);
 	if (_clients.count(fd))
 	{
 		delete _clients[fd];
@@ -286,19 +291,15 @@ Server::~Server()
 	std::map<int, Client *>::iterator it = this->_clients.begin();
 	for (; it != this->_clients.end(); ++it)
 	{
-		close(it->first);
+		safeClose(it->first);
 	}
 	_clients.clear();
 
 	std::map<int, const ServerConfig *>::iterator secondIt = this->_listenFds.begin();
 	for (; secondIt != this->_listenFds.end(); ++secondIt)
 	{
-		close(secondIt->first);
+		safeClose(secondIt->first);
 	}
 	_listenFds.clear();
-	if (this->_epollFd != -1)
-	{
-		close(this->_epollFd);
-		this->_epollFd = -1;
-	}
+	safeClose(this->_epollFd);
 }
