@@ -105,3 +105,8 @@ void Response::setError(int code){
     _statusCode = code;
     buildError();
 }
+
+std::string Response::getCgiExtension(void)
+{
+    return this->_cgiExtension;
+}

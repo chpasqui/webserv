@@ -159,7 +159,6 @@ void Server::launchCgi(Client &client)
 	}
 	if (cgi->getStdinWriteEnd() != -1)
 	{
-		std::cout << "GET METHPD ENTERED ALERT" << std::endl;
 		addToEpoll(_epollFd, cgi->getStdinWriteEnd(), EPOLLOUT);
 		this->_pipeFd[cgi->getStdinWriteEnd()] = &client;
 		std::cout << "pipe to be written to is " << cgi->getStdinWriteEnd() << std::endl;

@@ -36,13 +36,18 @@ void Cgi::launch(const ServerConfig &config)
 {
 	errno = 0;
 
-	std::cout << "internal path received is " << _response->getInternalPath() << std::endl;
 	this->_fileSystemPath = _response->getInternalPath();
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
 		std::cerr << "access issue" << std::endl;
 	}
-	std::cout << "no access issue anymore" << std::endl;
+	std::string directoryPath;
+	size_t pos = this->_fileSystemPath.find_last_of('/');
+	directoryPath = this->_fileSystemPath.substr(0, pos);
+	std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
+	if (chdir(directoryPath.c_str()) != 0)
+		std::cerr << "chdir error\n" << std::endl;
+	this->_fileName = filename;
 	buildEnv(config);
 	executeScript();
 }
@@ -51,7 +56,8 @@ void Cgi::buildEnv(const ServerConfig &config)
 {
 
 	const std::map<std::string, std::string> &header = _request->getHeaders();
-	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(".py") + 3);
+	std::string extension = this->_response->getCgiExtension();
+	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(extension) + extension.length());
 
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	_tempEnv.push_back("REQUEST_METHOD=" + _request->getMethod());
@@ -73,7 +79,10 @@ void Cgi::buildEnv(const ServerConfig &config)
 	}
 
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
+	{
 		this->_finalEnv.push_back(const_cast<char *>((*it).c_str()));
+		std::cout << GREEN << *it << RESET << std::endl;
+	}
 	this->_finalEnv.push_back(NULL);
 }
 
@@ -116,9 +125,9 @@ void Cgi::executeScript()
 			std::exit(EXIT_FAILURE);
 		}
 		safeClose(stdoutPipe[WRITE_END]);
-		std::string executable = parseShebang(this->_fileSystemPath);
+		std::string executable = this->_response->getCgiPass();
 
-		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileSystemPath.c_str()), NULL}; // NULL marks the end of the array
+		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileName.c_str()), NULL}; // NULL marks the end of the array
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 		{
 			std::exit(EXIT_FAILURE); //WARN: What we do if execve() failed;

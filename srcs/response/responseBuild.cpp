@@ -40,6 +40,7 @@ void Response::build(Request &request, const ServerConfig *config)
 	}
 	if (isCGI())
 	{
+		LOG("the path sent is " << this->_internalPath << std::endl);
 		this->_isCgi = true;
 		return;
 	}
@@ -109,6 +110,7 @@ bool Response::isCGI()
 			if (end == _internalPath.size() || _internalPath[end] == '/')
 			{
 				_cgiPass = it->second;
+				_cgiExtension = it->first;
 				return true;
 			}
 		}
@@ -206,6 +208,7 @@ bool Response::splitOutput(const std::string &output, std::string &headerSection
 
 void Response::buildCgiResponse(const std::string &output)
 {
+	std::cout << "output received is " << output << std::endl;
 	std::string headerSection;
 
 	if (!splitOutput(output, headerSection))
