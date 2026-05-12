@@ -41,13 +41,13 @@ void Cgi::launch(const ServerConfig &config)
 	{
 		std::cerr << "access issue" << std::endl;
 	}
-	std::string directoryPath;
-	size_t pos = this->_fileSystemPath.find_last_of('/');
-	directoryPath = this->_fileSystemPath.substr(0, pos);
-	std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
-	if (chdir(directoryPath.c_str()) != 0)
-		std::cerr << "chdir error\n" << std::endl;
-	this->_fileName = filename;
+	// std::string directoryPath;
+	// size_t pos = this->_fileSystemPath.find_last_of('/');
+	// directoryPath = this->_fileSystemPath.substr(0, pos);
+	// std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
+	// if (chdir(directoryPath.c_str()) != 0)
+	// 	std::cerr << "chdir error\n" << std::endl;
+	// this->_fileName = filename;
 	buildEnv(config);
 	executeScript();
 }
@@ -60,6 +60,7 @@ void Cgi::buildEnv(const ServerConfig &config)
 	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(extension) + extension.length());
 
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	_tempEnv.push_back("REDIRECT_STATUS=200");
 	_tempEnv.push_back("REQUEST_METHOD=" + _request->getMethod());
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName);
 	_tempEnv.push_back("PATH_INFO=" + this->_fileSystemPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself
@@ -127,7 +128,7 @@ void Cgi::executeScript()
 		safeClose(stdoutPipe[WRITE_END]);
 		std::string executable = this->_response->getCgiPass();
 
-		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileName.c_str()), NULL}; // NULL marks the end of the array
+		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileSystemPath.c_str()), NULL}; // NULL marks the end of the array
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 		{
 			std::exit(EXIT_FAILURE); //WARN: What we do if execve() failed;
