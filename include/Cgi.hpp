@@ -32,6 +32,7 @@ class Cgi
 		void launch(const ServerConfig &config);
 		int	getStdinWriteEnd() const;
 		int getStdoutReadEnd() const;
+		bool getCgiRunning() const;
 		int getPid(void) const;
 
 	private:
@@ -52,6 +53,8 @@ class Cgi
 
 		Response *_response;
 		Request *_request;
+
+		bool _cgiRunning;
 };
 
 std::string getHeaderVariable(const std::map<std::string, std::string> &header, const std::string &key);

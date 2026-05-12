@@ -206,6 +206,10 @@ std::string	Client::getOutput(void) const
 	return this->_output;
 }
 
+void Client::setTimestamp(time_t currentTime){
+	_timestamp = currentTime;
+}
+
 /**
  * @brief Destroy the Client:: Client object
  * Client is the one who holds the *Request, it must delete it then.

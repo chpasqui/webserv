@@ -42,10 +42,12 @@ void Server::run()
 
 	while (!serverSignal)
 	{
-		nFd = epoll_wait(this->_epollFd, events, MAX_EVENTS, -1);
+		nFd = epoll_wait(this->_epollFd, events, MAX_EVENTS, 1000);
+		if (nFd == -1 || errno == EINTR)
+			continue ;
 		//check if nFd equals -1 if signals arrived
 		//need to change the timeout of epoll_wait for checks 
-		//timeoutCheck();
+		timeoutCheck();
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd;
@@ -117,7 +119,7 @@ bool Server::acceptNewConnection(int listeningFd)
 void Server::readFromClient(int clientFd)
 {
 	Client &client = *(_clients[clientFd]);
-	//update timestamp for TimeoutCheck
+	updateTimeStamp(client);
 	client.parseRequest();
 
 	if (client.getParsingStatus() == CLOSEFD)
@@ -182,6 +184,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	ssize_t nbytes = 0;
 	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
 	if (nbytes > 0){
+		updateTimeStamp(*client);
 		client->setOutput(client->getOutput().append(buffer, nbytes));
 		return;
 	}
@@ -229,6 +232,7 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 	}
 	else if (writtenBytes > 0)
 	{
+		updateTimeStamp(client);
 		client.bodyoffset += writtenBytes;
 		if (client.bodyoffset >= request->getContentLength())
 		{
@@ -254,7 +258,7 @@ void Server::writeToClient(int fd)
 	}
 	else if (nbytes  > 0)
 	{
-		//update timestamp for timeoutCheck
+		updateTimeStamp(client);
 		client.sendoffset += nbytes;
 		if (client.sendoffset >= response.size())
 		{
@@ -266,6 +270,8 @@ void Server::writeToClient(int fd)
 
 void Server::closeConnection(int fd)
 {
+	if(_clients[fd]->getCgi() && _clients[fd]->getCgi()->getCgiRunning())
+		kill(_clients[fd]->getCgi()->getPid(), SIGKILL);
 	delFromEpoll(this->_epollFd, fd);
 	safeClose(fd);
 	if (_clients.count(fd))

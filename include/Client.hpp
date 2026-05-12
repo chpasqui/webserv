@@ -49,6 +49,7 @@ class Client
 		std::string	getOutput(void) const;
 		int bodyoffset;
 		size_t sendoffset;
+		void setTimestamp(time_t currentTime);
 
 	private:
 		Client(); // client constructor is in private so that we never create a client out of nowhere

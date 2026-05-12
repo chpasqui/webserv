@@ -24,13 +24,22 @@
 #define WRITE_END 1
 #define BUFFER_SIZE 1024
 
-Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1)
-{
-}
+Cgi::Cgi() : 
+	_fileSystemPath(""), 
+	_tempEnv(), 
+	_finalEnv(), 
+	_stdinWriteEnd(-1), 
+	_stdoutReadEnd(-1), 
+	_cgiRunning(false){}
 
-Cgi::Cgi(Response *response, Request *request) : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1), _response(response), _request(request)
-{
-}
+Cgi::Cgi(Response *response, Request *request) : 
+	_fileSystemPath(""),
+	_tempEnv(), _finalEnv(),
+	_stdinWriteEnd(-1),
+	_stdoutReadEnd(-1),
+	_response(response),
+	_request(request),
+	_cgiRunning(false){}
 
 void Cgi::launch(const ServerConfig &config)
 {
@@ -98,6 +107,7 @@ void Cgi::executeScript()
 		return ;
 	
 	pid_t pid = fork(); //
+	_cgiRunning = true;
 	if (pid == 0)
 	{
 		safeClose(stdinPipe[WRITE_END]);
@@ -153,6 +163,10 @@ int Cgi::getPid(void) const
 int Cgi::getStdoutReadEnd() const
 {
 	return this->_stdoutReadEnd;
+}
+
+bool Cgi::getCgiRunning() const{
+	return _cgiRunning;
 }
 
 Cgi::~Cgi()
