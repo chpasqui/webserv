@@ -9,3 +9,4 @@ Notes to be adressed:
 - In TimeOutCheck : the actual function is for incomplete request, there is an error on the it, and is not yet called anywhere. Need to complete the timeoutCheck functions for CGIs --- WORK IN PROGRESS
 - In Server.cpp (read/write): There is a problem with the flow of modifyEpoll if it fails,it is missing the return false, and in case of failure the fd is closed 3 times (in modifyEpoll, in deleteEpoll and in closeConnections). Since it is already closed it will fail in deleteEpoll. Only closeConnections should close connections.
 - In Session.cpp : maybe add with possibilty to add passwords or more, for more clarity. Need something that enables us to check in a better way whether it is a new or old sesion
+- Enlever uploadStore de post handle
