@@ -19,8 +19,8 @@ int main(int ac, char **av) {
 	if (checkInputArgs(ac, av, configFileName) == 1)
 		return (1);
 
-	ParseConfig pc(configFileName, &configs);
-	if (pc.parsingConfigFile() == 1)
+	ParseConfig pc(&configs);
+	if (pc.parsingConfigFile(av[1]) == 1)
 		return (1);
 
 	Server server;

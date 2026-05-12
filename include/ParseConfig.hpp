@@ -4,6 +4,7 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <sstream>
 #include <vector>
 
 #define FILENAME_EXT ".conf"
@@ -24,40 +25,39 @@ enum context {
 class ParseConfig {
 	public:
 		ParseConfig();
-		ParseConfig(const std::string &filename, std::vector<ServerConfig *> *serverConfigs);
+		ParseConfig(std::vector<ServerConfig *> *serverConfigs);
 		~ParseConfig();
 		
-		int				parsingConfigFile(void);
+		int													parsingConfigFile(const std::string &filename);
 	private:
-		int					openFile(void);
-		int					getNextToken(std::string &token);
-		int					getNextToken(int &token);
-		bool				thereIsDefaultLocation(void) const;
-		bool				thereIsIndex(void) const;
+		int													openFile(const std::string &filename);
+		int													getNextToken(std::string &token);
+		int													getNextToken(int &token);
+		int													getNextLine(void);
+		bool												thereIsDefaultLocation(void) const;
+		bool												thereIsIndex(void) const;
 		//----ProcessToken----//
-		void				processEndBraquetToken(void);
-		void				processTokenHttp(void);
-		void				processServerToken(void);
-		void				processLocationToken(void);
-		void				processHeaderTimeoutToken(void);
-		void				processBodyTimeoutToken(void);
-		void				processMaxBodySizeToken(void);
-		void				processRootToken(void);
-		void				processListenToken(void);
-		void 				processAutoindexToken(void);
-		void				processServerNameToken(void);
-		void				processAllowedMethodsToken(void);
-		void				processIndexToken(void);
-		void				processErrorPageToken(void);
-		void				processRedirectionToken(void);
-		void				processCgiPassToken(void);
-		void				processUploadStoreToken(void);
-		//----Static functions----//
-		static int		transformTokenToInt(std::string token);
+		void												processEndBraquetToken(void);
+		void												processTokenHttp(void);
+		void												processServerToken(void);
+		void												processLocationToken(void);
+		void												processHeaderTimeoutToken(void);
+		void												processBodyTimeoutToken(void);
+		void												processMaxBodySizeToken(void);
+		void												processRootToken(void);
+		void												processListenToken(void);
+		void 												processAutoindexToken(void);
+		void												processServerNameToken(void);
+		void												processAllowedMethodsToken(void);
+		void												processIndexToken(void);
+		void												processErrorPageToken(void);
+		void												processRedirectionToken(void);
+		void												processCgiPassToken(void);
+		void												processUploadStoreToken(void);
 		//----Atributes----//
-		std::string											_filename;
 		std::ifstream										_configFile;
-		int													_line;
+		std::stringstream									_line;
+		int													_lineNumber;
 		int													_contextLevel;
 		AConfig												*_contextConfig;
 		Http												*_http;

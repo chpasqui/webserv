@@ -16,9 +16,8 @@
 #include "../../include/Debug.hpp"
 
 ParseConfig::ParseConfig() :
-	_filename(""),
 	_configFile(""),
-	_line(0),
+	_lineNumber(0),
 	_contextLevel(0),
 	_contextConfig(0),
 	_http(0),
@@ -29,10 +28,9 @@ ParseConfig::ParseConfig() :
 	LOG(C_CSTR << "ParseConfig: Default constructor called" << RESET);
 }
 
-ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *> *serverConfigs) :
-	_filename(filename),
+ParseConfig::ParseConfig(std::vector<ServerConfig *> *serverConfigs) :
 	_configFile(""),
-	_line(1),
+	_lineNumber(1),
 	_contextLevel(NONE),
 	_contextConfig(0),
 	_http(0),
@@ -62,15 +60,16 @@ ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *
 ParseConfig::~ParseConfig() {
 	if (_http)
 		delete (_http);
+	_configFile.close();
 	LOG(C_DSTR << "ParseConfig: Destructor called" << RESET);
 }
 
-int	ParseConfig::parsingConfigFile(void) {
+int	ParseConfig::parsingConfigFile(const std::string &filename) {
 	std::string														token;
 	std::map<std::string, void (ParseConfig::*)(void)>::iterator	it;
 
 	errno = 0;
-	if (openFile() != 0)
+	if (openFile(filename) != 0)
 		return (1);
 
 	while (true)
@@ -79,7 +78,7 @@ int	ParseConfig::parsingConfigFile(void) {
 			break;
 		it = _dictionary.find(token);
 		if (it == _dictionary.end()) {
-			std::cerr << C_RED << token << ": Unknow token on line: " << _line << RESET  << std::endl;
+			std::cerr << C_RED << token << ": Unknow token on line: " << _lineNumber << RESET  << std::endl;
 			return (1);
 		}
 		
@@ -87,7 +86,7 @@ int	ParseConfig::parsingConfigFile(void) {
 			(this->*it->second)();
 		}
 		catch (std::exception &e) {
-			std::cerr << C_RED << e.what() << "on line: " << _line << RESET << std::endl;
+			std::cerr << C_RED << e.what() << "on line: " << _lineNumber << RESET << std::endl;
 			if (_serverConfigs && !_serverConfigs->empty()) {
 				for (std::vector<ServerConfig *>::iterator it = _serverConfigs->begin(); it != _serverConfigs->end(); it++)
 					delete *it;
@@ -95,27 +94,27 @@ int	ParseConfig::parsingConfigFile(void) {
 			return (1);
 		}
 	}
-	if (_serverConfigs == 0) {
-		std::cerr << C_RED << "Error: no config file provided" << RESET << std::endl;
+	if (_serverConfigs->size() == 0) {
+		std::cerr << C_RED << "Error: no server block is provided" << RESET << std::endl;
 		return (1);
 	}
 	std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
 	return (0);
 }
 
-int		ParseConfig::openFile(void) {
+int		ParseConfig::openFile(const std::string &filename) {
 	std::string				buffer;
 	std::string::iterator	it;
 
 	errno = 0;
-	if (_filename.size() <= FILENAME_EXT_SIZE || _filename.compare(_filename.size() - FILENAME_EXT_SIZE, FILENAME_EXT_SIZE, FILENAME_EXT)) {
-		std::cerr << C_RED << "invalid extension, you're filename need to end with: \"" << FILENAME_EXT << "\"" << RESET << std::endl;
+	if (filename.size() <= FILENAME_EXT_SIZE || filename.compare(filename.size() - FILENAME_EXT_SIZE, FILENAME_EXT_SIZE, FILENAME_EXT)) {
+		std::cerr << C_RED << "Error: invalid extension, you're filename need to end with: \"" << FILENAME_EXT << "\"" << RESET << std::endl;
 		return (1);
 	}
 
-	_configFile.open(_filename.c_str());
+	_configFile.open(filename.c_str());
 	if (!_configFile.is_open()) {
-		std::cerr << C_RED << "Unable to open the file " << _filename << " :" << strerror(errno) << RESET << std::endl;
+		std::cerr << C_RED << "Unable to open the file " << filename << " :" << strerror(errno) << RESET << std::endl;
 		return (errno);
 	}
 	
@@ -140,18 +139,58 @@ int		ParseConfig::openFile(void) {
  * @return the token or an empty string if the end of the file has been reached
  */
 int ParseConfig::getNextToken(std::string &token) {
-	std::string::iterator it;
-	_configFile >> token;
-	if (_configFile.eof() || _configFile.fail())
-		return (0);
-	
-	if (*(token.begin()) == '#') {
-		LOG(C_PINK << "character # encounter, ignore line");
-		_configFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		_configFile >> token;
+	if (_line.eof()) {
+		//std::cout << "DEBUG: line is empty" << std::endl;
+		if (getNextLine() == 1)
+			return (1);
 	}
+
+	_line >> token;
+	if (_line.fail() || _line.tellp() == 0)
+		return (0);
+
 	LOG(C_PINK << "Token: " << token << RESET);
 	return (1);
+}
+
+int ParseConfig::getNextToken(int &token) {
+	if (_line.end) {
+		//std::cout << "DEBUG: line is empty" << std::endl;
+		if (getNextLine() == 1)
+			return (1);
+	}
+
+	_line >> token;
+	if (_line.fail() || _line.tellp() == 0)
+		return (0);
+
+	LOG(C_PINK << "Token: " << token << RESET);
+	return (1);
+}
+
+int ParseConfig::getNextLine(void) {
+	std::string	str;
+	ssize_t		pos = 0;
+
+	while (1) {
+		_line.clear();
+		if (!getline(_configFile, str))
+			return (1);
+		_lineNumber++;
+		std::cout << C_PINK << "line: " << str << RESET << std::endl;
+		if (*str.begin() == '#')
+			continue ;
+		if ((pos = str.find(" #", 0) != std::string::npos)) {
+			std::cout << C_PINK << "pos is " << pos << RESET << std::endl;
+			str = str.substr(0, pos);
+		}
+		if (str.find_first_not_of(" \f\n\r\t\v") == std::string::npos)
+			continue ;
+		break;
+	}
+
+	_line << str;
+	return (0);
 }
 
 bool	ParseConfig::thereIsDefaultLocation(void) const {
@@ -251,12 +290,9 @@ void	ParseConfig::processLocationToken(void) {
  */
 void	ParseConfig::processHeaderTimeoutToken(void) {
 	int			timeout;
-	std::string	nextToken;
 
-	if (!getNextToken(nextToken))
+	if (!getNextToken(timeout))
 		throw (std::invalid_argument("fail to get a token"));
-	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
-		return ;
 	_contextConfig->setHeaderTimeout(timeout);
 }
 
@@ -265,13 +301,9 @@ void	ParseConfig::processHeaderTimeoutToken(void) {
  */
 void	ParseConfig::processBodyTimeoutToken(void) {
 	int			timeout;
-	std::string	nextToken;
 
-
-	if (!getNextToken(nextToken))
+	if (!getNextToken(timeout))
 		throw (std::invalid_argument("fail to get a token"));
-	if ((timeout = ParseConfig::transformTokenToInt(nextToken)) == -1)
-		return ;
 	_contextConfig->setBodyTimeout(timeout);
 	return ;
 }
@@ -281,12 +313,9 @@ void	ParseConfig::processBodyTimeoutToken(void) {
  */
 void	ParseConfig::processMaxBodySizeToken(void) {
 	int			maxBodySize;
-	std::string	nextToken;
 
-	if (!getNextToken(nextToken))
+	if (!getNextToken(maxBodySize))
 		throw (std::invalid_argument("fail to get a token"));
-	if ((maxBodySize = ParseConfig::transformTokenToInt(nextToken)) == -1) //FIX: need to mutiplie this later
-		return ;
 	_contextConfig->setMaxBodySize(maxBodySize);
 }
 
@@ -307,17 +336,9 @@ void	ParseConfig::processRootToken(void) {
  */
 void	ParseConfig::processListenToken(void) {
 		int 		port;
-		std::string	nextToken;
 
-	if (!getNextToken(nextToken))
+	if (!getNextToken(port))
 		throw (std::invalid_argument("fail to get a token"));
-	if (_contextLevel != SERVER)
-	{
-		std::cerr << C_RED << "Using token \"listen\" in wrong context" << RESET << std::endl;
-		return;
-	}
-	if ((port = ParseConfig::transformTokenToInt(nextToken)) == -1)
-		return;
 	_contextConfig->setPort(port);
 	return;
 }
@@ -345,12 +366,11 @@ void	ParseConfig::processAutoindexToken(void) {
  */
 void	ParseConfig::processErrorPageToken(void) {
 	int			code;
-	std::string	codeToken, pageToken;
+	std::string	pageToken;
 
-	if (!getNextToken(codeToken) || !getNextToken(pageToken))
+	if (!getNextToken(code) || !getNextToken(pageToken))
 		throw (std::invalid_argument("fail to get a token"));
 
-	code = ParseConfig::transformTokenToInt(codeToken);
 	_contextConfig->addErrorPage(code, pageToken);
 }
 
@@ -384,12 +404,10 @@ void	ParseConfig::processIndexToken(void) {
 
 void	ParseConfig::processRedirectionToken(void) {
 	int			code;
-	std::string	codeToken;
 	std::string	redirectionPath;
 
-	if (!getNextToken(codeToken) || !getNextToken(redirectionPath))
+	if (!getNextToken(code) || !getNextToken(redirectionPath))
 		throw (std::invalid_argument("fail to get a token"));
-	code = ParseConfig::transformTokenToInt(codeToken);
 	_contextConfig->setRedireCode(code);
 	_contextConfig->setRedirePath(redirectionPath);
 }
@@ -413,18 +431,3 @@ void	ParseConfig::processUploadStoreToken(void) {
 	_contextConfig->setUploadStore(uploadStorePath);
 }
 
-/**
- * @brief transform a token to a usable int
- * @param the token you want to convert
- * @return the converted int or -1 if an error occurs 
- */
-int	ParseConfig::transformTokenToInt(std::string token) { //OPTIM: Use std::stringstream to get ints
-	int					nb;
-	std::stringstream	ss(token);
-	
-	ss >> nb;
-	if (ss.fail() || !ss.eof() || nb < 0)
-		throw std::runtime_error("invalid number in line x");
-	//LOG(C_PURPLE << "DEBUG: number is: " << nb << RESET);
-	return (nb);
-}
