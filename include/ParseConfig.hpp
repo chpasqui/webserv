@@ -29,11 +29,11 @@ class ParseConfig {
 		
 		int				parsingConfigFile(void);
 	private:
-		int				openFile(void);
-		int				getNextToken(std::string &token);
-		// std::string		getNextToken(void);
-		bool			thereIsDefaultLocation(void) const;
-		bool			thereIsIndex(void) const;
+		int					openFile(void);
+		int					getNextToken(std::string &token);
+		int					getNextToken(int &token);
+		bool				thereIsDefaultLocation(void) const;
+		bool				thereIsIndex(void) const;
 		//----ProcessToken----//
 		void				processEndBraquetToken(void);
 		void				processTokenHttp(void);

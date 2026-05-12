@@ -1,5 +1,4 @@
 #include "../../include/ParseConfig.hpp"
-#include <algorithm>
 #include <errno.h>
 #include <ios>
 #include <iostream>
@@ -63,10 +62,6 @@ ParseConfig::ParseConfig(const std::string &filename, std::vector<ServerConfig *
 ParseConfig::~ParseConfig() {
 	if (_http)
 		delete (_http);
-	if (_currentConfig)
-		delete (_currentConfig);
-	if (_location)
-		delete (_location);
 	LOG(C_DSTR << "ParseConfig: Destructor called" << RESET);
 }
 
@@ -95,8 +90,7 @@ int	ParseConfig::parsingConfigFile(void) {
 			std::cerr << C_RED << e.what() << "on line: " << _line << RESET << std::endl;
 			if (_serverConfigs && !_serverConfigs->empty()) {
 				for (std::vector<ServerConfig *>::iterator it = _serverConfigs->begin(); it != _serverConfigs->end(); it++)
-						delete *it;
-				_currentConfig = 0;
+					delete *it;
 			}
 			return (1);
 		}
@@ -134,7 +128,7 @@ int		ParseConfig::openFile(void) {
 //- Add a line number for errors. : Use a ss to get the line, and overload getNextToken() to take int
 //- Display a better error message.
 //- check if the file end with ".conf". OK
-//- Fix leaks when exception is thrown. Still some leaks
+//- Fix leaks when exception is thrown. Still some leaks : OK
 //- Rename variables with wrong names
 //- Read word by word the config file OK
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
@@ -243,7 +237,7 @@ void	ParseConfig::processLocationToken(void) {
 	if (_location)
 		throw std::runtime_error("Nested location is not allowed");
 
-	if (braquet != "{" || _contextLevel!= SERVER || _currentConfig)
+	if (braquet != "{" || _contextLevel!= SERVER || _location)
 		throw std::runtime_error("Unexcepted token after \"Location\"");
 
 	_location = new Location(*_currentConfig, path);
