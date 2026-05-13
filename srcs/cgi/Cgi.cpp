@@ -154,8 +154,6 @@ int Cgi::getStdoutReadEnd() const
 
 Cgi::~Cgi()
 {
-	if (this->_stdinWriteEnd != -1)
-		safeClose(this->_stdinWriteEnd);
-	if (this->_stdoutReadEnd)
-		safeClose(this->_stdoutReadEnd);
+	safeClose(this->_stdinWriteEnd);
+	safeClose(this->_stdoutReadEnd);
 }

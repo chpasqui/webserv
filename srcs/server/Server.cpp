@@ -43,9 +43,6 @@ void Server::run()
 	while (!serverSignal)
 	{
 		nFd = epoll_wait(this->_epollFd, events, MAX_EVENTS, -1);
-		//check if nFd equals -1 if signals arrived
-		//need to change the timeout of epoll_wait for checks 
-		//timeoutCheck();
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd;
@@ -56,7 +53,7 @@ void Server::run()
 			}
 			else if (events[i].events & (EPOLLERR))
 			{
-				closeConnection(fd);
+				//closeConnection(fd); check this after
 			}
 			else if (events[i].events & (EPOLLIN | EPOLLHUP))
 			{
@@ -105,7 +102,7 @@ bool Server::acceptNewConnection(int listeningFd)
 	catch (const std::exception &e)
 	{
 		std::cerr << e.what() << '\n';
-		closeConnection(clientFd);
+		safeClose(clientFd);
 		return false;
 	}
 	return (true);
@@ -114,30 +111,30 @@ bool Server::acceptNewConnection(int listeningFd)
 // potentially rename to treatClientRequest
 void Server::readFromClient(int clientFd)
 {
-	Client &client = *(_clients[clientFd]);
+	Client *client = _clients[clientFd];
 	//update timestamp for TimeoutCheck
-	client.parseRequest();
+	client->parseRequest();
 
-	if (client.getParsingStatus() == CLOSEFD)
+	if (client->getParsingStatus() == CLOSEFD)
 	{
-		closeConnection(clientFd);
+		closeConnection(client);
 		return;
 	}
-	if (client.getParsingStatus() == COMPLETE)
+	if (client->getParsingStatus() == COMPLETE)
 	{
 		bool isNew = false;
-		Session &session = resolveSession(client.getRequest()->getHeader("cookie"), isNew);
-		client.setResponse(session, isNew);
-		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
-		if (client.getResponse()->getCgiStatus() == true)
+		Session &session = resolveSession(client->getRequest()->getHeader("cookie"), isNew);
+		client->setResponse(session, isNew);
+		client->getResponse()->build(*client->getRequest(), client->getServerConfig());
+		if (client->getResponse()->getCgiStatus() == true)
 		{
-			launchCgi(client);
+			launchCgi(*client);
 		}
 		else
 		{
 			if (!modifyEpoll(this->_epollFd, clientFd, EPOLLOUT))
 			{
-				closeConnection(clientFd);
+				closeConnection(client);
 				return;
 			}
 		}
@@ -151,7 +148,7 @@ void Server::launchCgi(Client &client)
 	cgi->launch(*client.getServerConfig());
 	if (errno)
 	{
-		closeConnection(client.getClientFd());
+		closeConnection(&client);
 		return ;
 	}
 	if (cgi->getStdinWriteEnd() != -1)
@@ -187,7 +184,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{
 			std::cout << "entered the case of read from pipe modify" << std::endl;
-			closeConnection(client->getClientFd());
+			closeConnection(client);
 			return;
 		}
 		pid_t pid = client->getCgi()->getPid();
@@ -203,11 +200,11 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 		client->getResponse()->setError(502);
 		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{
-			closeConnection(client->getClientFd());
+			closeConnection(client);
 			return;
 		}
 	}
-	closeConnection(stdoutPipeReadFd);
+	//closeConnection(client);
 }
 
 void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
@@ -226,7 +223,7 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 		client.bodyoffset += writtenBytes;
 		if (client.bodyoffset >= request->getContentLength())
 		{
-			closeConnection(stdinPipeWriteFd);
+			closeConnection(&client);
 			return;
 		}
 	}
@@ -234,42 +231,45 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 
 void Server::writeToClient(int fd)
 {
-	Client &client = *(_clients[fd]);
-	std::string response = client.getResponseStr();
-	// Just like the write call, then i will need ot use the offset --> I need to keep the offset in client 
-	ssize_t nbytes = send(fd, response.c_str() + client.sendoffset, response.size() - client.sendoffset, 0);
+	Client *client = _clients[fd];
+	std::string response = client->getResponseStr();
+	ssize_t nbytes = send(fd, response.c_str() + client->sendoffset, response.size() - client->sendoffset, 0);
 	if (nbytes < 0)
 	{
-		// handle the error message
-		// if the send system call fails, does that mean that we need to close evryhting and come back to the main loop?
 		return ;
 	}
 	else if (nbytes  > 0)
 	{
-		//update timestamp for timeoutCheck
-		client.sendoffset += nbytes;
-		if (client.sendoffset >= response.size())
+		client->sendoffset += nbytes;
+		if (client->sendoffset >= response.size())
 		{
-			closeConnection(fd);
+			closeConnection(client);
 			return ;
 		}
 	}
 }
 
-void Server::closeConnection(int fd)
+void Server::closeConnection(Client *client)
 {
-	delFromEpoll(this->_epollFd, fd);
-	safeClose(fd);
-	if (_clients.count(fd))
+	std::cout << "stdoutreadend is " << client->getCgi()->getStdoutReadEnd() << std::endl;
+	std::cout << "stdinwriteend is " << client->getCgi()->getStdinWriteEnd() << std::endl;
+	std::cout << "clientfd is " << client->getClientFd() << std::endl;
+
+	if (client->getCgi())
+	{
+		if (client->getCgi()->getStdinWriteEnd() != -1)
+			delFromEpoll(this->_epollFd, client->getCgi()->getStdoutReadEnd());
+		if (client->getCgi()->getStdinWriteEnd() != -1)
+			delFromEpoll(this->_epollFd, client->getCgi()->getStdinWriteEnd());
+	}
+	delFromEpoll(this->_epollFd, client->getClientFd());
+
+	if (_clients.count(client->getClientFd()))
 	{
 		std::cout << "delte client" << std::endl;
-		delete _clients[fd];
-		_clients.erase(fd);
-	}
-	if (_pipeFd.count(fd))
-	{
-		std::cout << "delete pipefd" << std::endl;
-		_pipeFd.erase(fd);
+		int fd = client->getClientFd(); // extract fd contained in client
+		delete _clients[fd]; // delete the client pointer
+		_clients.erase(fd); // remove the entry without access to client which has been deleted 
 	}
 }
 
@@ -289,22 +289,15 @@ Server::~Server()
 	std::map<int, Client *>::iterator it = this->_clients.begin();
 	for (; it != this->_clients.end(); ++it)
 	{
-		safeClose(it->first);
 		delete (it->second);
 	}
 	_clients.clear();
 
-	std::map<int, const ServerConfig *>::iterator secondIt = this->_listenFds.begin();
-	for (; secondIt != this->_listenFds.end(); ++secondIt)
+	std::map<int, const ServerConfig*>::iterator listenIt = this->_listenFds.begin();
+	for (; listenIt != this->_listenFds.end(); ++listenIt)
 	{
-		safeClose(secondIt->first);
+		close(listenIt->first);
 	}
-	this->_listenFds.clear();
-
-	std::map<int , Client*>::iterator thirdIt = this->_pipeFd.begin();
-	for (; thirdIt != this->_pipeFd.end(); thirdIt++)
-		safeClose((*thirdIt).first);
-	this->_pipeFd.clear();
-
+	_listenFds.clear();
 	safeClose(this->_epollFd);
 }

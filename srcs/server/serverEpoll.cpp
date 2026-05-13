@@ -55,7 +55,7 @@ bool Server::modifyEpoll(int _epollFd, int fdToModify, uint32_t flag)
 	struct epoll_event event;
 	event.events = flag;
 	event.data.fd = fdToModify;
-	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, fdToModify, &event) == 0)
+	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, fdToModify, &event) == -1)
 	{
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		return false;
@@ -71,7 +71,8 @@ void Server::delFromEpoll(int _epollFd, int fdToModify)
 	struct epoll_event event;
 	event.events = 0;
 	event.data.fd = fdToModify;
-	if (epoll_ctl(_epollFd, EPOLL_CTL_DEL, fdToModify, &event) == 0)
+	std::cout << "fd received in delfromepoll is " << fdToModify << std::endl;
+	if (epoll_ctl(_epollFd, EPOLL_CTL_DEL, fdToModify, &event) == -1)
 	{
 		std::string errorMsg = std::string("Epoll_ctl() DEL error: ") + strerror(errno);
 		throw(std::runtime_error(errorMsg));
