@@ -133,7 +133,6 @@ void Server::readFromClient(int clientFd)
 		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
 		if (client.getResponse()->getCgiStatus() == true)
 		{
-			std::cout << "launch cgi entered" << std::endl;
 			launchCgi(client);
 		}
 		else
@@ -170,7 +169,6 @@ void Server::launchCgi(Client &client)
 		std::cout << "pipe to be read from " << cgi->getStdoutReadEnd() << std::endl;
 
 	}
-	std::cout << "the stinread end should contain a number " <<  cgi->getStdoutReadEnd() << " and the stdinpipe should be -1: VALUE " <<   cgi->getStdoutReadEnd() << std::endl;
 	return;
 }
 
@@ -186,7 +184,6 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	}
 	else if (nbytes == 0)
 	{
-		std::cout << "entered the isdone case after the read" << std::endl;
 		client->getResponse()->buildCgiResponse(client->getOutput());
 		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{

@@ -145,7 +145,6 @@ void Cgi::executeScript()
 	
 	safeClose(stdoutPipe[WRITE_END]);
 	_stdoutReadEnd = stdoutPipe[READ_END];
-	std::cout << "ALL CASES the _stdoutReadEnd end is " << _stdoutReadEnd << std::endl;
 	this->_pid = pid;
 }
 
