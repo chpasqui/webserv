@@ -58,7 +58,6 @@ void ServerConfig::addLocation(Location *location) {
 	_locations.push_back(location);
 }
 
-
 void ServerConfig::setClientTimeout(int clientTimeout) {
 	_clientTimeout = clientTimeout;
 }

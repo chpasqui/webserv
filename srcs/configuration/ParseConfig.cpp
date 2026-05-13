@@ -1,6 +1,5 @@
 #include "../../include/ParseConfig.hpp"
 #include <errno.h>
-#include <ios>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -121,7 +120,7 @@ int		ParseConfig::openFile(const std::string &filename) {
 //TODO:
 //- Add a default location if no one is given. OK
 //- Ignore the end ligne with " #". OK
-//- Add a line number for errors. : Use a ss to get the line, and overload getNextToken() to take int
+//- Add a line number for errors. : Use a ss to get the line, and overload getNextToken() to take int OK
 //- Display a better error message.
 //- check if the file end with ".conf". OK
 //- Fix leaks when exception is thrown. Still some leaks : OK
@@ -130,8 +129,9 @@ int		ParseConfig::openFile(const std::string &filename) {
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
 //- remove the setPath function in location OK
 //- add default index.html if no one is provided OK
-//- Combine "client_header_timeout" and "client_body_timeout" into "client_timeout"
+//- Combine "client_header_timeout" and "client_body_timeout" into "client_timeout" OK
 //- Keep in mind that it may be necessary to remove upload_store
+//- Make a logger with different level ?
 
 /**
  * @biref get the next token in the config file and remove it from the file string
@@ -141,8 +141,12 @@ int		ParseConfig::getNextToken(std::string &token) {
 	_configFile >> token;
 	if (_configFile.eof() || _configFile.fail())
 		return (0);
-	while (*token.begin() == '#')
+	while (*token.begin() == '#') {
+		_configFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //WARN: if the comment is the last word of the line , we skip the new line ???
 		_configFile >> token;
+		if (_configFile.eof() || _configFile.fail())
+			return (0);
+	}
 	LOG(C_PINK << token << RESET);
 	return (1);
 }
