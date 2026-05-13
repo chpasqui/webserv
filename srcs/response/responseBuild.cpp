@@ -172,7 +172,10 @@ void Response::parseCgiHeaders(std::string &headerSection)
 
 		size_t colonPos = line.find(':');
 		if (colonPos == std::string::npos)
+		{
+			std::cout << RED << "this is where PHP fails" << RESET << std::endl;
 			continue;
+		}
 
 		std::string name = line.substr(0, colonPos);
 		std::string value = line.substr(colonPos + 1);
@@ -218,7 +221,14 @@ void Response::buildCgiResponse(const std::string &output)
 	}
 	parseCgiHeaders(headerSection);
 	if (!_body.empty() && !_headers.count("Content-Type"))
+	{
+		std::cout << "entered here" << std::endl;
+		for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
+		{
+			std::cout << it->first << std::endl;
+		}
 		setError(INTERNAL_SERVER_ERROR);
+	}
 	if (_headers.count("Status"))
 	{
 		_statusCode = std::atoi(_headers["Status"].c_str());

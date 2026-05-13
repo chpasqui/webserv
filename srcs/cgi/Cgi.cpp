@@ -81,7 +81,7 @@ void Cgi::buildEnv(const ServerConfig &config)
 
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
 	{
-		this->_finalEnv.push_back(const_cast<char *>((*it).c_str()));
+		this->_finalEnv.push_back((strdup((*it).c_str())));
 		std::cout << GREEN << *it << RESET << std::endl;
 	}
 	this->_finalEnv.push_back(NULL);
