@@ -207,7 +207,7 @@ bool Response::splitOutput(const std::string &output, std::string &headerSection
 void Response::buildCgiResponse(const std::string &output)
 {
 	std::string headerSection;
-
+	LOG(std::cout << "output is : " << output << std::endl);
 	if (!splitOutput(output, headerSection))
 	{
 		setError(INTERNAL_SERVER_ERROR);
