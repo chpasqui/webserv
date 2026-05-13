@@ -36,13 +36,11 @@ void Cgi::launch(const ServerConfig &config)
 {
 	errno = 0;
 
-	std::cout << "internal path received is " << _response->getInternalPath() << std::endl;
 	this->_fileSystemPath = _response->getInternalPath();
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
 		std::cerr << "access issue" << std::endl;
 	}
-	std::cout << "no access issue anymore" << std::endl;
 	buildEnv(config);
 	executeScript();
 }
@@ -135,7 +133,6 @@ void Cgi::executeScript()
 	
 	safeClose(stdoutPipe[WRITE_END]);
 	_stdoutReadEnd = stdoutPipe[READ_END];
-	std::cout << "ALL CASES the _stdoutReadEnd end is " << _stdoutReadEnd << std::endl;
 	this->_pid = pid;
 }
 
@@ -157,4 +154,8 @@ int Cgi::getStdoutReadEnd() const
 
 Cgi::~Cgi()
 {
+	if (this->_stdinWriteEnd != -1)
+		safeClose(this->_stdinWriteEnd);
+	if (this->_stdoutReadEnd)
+		safeClose(this->_stdoutReadEnd);
 }

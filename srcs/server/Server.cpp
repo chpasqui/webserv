@@ -56,7 +56,6 @@ void Server::run()
 			}
 			else if (events[i].events & (EPOLLERR))
 			{
-				std::cout << "error event is " << events[i].events << std::endl;
 				closeConnection(fd);
 			}
 			else if (events[i].events & (EPOLLIN | EPOLLHUP))
@@ -82,7 +81,6 @@ void Server::run()
 			}
 		}
 	}
-	std::cout << "signal to stop received" << std::endl;
 }
 
 
@@ -133,7 +131,6 @@ void Server::readFromClient(int clientFd)
 		client.getResponse()->build(*client.getRequest(), client.getServerConfig());
 		if (client.getResponse()->getCgiStatus() == true)
 		{
-			std::cout << "launch cgi entered" << std::endl;
 			launchCgi(client);
 		}
 		else
@@ -159,7 +156,6 @@ void Server::launchCgi(Client &client)
 	}
 	if (cgi->getStdinWriteEnd() != -1)
 	{
-		std::cout << "GET METHPD ENTERED ALERT" << std::endl;
 		addToEpoll(_epollFd, cgi->getStdinWriteEnd(), EPOLLOUT);
 		this->_pipeFd[cgi->getStdinWriteEnd()] = &client;
 		std::cout << "pipe to be written to is " << cgi->getStdinWriteEnd() << std::endl;
@@ -171,7 +167,6 @@ void Server::launchCgi(Client &client)
 		std::cout << "pipe to be read from " << cgi->getStdoutReadEnd() << std::endl;
 
 	}
-	std::cout << "the stinread end should contain a number " <<  cgi->getStdoutReadEnd() << " and the stdinpipe should be -1: VALUE " <<   cgi->getStdoutReadEnd() << std::endl;
 	return;
 }
 
@@ -191,6 +186,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 		client->getResponse()->buildCgiResponse(client->getOutput());
 		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{
+			std::cout << "entered the case of read from pipe modify" << std::endl;
 			closeConnection(client->getClientFd());
 			return;
 		}
@@ -211,9 +207,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 			return;
 		}
 	}
-	delFromEpoll(_epollFd, stdoutPipeReadFd);
-	safeClose(stdoutPipeReadFd);
-	_pipeFd.erase(stdoutPipeReadFd);
+	closeConnection(stdoutPipeReadFd);
 }
 
 void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
@@ -232,9 +226,7 @@ void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 		client.bodyoffset += writtenBytes;
 		if (client.bodyoffset >= request->getContentLength())
 		{
-			this->_pipeFd.erase(stdinPipeWriteFd);
-			delFromEpoll(_epollFd,stdinPipeWriteFd);
-			safeClose(stdinPipeWriteFd);
+			closeConnection(stdinPipeWriteFd);
 			return;
 		}
 	}
@@ -270,8 +262,14 @@ void Server::closeConnection(int fd)
 	safeClose(fd);
 	if (_clients.count(fd))
 	{
+		std::cout << "delte client" << std::endl;
 		delete _clients[fd];
 		_clients.erase(fd);
+	}
+	if (_pipeFd.count(fd))
+	{
+		std::cout << "delete pipefd" << std::endl;
+		_pipeFd.erase(fd);
 	}
 }
 
@@ -292,6 +290,7 @@ Server::~Server()
 	for (; it != this->_clients.end(); ++it)
 	{
 		safeClose(it->first);
+		delete (it->second);
 	}
 	_clients.clear();
 
@@ -300,6 +299,12 @@ Server::~Server()
 	{
 		safeClose(secondIt->first);
 	}
-	_listenFds.clear();
+	this->_listenFds.clear();
+
+	std::map<int , Client*>::iterator thirdIt = this->_pipeFd.begin();
+	for (; thirdIt != this->_pipeFd.end(); thirdIt++)
+		safeClose((*thirdIt).first);
+	this->_pipeFd.clear();
+
 	safeClose(this->_epollFd);
 }

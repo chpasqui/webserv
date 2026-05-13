@@ -41,8 +41,6 @@ public:
 	void writeToPipe(Client &client, int stdinPipeWriteFd);
 	void timeoutCheck(void);
 
-	bool cgiDead(int fd);
-
 	void closeConnection(int fd);
 	static void addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static bool modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
