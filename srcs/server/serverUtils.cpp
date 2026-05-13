@@ -29,10 +29,15 @@ void	Server::timeoutCheck(void) {
 	time_t	currentTime;
 	time(&currentTime);
 
-	for (std::map<int, Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
 		Client* client = it->second;
 		if (std::difftime(currentTime, client->getTimestamp()) >= client->getServerConfig()->getClientTimeout()){
-			closeConnection(it->first);
+			if (client->getResponse() != NULL){
+				client->getResponse()->setError(504);
+				modifyEpoll(_epollFd, it->first, EPOLLOUT);
+			}
+			else
+				closeConnection(it->first);
 			std::cout << "connection closed" << std::endl;
 			if (_clients.empty())
 				return ;

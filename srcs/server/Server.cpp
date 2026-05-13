@@ -184,7 +184,6 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	ssize_t nbytes = 0;
 	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
 	if (nbytes > 0){
-		updateTimeStamp(*client);
 		client->setOutput(client->getOutput().append(buffer, nbytes));
 		return;
 	}
@@ -270,15 +269,31 @@ void Server::writeToClient(int fd)
 
 void Server::closeConnection(int fd)
 {
-	if(_clients[fd]->getCgi() && _clients[fd]->getCgi()->getCgiRunning())
-		kill(_clients[fd]->getCgi()->getPid(), SIGKILL);
-	delFromEpoll(this->_epollFd, fd);
-	safeClose(fd);
-	if (_clients.count(fd))
-	{
-		delete _clients[fd];
-		_clients.erase(fd);
-	}
+    if (_clients.count(fd))
+    {
+        Client *client = _clients[fd];
+        if (client->getCgi() && client->getCgi()->getCgiRunning())
+            kill(client->getCgi()->getPid(), SIGKILL);
+        // nettoyer les pipes
+        for (std::map<int, Client*>::iterator pit = _pipeFd.begin(); pit != _pipeFd.end(); )
+        {
+            if (pit->second == client)
+            {
+                delFromEpoll(_epollFd, pit->first);
+                safeClose(pit->first);
+                std::map<int, Client*>::iterator next = pit;
+                ++next;
+                _pipeFd.erase(pit);
+                pit = next;
+            }
+            else
+                ++pit;
+        }
+        delete client;
+        _clients.erase(fd);
+    }
+    delFromEpoll(this->_epollFd, fd);
+    safeClose(fd);
 }
 
 // EPOLL HELPER FUNCTIONS

@@ -53,7 +53,7 @@ std::map<int, std::string> Http::getErrorPages(void) const
 //----Setter----//
 
 void Http::setClientTimeout(int clientTimeout) {
-	clientTimeout = _clientTimeout;
+	_clientTimeout = clientTimeout ;
 }
 
 void Http::setMaxBodySize(int maxBodySize) {
