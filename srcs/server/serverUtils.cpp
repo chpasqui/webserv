@@ -31,7 +31,7 @@ void	Server::timeoutCheck(void) {
 
 	for (std::map<int, Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++) {
 		Client* client = it->second;
-		if (std::difftime(currentTime, client->getTimestamp()) >= TIMEOUT){
+		if (std::difftime(currentTime, client->getTimestamp()) >= client->getServerConfig()->getClientTimeout()){
 			closeConnection(it->first);
 			std::cout << "connection closed" << std::endl;
 			if (_clients.empty())

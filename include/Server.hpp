@@ -19,7 +19,6 @@ extern void safeClose(int fd);
 // server outlives serverconfig so it can have a pointer to serverconfig and it will delete it when closing
 
 #define MAX_EVENTS 1024
-#define TIMEOUT 10
 #define BACKLOG 20
 
 class Server
