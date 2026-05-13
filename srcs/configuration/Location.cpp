@@ -8,8 +8,7 @@ Location::Location() :
 	_path("/"),
 	_redirePath(""),
 	_cgiExtensions(),
-	_headerTimeout(0),
-	_bodyTimeout(0),
+	_clientTimeout(0),
 	_maxBodysize(0),
 	_port(0),
 	_autoindex(false),
@@ -27,8 +26,7 @@ Location::Location(const ServerConfig &serverConfig, const std::string path) :
 	_path(path),
 	_redirePath(""),
 	_cgiExtensions(),
-	_headerTimeout(serverConfig.getHeaderTimeout()),
-	_bodyTimeout(serverConfig.getBodyTimeout()),
+	_clientTimeout(serverConfig.getClientTimeout()),
 	_maxBodysize(serverConfig.getMaxBodySize()),
 	_port(serverConfig.getPort()),
 	_autoindex(serverConfig.getAutoindex()),
@@ -62,10 +60,6 @@ void Location::setUploadStore(const std::string UploadDir) {
 
 void Location::addCgiExtension(const std::string extension, const std::string path) {
 	_cgiExtensions.insert(std::map<std::string, std::string>::value_type(extension, path));
-}
-
-void Location::setBodyTimeout(const int bodyTimeout) {
-	_bodyTimeout = bodyTimeout;
 }
 
 void Location::setMaxBodySize(const int maxBodySize) {
@@ -108,14 +102,6 @@ std::string Location::getRedirPath(void) const {
 
 std::map<std::string, std::string> Location::getCgiExtensions(void) const {
 	return (_cgiExtensions);
-}
-
-int Location::getHeaderTimeout(void) const {
-	return (_headerTimeout);
-}
-
-int Location::getBodyTimeout(void) const {
-	return (_bodyTimeout);
 }
 
 int Location::getMaxBodySize(void) const {

@@ -32,14 +32,9 @@ void	AConfig::addCgiExtension(const std::string extension, const std::string pat
 	throw (std::runtime_error("wrong context with \"cgi_pass\""));
 }
 
-void	AConfig::setHeaderTimeout(const int headerTimeout) {
-	(void) headerTimeout;
-	throw (std::runtime_error("wrong context with \"client_header_timeout\""));
-}
-
-void	AConfig::setBodyTimeout(const int bodyTimeout) {
-	(void) bodyTimeout;
-	throw (std::runtime_error("wrong context with \"client_body_timeout\""));
+void	AConfig::setClientTimeout(const int clientTimeout) {
+	(void) clientTimeout;
+	throw (std::runtime_error("wrong context with \"client_timeout\""));
 }
 
 void	AConfig::setMaxBodySize(const int maxBodySize) {

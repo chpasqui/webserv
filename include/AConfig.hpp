@@ -14,8 +14,7 @@ class AConfig
 		virtual void						setRedirePath(const std::string redirePath);
 		virtual void						setUploadStore(const std::string dir);
 		virtual void						addCgiExtension(const std::string extension, const std::string path);
-		virtual void						setHeaderTimeout(const int headerTimeout);
-		virtual void						setBodyTimeout(const int bodyTimeout) = 0;
+		virtual void						setClientTimeout(const int bodyTimeout);
 		virtual void						setMaxBodySize(const int maxBodySize) = 0;
 		virtual void						setServerName(const std::string serverName);
 		virtual void						setPort(const int port);

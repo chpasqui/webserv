@@ -18,8 +18,7 @@ class ServerConfig : public AConfig
 		std::string					_serverName; //WARN: Only for virtual server ?
 		std::vector<Location *>		_locations;
 
-		int							_headerTimeout;
-		int							_bodyTimeout;
+		int							_clientTimeout;
 		int							_maxBodysize;
 		bool						_autoindex;
 		std::string					_root;
@@ -33,8 +32,7 @@ class ServerConfig : public AConfig
 		void						setPort(const int port);
 		void						setServerName(const std::string serverName);
 		void						addLocation(Location *location);
-		void						setHeaderTimeout(int headerTimeout);
-		void						setBodyTimeout(int bodyTimeout);
+		void						setClientTimeout(int bodyTimeout);
 		void						setMaxBodySize(int maxBodySize);
 		void						setAutoindex(bool autoindex);
 		void						setRoot(const std::string route);
@@ -45,8 +43,7 @@ class ServerConfig : public AConfig
 		int							getPort(void) const;
 		std::string					getServerName(void) const;
 		std::vector<Location *>		getLocations(void) const;
-		int							getHeaderTimeout(void) const;
-		int							getBodyTimeout(void) const;
+		int							getClientTimeout(void) const;
 		int							getMaxBodySize(void) const;
 		bool						getAutoindex(void) const;
 		std::string					getRoute(void) const;

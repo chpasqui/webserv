@@ -9,8 +9,7 @@ ServerConfig::ServerConfig() :
 	_port(0),
 	_serverName(""),
 	_locations(0),
-	_headerTimeout(0),
-	_bodyTimeout(0),
+	_clientTimeout(0),
 	_maxBodysize(0),
 	_autoindex(false),
 	_root(""),
@@ -25,8 +24,7 @@ ServerConfig::ServerConfig(const Http &http) :
 	_port(0),
 	_serverName(""),
 	_locations(0),
-	_headerTimeout(http.getHeaderTimeout()),
-	_bodyTimeout(http.getBodyTimeout()),
+	_clientTimeout(http.getClientTimeout()),
 	_maxBodysize(http.getMaxBodySize()),
 	_autoindex(http.getAutoindex()),
 	_root(http.getRoot()),
@@ -60,12 +58,9 @@ void ServerConfig::addLocation(Location *location) {
 	_locations.push_back(location);
 }
 
-void ServerConfig::setHeaderTimeout(int headerTimeout) {
-	_headerTimeout = headerTimeout;
-}
 
-void ServerConfig::setBodyTimeout(int bodyTimeout) {
-	_bodyTimeout = bodyTimeout;
+void ServerConfig::setClientTimeout(int clientTimeout) {
+	_clientTimeout = clientTimeout;
 }
 
 void ServerConfig::setMaxBodySize(int maxBodySize) {
@@ -107,12 +102,8 @@ std::vector<Location *> ServerConfig::getLocations(void) const {
 	return (_locations);
 }
 
-int ServerConfig::getHeaderTimeout(void) const {
-	return (_headerTimeout);
-}
-
-int ServerConfig::getBodyTimeout(void) const {
-	return (_bodyTimeout);
+int ServerConfig::getClientTimeout(void) const {
+	return (_clientTimeout);
 }
 
 int ServerConfig::getMaxBodySize(void) const {

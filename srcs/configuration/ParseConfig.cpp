@@ -39,8 +39,7 @@ ParseConfig::ParseConfig(std::vector<ServerConfig *> *serverConfigs) :
 	_dictionary["http"] = &ParseConfig::processTokenHttp;
 	_dictionary["server"] = &ParseConfig::processServerToken;
 	_dictionary["location"] = &ParseConfig::processLocationToken;
-	_dictionary["client_header_timeout"] = &ParseConfig::processHeaderTimeoutToken;
-	_dictionary["client_body_timeout"] = &ParseConfig::processBodyTimeoutToken;
+	_dictionary["client_timeout"] = &ParseConfig::processClientTimeoutToken;
 	_dictionary["client_max_body_size"] = &ParseConfig::processMaxBodySizeToken;
 	_dictionary["root"] = &ParseConfig::processRootToken;
 	_dictionary["listen"] = &ParseConfig::processListenToken;
@@ -252,26 +251,16 @@ void	ParseConfig::processLocationToken(void) {
 	_currentConfig->addLocation(_location);
 }
 
+
 /**
- * @detail client_header_timeout context: http, server
+ * @detail client_timeout context: http, server
  */
-void	ParseConfig::processHeaderTimeoutToken(void) {
+void	ParseConfig::processClientTimeoutToken(void) {
 	int			timeout;
 
 	if (!getNextToken(timeout))
-		throw (std::invalid_argument("fail to get the nextToken for \"client_header_timeout\""));
-	_contextConfig->setHeaderTimeout(timeout);
-}
-
-/**
- * @detail client_body_timeout context: http, server, location
- */
-void	ParseConfig::processBodyTimeoutToken(void) {
-	int			timeout;
-
-	if (!getNextToken(timeout))
-		throw (std::invalid_argument("fail to get the nextToken for \"cient_body_timeout\""));
-	_contextConfig->setBodyTimeout(timeout);
+		throw (std::invalid_argument("fail to get the nextToken for \"cient_timeout\""));
+	_contextConfig->setClientTimeout(timeout);
 	return ;
 }
 

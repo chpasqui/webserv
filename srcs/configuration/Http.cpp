@@ -3,8 +3,7 @@
 #include "../../include/color.hpp"
 
 Http::Http() :
-	_headerTimeout(30),
-	_bodyTimeout(30),
+	_clientTimeout(30),
 	_maxBodysize(1000), //WARN: check the correct convertion of 1m in bit
 	_autoindex(true),
 	_root(""),
@@ -22,12 +21,8 @@ Http::~Http() {
 
 //----Getter----//
 
-int Http::getHeaderTimeout(void) const {
-	return (_headerTimeout);
-}
-
-int Http::getBodyTimeout(void) const {
-	return (_bodyTimeout);
+int Http::getClientTimeout(void) const {
+	return (_clientTimeout);
 }
 
 int Http::getMaxBodySize(void) const {
@@ -57,12 +52,8 @@ std::map<int, std::string> Http::getErrorPages(void) const
 
 //----Setter----//
 
-void Http::setHeaderTimeout(int headerTimeout) {
-	_headerTimeout = headerTimeout;
-}
-
-void Http::setBodyTimeout(int bodyTimeout) {
-	_bodyTimeout = bodyTimeout;
+void Http::setClientTimeout(int clientTimeout) {
+	clientTimeout = _clientTimeout;
 }
 
 void Http::setMaxBodySize(int maxBodySize) {

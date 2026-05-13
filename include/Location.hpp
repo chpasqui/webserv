@@ -18,7 +18,6 @@ class Location : public AConfig
 		void						setRedirePath(const std::string redirePath);
 		void						setUploadStore(const std::string uploadDir);
 		void						addCgiExtension(const std::string extension, const std::string path);
-		void						setBodyTimeout(const int bodyTimeout);
 		void						setMaxBodySize(const int maxBodySize);
 		void						setAutoindex(const bool autoindex);
 		void						setRoot(const std::string root);
@@ -31,8 +30,7 @@ class Location : public AConfig
 		std::string					getRedirPath(void) const;
 		std::string					getUploadStore() const;
 		std::map<std::string, std::string>	getCgiExtensions(void) const;
-		int							getHeaderTimeout(void) const;
-		int							getBodyTimeout(void) const;
+		int							getClientTimeout(void) const;
 		int							getMaxBodySize(void) const;
 		int 						getPort(void) const;
 		bool 						getAutoIndex(void) const;
@@ -51,8 +49,7 @@ class Location : public AConfig
 		std::string							_uploadStore;
 		std::map<std::string, std::string>	_cgiExtensions;
 
-		int									_headerTimeout;
-		int									_bodyTimeout;
+		int									_clientTimeout;
 		int									_maxBodysize;
 		int									_port;
 		bool								_autoindex;

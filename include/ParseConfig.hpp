@@ -40,8 +40,7 @@ class ParseConfig {
 		void												processTokenHttp(void);
 		void												processServerToken(void);
 		void												processLocationToken(void);
-		void												processHeaderTimeoutToken(void);
-		void												processBodyTimeoutToken(void);
+		void												processClientTimeoutToken(void);
 		void												processMaxBodySizeToken(void);
 		void												processRootToken(void);
 		void												processListenToken(void);
