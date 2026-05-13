@@ -132,6 +132,7 @@ int		ParseConfig::openFile(const std::string &filename) {
 //- Combine "client_header_timeout" and "client_body_timeout" into "client_timeout" OK
 //- Keep in mind that it may be necessary to remove upload_store
 //- Make a logger with different level ?
+//- unform some function (like setMaxBodySize, setClientTimeout, etc...)
 
 /**
  * @biref get the next token in the config file and remove it from the file string

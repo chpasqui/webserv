@@ -16,12 +16,14 @@ int main(int ac, char **av) {
 	std::vector<ServerConfig*> configs;
 	std::srand(static_cast<unsigned int>(std::time(NULL))); //voir si laisser la
 
-	if (checkInputArgs(ac, av, configFileName) == 1)
-		return (1);
+	{
+		if (checkInputArgs(ac, av, configFileName) == 1)
+			return (1);
 
-	ParseConfig pc(&configs);
-	if (pc.parsingConfigFile(av[1]) == 1)
-		return (1);
+		ParseConfig pc(&configs);
+		if (pc.parsingConfigFile(av[1]) == 1)
+			return (1);
+	}
 
 	Server server;
 
