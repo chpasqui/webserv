@@ -222,7 +222,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
 {
 	Request *request = client.getRequest();
-	size_t writtenBytes = 0;
+	ssize_t writtenBytes = 0;
 
 	writtenBytes = write(stdinPipeWriteFd, request->getBody().c_str() + client.bodyoffset, request->getBody().size() - client.bodyoffset);
 	if (writtenBytes < 0)

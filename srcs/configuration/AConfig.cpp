@@ -16,11 +16,6 @@ void	AConfig::setRedireCode(const int redireCode){
 	throw (std::runtime_error("wrong context with \"return\" (redireCode)"));
 }
 
-void	AConfig::setPath(const std::string path) { //OPTIM: setPath is now directly called in the constructor of Location, can we remove it from AConfig ?
-	(void) path;
-	throw (std::runtime_error("wrong context"));
-}
-
 void	AConfig::setRedirePath(const std::string redirePath) {
 	(void) redirePath;
 	throw (std::runtime_error("wrong context with \"return\" (redirePath)"));
@@ -37,14 +32,9 @@ void	AConfig::addCgiExtension(const std::string extension, const std::string pat
 	throw (std::runtime_error("wrong context with \"cgi_pass\""));
 }
 
-void	AConfig::setHeaderTimeout(const int headerTimeout) {
-	(void) headerTimeout;
-	throw (std::runtime_error("wrong context with \"client_header_timeout\""));
-}
-
-void	AConfig::setBodyTimeout(const int bodyTimeout) {
-	(void) bodyTimeout;
-	throw (std::runtime_error("wrong context with \"client_body_timeout\""));
+void	AConfig::setClientTimeout(const int clientTimeout) {
+	(void) clientTimeout;
+	throw (std::runtime_error("wrong context with \"client_timeout\""));
 }
 
 void	AConfig::setMaxBodySize(const int maxBodySize) {

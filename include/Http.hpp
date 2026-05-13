@@ -12,8 +12,7 @@ class Http : public AConfig
 		Http();
 		virtual ~Http();
 		//----Getter----//
-		int							getHeaderTimeout(void) const;
-		int							getBodyTimeout(void) const;
+		int							getClientTimeout(void) const;
 		int							getMaxBodySize(void) const;
 		bool						getAutoindex(void) const;
 		std::string					getRoot(void) const;
@@ -22,8 +21,7 @@ class Http : public AConfig
 		std::map<int, std::string>	getErrorPages(void) const;
 		
 		//----Setter----//
-		void						setHeaderTimeout(const int headerTimeout);
-		void						setBodyTimeout(const int bodyTimeout);
+		void						setClientTimeout(const int bodyTimeout);
 		void						setMaxBodySize(const int maxBodySize);
 		void						setAutoindex(const bool autoindex);
 		void						setRoot(const std::string root);
@@ -32,8 +30,7 @@ class Http : public AConfig
 		void						addErrorPage(const int code, std::string page);
 
 	private:
-		int							_headerTimeout;
-		int							_bodyTimeout;
+		int							_clientTimeout;
 		int							_maxBodysize;
 		bool						_autoindex;
 		std::string					_root;
