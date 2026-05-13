@@ -1,6 +1,7 @@
 #ifndef PARSECONFIG_HPP
 # define PARSECONFIG_HPP
 
+#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
@@ -28,9 +29,11 @@ class ParseConfig {
 		
 		int				parsingConfigFile(void);
 	private:
-		int				openFile(void);
-		std::string		getNextToken(void);
-		bool			thereIsDefaultLocation(void) const;
+		int					openFile(void);
+		int					getNextToken(std::string &token);
+		int					getNextToken(int &token);
+		bool				thereIsDefaultLocation(void) const;
+		bool				thereIsIndex(void) const;
 		//----ProcessToken----//
 		void				processEndBraquetToken(void);
 		void				processTokenHttp(void);
@@ -53,7 +56,7 @@ class ParseConfig {
 		static int		transformTokenToInt(std::string token);
 		//----Atributes----//
 		std::string											_filename;
-		std::string											_configFile;
+		std::ifstream										_configFile;
 		int													_line;
 		int													_contextLevel;
 		AConfig												*_contextConfig;

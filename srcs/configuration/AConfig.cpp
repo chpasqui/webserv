@@ -16,11 +16,6 @@ void	AConfig::setRedireCode(const int redireCode){
 	throw (std::runtime_error("wrong context with \"return\" (redireCode)"));
 }
 
-void	AConfig::setPath(const std::string path) { //OPTIM: setPath is now directly called in the constructor of Location, can we remove it from AConfig ?
-	(void) path;
-	throw (std::runtime_error("wrong context"));
-}
-
 void	AConfig::setRedirePath(const std::string redirePath) {
 	(void) redirePath;
 	throw (std::runtime_error("wrong context with \"return\" (redirePath)"));

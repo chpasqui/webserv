@@ -15,7 +15,6 @@ class Location : public AConfig
 		virtual ~Location();
 		//----Setter----//
 		void						setRedireCode(const int redireCode);
-		void						setPath(const std::string path);
 		void						setRedirePath(const std::string redirePath);
 		void						setUploadStore(const std::string uploadDir);
 		void						addCgiExtension(const std::string extension, const std::string path);
