@@ -49,7 +49,6 @@ ParseConfig::ParseConfig(std::vector<ServerConfig *> *serverConfigs) :
 	_dictionary["index"] = &ParseConfig::processIndexToken;
 	_dictionary["return"] = &ParseConfig::processRedirectionToken;
 	_dictionary["cgi_pass"] = &ParseConfig::processCgiPassToken;
-	_dictionary["upload_store"] = &ParseConfig::processUploadStoreToken;
 	LOG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
 }
 
@@ -382,13 +381,5 @@ void	ParseConfig::processCgiPassToken(void) {
 	if (*(extension.begin()) != '.')
 		throw (std::invalid_argument("an extension need to start with a point"));
 	_contextConfig->addCgiExtension(extension, path);
-}
-
-void	ParseConfig::processUploadStoreToken(void) {
-	std::string uploadStorePath;
-
-	if (!getNextToken(uploadStorePath))
-		throw (std::invalid_argument("fail to get the nextToken for \"upload_store\""));
-	_contextConfig->setUploadStore(uploadStorePath);
 }
 
