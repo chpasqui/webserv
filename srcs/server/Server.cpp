@@ -251,7 +251,7 @@ void Server::readFromPipe(int pipeReadEnd)
 	{
 		delFromEpoll(this->_epollFd, pipeReadEnd);
 		this->_pipeFd.erase(pipeReadEnd);
-		client->getCgi()->closePipeReadEnd();
+		client->getCgi()->closePipeReadEnd();//pour close le PipeReadEnd de la classe Cgi (pas la variable locale)
 
 		response->buildCgiResponse(client->getOutput());
 	}
@@ -290,7 +290,7 @@ void Server::writeToPipe(int pipeWriteEnd)
 		{
 			delFromEpoll(this->_epollFd, pipeWriteEnd);
 			this->_pipeFd.erase(pipeWriteEnd);
-			client->getCgi()->closePipeWriteEnd();
+			client->getCgi()->closePipeWriteEnd();//pour close le PipeWriteEnd de la classe Cgi (pas la variable locale)
 			return;
 		}
 	}
