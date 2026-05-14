@@ -73,6 +73,5 @@ class Request
 std::string decodeUrl(const std::string &url);
 bool        checkUnsafeChar(const std::string &url_decode);
 bool        isTokenChar(unsigned char c);
-void 		debugListHeader(std::map<std::string, std::string> &_headers);
 
 #endif

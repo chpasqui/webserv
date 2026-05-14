@@ -12,7 +12,7 @@ LDINCLUDE   =   -I$(DIR_INCLUDE)
 
 SRCS        =   main.cpp \
 				Client.cpp \
-				debug.cpp \
+				Debug.cpp \
 				fdUtils.cpp \
 				server/Server.cpp \
 				server/serverEpoll.cpp \
