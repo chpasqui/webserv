@@ -1,6 +1,7 @@
-#include "../include/Server.hpp"
-#include "../include/color.hpp"
-#include "../include/Cgi.hpp"
+#include "../../include/Server.hpp"
+#include "../../include/color.hpp"
+#include "../../include/Cgi.hpp"
+#include "../../include/statusCode.hpp"
 
 #include <iostream>
 #include <ctime>
@@ -18,11 +19,11 @@
 #include <signal.h>
 
 
-void Server:: updateTimeStamp(Client &client){
+void Server:: updateTimeStamp(Client *client){
 	time_t currentTime;
 	time(&currentTime);
 
-	client.setTimestamp(currentTime);
+	client->setTimestamp(currentTime);
 }
 
 void	Server::timeoutCheck(void) {
@@ -33,11 +34,17 @@ void	Server::timeoutCheck(void) {
 		Client* client = it->second;
 		if (std::difftime(currentTime, client->getTimestamp()) >= client->getServerConfig()->getClientTimeout()){
 			if (client->getResponse() != NULL){
-				client->getResponse()->setError(504);
-				modifyEpoll(_epollFd, it->first, EPOLLOUT);
+				client->getResponse()->setError(GATEWAY_TIMEOUT, "timeoutCheck: response is not NULL");
+				if (client->getCgi()){
+					addToEpoll(_epollFd, it->first, EPOLLOUT);
+					updateTimeStamp(client);
+				}
+				else 
+					modifyEpoll(_epollFd, it->first, EPOLLOUT);
+				return ;
 			}
 			else
-				closeConnection(it->first);
+				closeConnection(client);
 			std::cout << "connection closed" << std::endl;
 			if (_clients.empty())
 				return ;
@@ -52,8 +59,8 @@ void	Server::timeoutCheck(void) {
 void	Server::signalHandler(int signal) {
 	if (signal == SIGINT)
 		std::cout << "\nSIGINT signal detected, stopping server\n";
-	else if (signal == SIGQUIT)
-		std::cout << "\nSIGQUIT signal detected, stopping server\n";
+	// else if (signal == SIGQUIT)
+	// 	std::cout << "\nSIGQUIT signal detected, stopping server\n"; 
 	serverSignal = signal;
 }
 

@@ -29,8 +29,7 @@ Cgi::Cgi() :
 	_tempEnv(), 
 	_finalEnv(), 
 	_pipeWriteEnd(-1), 
-	_pipeReadEnd(-1), 
-	_cgiRunning(false){}
+	_pipeReadEnd(-1){}
 
 Cgi::Cgi(Response *response, Request *request) : 
 	_fileSystemPath(""),
@@ -38,8 +37,7 @@ Cgi::Cgi(Response *response, Request *request) :
 	_pipeWriteEnd(-1),
 	_pipeReadEnd(-1),
 	_response(response),
-	_request(request),
-	_cgiRunning(false){}
+	_request(request){}
 
 void Cgi::launch(const ServerConfig &config)
 {
@@ -116,7 +114,6 @@ void Cgi::executeScript()
 		return ;
 	
 	pid_t pid = fork(); //
-	_cgiRunning = true;
 	if (pid == 0)
 	{
 		safeClose(stdinPipe[WRITE_END]);
@@ -172,11 +169,6 @@ int Cgi::getPipeReadEnd() const
 int Cgi::getPid(void) const
 {
 	return this->_pid;
-}
-
-
-bool Cgi::getCgiRunning() const{
-	return _cgiRunning;
 }
 
 Cgi::~Cgi()

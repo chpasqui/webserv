@@ -32,7 +32,7 @@ public:
 	void readFromPipe(int stdoutPipeReadFd);
 	void launchCgi(Client &client);
 	void writeToClient(int fd);
-	void writeToPipe(Client &client, int stdinPipeWriteFd);
+	void writeToPipe(int stdinPipeWriteFd);
 	void timeoutCheck(void);
 
 	void closeConnection(Client *client);
@@ -40,7 +40,7 @@ public:
 	static bool modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static void delFromEpoll(int epollFd, int fdToModify);
 	static void signalHandler(int signal);
-	void updateTimeStamp(Client &client);
+	void updateTimeStamp(Client *client);
 
 private:
 	int _epollFd;

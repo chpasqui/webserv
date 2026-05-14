@@ -61,7 +61,7 @@ void Server::run()
 			{
 				if (this->_pipeFd.count(fd))
 					readFromPipe(fd);
-				else
+				else if (this->_clients.count(fd)) 
 					readFromClient(fd);
 			}
 			// else if (events[i].events & (EPOLLERR))
@@ -72,14 +72,9 @@ void Server::run()
 			else if (events[i].events & (EPOLLOUT)) //| EPOLLERR))
 			{
 				if (this->_pipeFd.count(fd))
-				{
-					Client *client = this->_pipeFd[fd];
-					writeToPipe(*client, fd);
-				}
-				else
-				{
+					writeToPipe(fd);
+				else if (this->_clients.count(fd))
 					writeToClient(fd);
-				}
 			}
 		}
 	}
@@ -128,11 +123,12 @@ bool Server::acceptNewConnection(int listeningFd)
 void Server::closeConnection(Client *client)
 {
 	if (client->getCgi())
-	{
+	{	if (client->getCgi()->getPid() > 0)
+			kill(client->getCgi()->getPid(), SIGKILL);
 		// this is a precautionary measure, in case the read and write have failed, then i need to double check that they are rempoved from epoll
-		if (this->_pipeFd[client->getCgi()->getPipeWriteEnd()] && client->getCgi()->getPipeWriteEnd() != -1)
+		if (client->getCgi()->getPipeWriteEnd() != -1 && this->_pipeFd[client->getCgi()->getPipeWriteEnd()])
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeWriteEnd());
-		if (this->_pipeFd[client->getCgi()->getPipeReadEnd()] && client->getCgi()->getPipeReadEnd() != -1)
+		if (client->getCgi()->getPipeReadEnd() != -1 && this->_pipeFd[client->getCgi()->getPipeReadEnd()])
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeReadEnd());
 	}
 	delFromEpoll(this->_epollFd, client->getClientFd());
@@ -263,9 +259,6 @@ void Server::readFromPipe(int pipeReadEnd)
 		// 	closeConnection(client);
 		// 	return;
 		// }
-		pid_t pid = client->getCgi()->getPid();
-		int status = 0;
-		waitpid(pid, &status, 0);
 	}
 	else {
 		client->getResponse()->setError(BAD_GATEWAY, "readFromPipe: read failed");
@@ -283,12 +276,13 @@ void Server::readFromPipe(int pipeReadEnd)
  * @param client 
  * @param pipeWriteEnd 
  */
-void Server::writeToPipe(Client &client, int pipeWriteEnd)
+void Server::writeToPipe(int pipeWriteEnd)
 {
-	Request *request = client.getRequest();
+	Client *client = this->_pipeFd[pipeWriteEnd];
+	Request *request = client->getRequest();
 	ssize_t writtenBytes = 0;
 
-	writtenBytes = write(pipeWriteEnd, request->getBody().c_str() + client.bodyoffset, request->getBody().size() - client.bodyoffset);
+	writtenBytes = write(pipeWriteEnd, request->getBody().c_str() + client->bodyoffset, request->getBody().size() - client->bodyoffset);
 	if (writtenBytes < 0)
 	{
 		perror("Error: ");
@@ -297,8 +291,8 @@ void Server::writeToPipe(Client &client, int pipeWriteEnd)
 	else if (writtenBytes > 0)
 	{
 		updateTimeStamp(client);
-		client.bodyoffset += writtenBytes;
-		if (client.bodyoffset >= request->getContentLength())
+		client->bodyoffset += writtenBytes;
+		if (client->bodyoffset >= request->getContentLength())
 		{
 			delFromEpoll(this->_epollFd, pipeWriteEnd);
 			this->_pipeFd.erase(pipeWriteEnd);
