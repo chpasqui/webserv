@@ -28,15 +28,15 @@ Cgi::Cgi() :
 	_fileSystemPath(""), 
 	_tempEnv(), 
 	_finalEnv(), 
-	_stdinWriteEnd(-1), 
-	_stdoutReadEnd(-1), 
+	_pipeWriteEnd(-1), 
+	_pipeReadEnd(-1), 
 	_cgiRunning(false){}
 
 Cgi::Cgi(Response *response, Request *request) : 
 	_fileSystemPath(""),
 	_tempEnv(), _finalEnv(),
-	_stdinWriteEnd(-1),
-	_stdoutReadEnd(-1),
+	_pipeWriteEnd(-1),
+	_pipeReadEnd(-1),
 	_response(response),
 	_request(request),
 	_cgiRunning(false){}
@@ -45,13 +45,18 @@ void Cgi::launch(const ServerConfig &config)
 {
 	errno = 0;
 
-	std::cout << "internal path received is " << _response->getInternalPath() << std::endl;
 	this->_fileSystemPath = _response->getInternalPath();
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
 		std::cerr << "access issue" << std::endl;
 	}
-	std::cout << "no access issue anymore" << std::endl;
+	// std::string directoryPath;
+	// size_t pos = this->_fileSystemPath.find_last_of('/');
+	// directoryPath = this->_fileSystemPath.substr(0, pos);
+	// std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
+	// if (chdir(directoryPath.c_str()) != 0)
+	// 	std::cerr << "chdir error\n" << std::endl;
+	// this->_fileName = filename;
 	buildEnv(config);
 	executeScript();
 }
@@ -60,9 +65,11 @@ void Cgi::buildEnv(const ServerConfig &config)
 {
 
 	const std::map<std::string, std::string> &header = _request->getHeaders();
-	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(".py") + 3);
+	std::string extension = this->_response->getCgiExtension();
+	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(extension) + extension.length());
 
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	_tempEnv.push_back("REDIRECT_STATUS=200");
 	_tempEnv.push_back("REQUEST_METHOD=" + _request->getMethod());
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName);
 	_tempEnv.push_back("PATH_INFO=" + this->_fileSystemPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself
@@ -71,7 +78,6 @@ void Cgi::buildEnv(const ServerConfig &config)
 	_tempEnv.push_back("SERVER_PORT=" + intToString(config.getPort()));
 	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
 	_tempEnv.push_back("SERVER_NAME=" + resolveHostname());
-	std::cout << "content length sent to the cgi is " << _request->getContentLength() << std::endl;
 	if (_request->getMethod() == "POST" && _request->getContentLength() != 0)
 	{
 		std::string contentType   = getHeaderVariable(header, "content-type");
@@ -82,18 +88,21 @@ void Cgi::buildEnv(const ServerConfig &config)
 	}
 
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
-		this->_finalEnv.push_back(const_cast<char *>((*it).c_str()));
+	{
+		this->_finalEnv.push_back((strdup((*it).c_str())));
+		std::cout << GREEN << *it << RESET << std::endl;
+	}
 	this->_finalEnv.push_back(NULL);
 }
 
 void	Cgi::openPipes(int *stdinPipe, int * stdoutPipe)
 {
 	if (pipe(stdoutPipe) == -1 || fcntl(stdoutPipe[READ_END], F_SETFL, O_NONBLOCK) < 0)
-		_response->setSyscallError();
+		_response->setSyscallError("openPipes: failed to open stdoutPipe");
 	else if (pipe(stdinPipe) == -1 
 		|| fcntl(stdinPipe[WRITE_END], F_SETFL, O_NONBLOCK) < 0
 		|| fcntl(stdinPipe[READ_END], F_SETFL, O_NONBLOCK) < 0)
-		_response->setSyscallError();
+		_response->setSyscallError("openPipes: failed to open stdinPipe");
 }
 
 void Cgi::executeScript()
@@ -126,7 +135,7 @@ void Cgi::executeScript()
 			std::exit(EXIT_FAILURE);
 		}
 		safeClose(stdoutPipe[WRITE_END]);
-		std::string executable = parseShebang(this->_fileSystemPath);
+		std::string executable = this->_response->getCgiPass();
 
 		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileSystemPath.c_str()), NULL}; // NULL marks the end of the array
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
@@ -137,22 +146,27 @@ void Cgi::executeScript()
 	safeClose(stdinPipe[READ_END]);
 	if (_request->getMethod() == "POST")
 	{
-		_stdinWriteEnd = stdinPipe[WRITE_END];
-		std::cout << "POST CASE the stdinwrite end is " << _stdinWriteEnd << std::endl;
+		_pipeWriteEnd = stdinPipe[WRITE_END];
 	}
 	else
+	{
 		safeClose(stdinPipe[WRITE_END]);
+	}
 	
 	safeClose(stdoutPipe[WRITE_END]);
-	_stdoutReadEnd = stdoutPipe[READ_END];
-	std::cout << "ALL CASES the _stdoutReadEnd end is " << _stdoutReadEnd << std::endl;
+	_pipeReadEnd = stdoutPipe[READ_END];
 	this->_pid = pid;
 }
 
 
-int Cgi::getStdinWriteEnd() const
+int Cgi::getPipeWriteEnd() const
 {
-	return this->_stdinWriteEnd;
+	return this->_pipeWriteEnd;
+}
+
+int Cgi::getPipeReadEnd() const
+{
+	return this->_pipeReadEnd;
 }
 
 int Cgi::getPid(void) const
@@ -160,10 +174,6 @@ int Cgi::getPid(void) const
 	return this->_pid;
 }
 
-int Cgi::getStdoutReadEnd() const
-{
-	return this->_stdoutReadEnd;
-}
 
 bool Cgi::getCgiRunning() const{
 	return _cgiRunning;
@@ -171,4 +181,6 @@ bool Cgi::getCgiRunning() const{
 
 Cgi::~Cgi()
 {
+	safeClose(this->_pipeWriteEnd);
+	safeClose(this->_pipeReadEnd);
 }

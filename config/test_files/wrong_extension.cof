@@ -1,0 +1,32 @@
+http { 
+
+  server {
+    listen 8080
+    server_name localhost
+
+    client_timeout 35
+    root www/
+    client_max_body_size 1000
+    error_page 404 /404.html
+
+    location / {
+        allowed_methods "GET|POST|DELETE";
+        autoindex on
+    }
+
+    location /oldPage {
+        return 301 /newPage
+      }
+
+    location /cgi-bin {
+        root www/cgi-bin/
+        allowed_methods "GET|POST"
+        cgi_pass .py  /usr/bin/python3
+        cgi_pass .php /usr/bin/php-cgi
+    }
+
+    location /uploadDir {
+        allowed_methods "GET";
+    }
+  }
+}

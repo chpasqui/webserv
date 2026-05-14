@@ -13,11 +13,6 @@
 extern int serverSignal;
 extern void safeClose(int fd);
 
-// Client lives in server
-// ServerConfig lives in Client
-// Server lives in main
-// server outlives serverconfig so it can have a pointer to serverconfig and it will delete it when closing
-
 #define MAX_EVENTS 1024
 #define BACKLOG 20
 
@@ -40,9 +35,7 @@ public:
 	void writeToPipe(Client &client, int stdinPipeWriteFd);
 	void timeoutCheck(void);
 
-	bool cgiDead(int fd);
-
-	void closeConnection(int fd);
+	void closeConnection(Client *client);
 	static void addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static bool modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static void delFromEpoll(int epollFd, int fdToModify);

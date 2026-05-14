@@ -54,10 +54,6 @@ void Location::setRedirePath(const std::string redirePath) {
 	_redirePath = redirePath;
 }
 
-void Location::setUploadStore(const std::string UploadDir) {
-	_uploadStore = UploadDir;
-}
-
 void Location::addCgiExtension(const std::string extension, const std::string path) {
 	_cgiExtensions.insert(std::map<std::string, std::string>::value_type(extension, path));
 }
@@ -130,10 +126,6 @@ std::string Location::getAllowedMethods(void) const {
 
 std::vector<std::string> Location::getIndexes(void) const {
 	return (_indexes);
-}
-
-std::string Location::getUploadStore() const{
-	return (_uploadStore);
 }
 
 std::string Location::getErrorPage(int code) const

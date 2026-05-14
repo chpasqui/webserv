@@ -30,8 +30,8 @@ class Cgi
 		Cgi(Response *response, Request *request);
 		~Cgi();
 		void launch(const ServerConfig &config);
-		int	getStdinWriteEnd() const;
-		int getStdoutReadEnd() const;
+		int	getPipeWriteEnd() const;
+		int getPipeReadEnd() const;
 		bool getCgiRunning() const;
 		int getPid(void) const;
 
@@ -42,9 +42,10 @@ class Cgi
 
 		std::string _scriptName;
 		std::string _pathInfo;
+		std::string _fileName;
 
-		int _stdinWriteEnd;
-		int _stdoutReadEnd;
+		int _pipeWriteEnd;
+		int _pipeReadEnd;
 		int _pid;
 
 		void buildEnv(const ServerConfig &config);

@@ -55,8 +55,6 @@ class Client
 		Client(); // client constructor is in private so that we never create a client out of nowhere
 		int _clientFd;
 		int _cgiPipeFd;
-		int _writeCgiPipeEnd;
-		int _readCgiPipeEnd;
 		std::string _output;
 
 		ssize_t _bytesRead;
@@ -72,4 +70,3 @@ class Client
 };
 
 #endif
-        
