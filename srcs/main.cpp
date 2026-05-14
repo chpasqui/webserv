@@ -21,7 +21,7 @@ int main(int ac, char **av) {
 			return (1);
 
 		ParseConfig pc(&configs);
-		if (pc.parsingConfigFile(av[1]) == 1)
+		if (pc.parsingConfigFile(configFileName) == 1)
 			return (1);
 	}
 
@@ -76,15 +76,15 @@ int main(int ac, char **av) {
  * @return [TODO:return]
  */
 int	checkInputArgs(int ac, char **av, std::string &filename) {
-	int			status, i;
+	int			status;
 	std::string	response;
 
 	if (ac > 2) {
-		std::cerr << C_RED << "Please use only one configuration file" << RESET << std::endl;
+		std::cerr << C_YELLOW << "This program can only use a single configuration file, stopping webserv" << RESET << std::endl;
 		return 1;
 	}
 	else if (ac == 1) {
-		i = 0;
+		int i = 0;
 		do {
 			std::cout << C_BLUE << "No configuration file was provided. Would you like to try using the default one ?\n[Y/n]" <<  RESET << std::endl;
 			std::getline(std::cin, response);
@@ -92,11 +92,11 @@ int	checkInputArgs(int ac, char **av, std::string &filename) {
 			status = checkResponse(response);
 			i++;
 		}
-		while (!status && i < 10);
+		while (!status && i < 5);
 		if (status == 1)
 			filename = "config/default.conf";
 		else {
-			std::cout << C_RED << "Please provide a configuration file" << RESET << std::endl;
+			std::cerr << C_YELLOW << "no configuration file provided. stopping webserv" << RESET << std::endl;
 			return (1);
 		}
 	}
@@ -112,3 +112,4 @@ int	checkResponse(const std::string &response) {
 		return (2);
 	return (0);
 }
+
