@@ -24,11 +24,11 @@
 #define WRITE_END 1
 #define BUFFER_SIZE 1024
 
-Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1)
+Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _pipeWriteEnd(-1), _pipeReadEnd(-1)
 {
 }
 
-Cgi::Cgi(Response *response, Request *request) : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1), _response(response), _request(request)
+Cgi::Cgi(Response *response, Request *request) : _fileSystemPath(""), _tempEnv(), _finalEnv(), _pipeWriteEnd(-1), _pipeReadEnd(-1), _response(response), _request(request)
 {
 }
 
@@ -125,21 +125,29 @@ void Cgi::executeScript()
 	safeClose(stdinPipe[READ_END]);
 	if (_request->getMethod() == "POST")
 	{
-		_stdinWriteEnd = stdinPipe[WRITE_END];
-		std::cout << "POST CASE the stdinwrite end is " << _stdinWriteEnd << std::endl;
+		_pipeWriteEnd = stdinPipe[WRITE_END];
+		std::cout << "POST CASE the stdinwrite end is " << _pipeWriteEnd << std::endl;
 	}
 	else
+	{
+		std::cout << "This is the GET in CGI, the stdinwrite end is " << _pipeWriteEnd << std::endl;
 		safeClose(stdinPipe[WRITE_END]);
+	}
 	
 	safeClose(stdoutPipe[WRITE_END]);
-	_stdoutReadEnd = stdoutPipe[READ_END];
+	_pipeReadEnd = stdoutPipe[READ_END];
 	this->_pid = pid;
 }
 
 
-int Cgi::getStdinWriteEnd() const
+int Cgi::getPipeWriteEnd() const
 {
-	return this->_stdinWriteEnd;
+	return this->_pipeWriteEnd;
+}
+
+int Cgi::getPipeReadEnd() const
+{
+	return this->_pipeReadEnd;
 }
 
 int Cgi::getPid(void) const
@@ -147,13 +155,9 @@ int Cgi::getPid(void) const
 	return this->_pid;
 }
 
-int Cgi::getStdoutReadEnd() const
-{
-	return this->_stdoutReadEnd;
-}
 
 Cgi::~Cgi()
 {
-	safeClose(this->_stdinWriteEnd);
-	safeClose(this->_stdoutReadEnd);
+	safeClose(this->_pipeWriteEnd);
+	safeClose(this->_pipeReadEnd);
 }

@@ -28,10 +28,10 @@
 
 int serverSignal = 0;
 
-Server::Server() : _epollFd(-1),
-				   _listenFds(),
-				   _clients(),
-				   _pipeFd()
+Server::Server() :	_epollFd(-1),
+_listenFds(),
+_clients(),
+_pipeFd()
 {
 }
 
@@ -51,23 +51,23 @@ void Server::run()
 				if (!acceptNewConnection(fd))
 					continue;
 			}
-			else if (events[i].events & (EPOLLERR))
-			{
-				//closeConnection(fd); check this after
-			}
 			else if (events[i].events & (EPOLLIN | EPOLLHUP))
 			{
 				if (this->_pipeFd.count(fd))
-				{
 					readFromPipe(fd);
-				}
 				else
 					readFromClient(fd);
 			}
-			else if (events[i].events & EPOLLOUT)
+			// else if (events[i].events & (EPOLLERR))
+			// {
+			// 	std::cout << "EPOLLERR case " << std::endl;
+			// 	continue;
+			// }
+			else if (events[i].events & (EPOLLOUT)) //| EPOLLERR))
 			{
 				if (this->_pipeFd.count(fd))
 				{
+					std::cout << "the pipe we want to write to is" << fd << std::endl;
 					Client *client = this->_pipeFd[fd];
 					writeToPipe(*client, fd);
 				}
@@ -91,7 +91,7 @@ bool Server::acceptNewConnection(int listeningFd)
 		perror("accept error");
 		return false;
 	}
-
+	
 	try
 	{
 		addToEpoll(this->_epollFd, clientFd, EPOLLIN);
@@ -108,15 +108,35 @@ bool Server::acceptNewConnection(int listeningFd)
 	return (true);
 }
 
+void Server::closeConnection(Client *client)
+{
+	std::cout << "ENTERED THE CLOSE CONNECTION FUNCITON" << std::endl;
+	if (client->getCgi())
+	{
+		if (client->getCgi()->getPipeWriteEnd() != -1)
+			delFromEpoll(this->_epollFd, client->getCgi()->getPipeWriteEnd());
+		if (client->getCgi()->getPipeReadEnd() != -1)
+			delFromEpoll(this->_epollFd, client->getCgi()->getPipeReadEnd());
+	}
+	delFromEpoll(this->_epollFd, client->getClientFd());
+
+	if (_clients.count(client->getClientFd()))
+	{
+		std::cout << "delte client" << std::endl;
+		int fd = client->getClientFd(); // extract fd contained in client
+		delete _clients[fd]; // delete the client pointer
+		_clients.erase(fd); // remove the entry without access to client which has been deleted 
+	}
+}
 // potentially rename to treatClientRequest
 void Server::readFromClient(int clientFd)
 {
 	Client *client = _clients[clientFd];
-	//update timestamp for TimeoutCheck
+	
 	client->parseRequest();
-
 	if (client->getParsingStatus() == CLOSEFD)
 	{
+		std::cout << "entered the CLOSEFD condition" << std::endl;
 		closeConnection(client);
 		return;
 	}
@@ -134,10 +154,12 @@ void Server::readFromClient(int clientFd)
 		{
 			if (!modifyEpoll(this->_epollFd, clientFd, EPOLLOUT))
 			{
+				std::cout << "entered the not modify epoll condition" << std::endl;
 				closeConnection(client);
 				return;
 			}
 		}
+		std::cout << "the reading from the client is comlplete" << std::endl;
 	}
 }
 
@@ -145,34 +167,42 @@ void Server::launchCgi(Client &client)
 {
 	client.setCgi(client.getResponse(), client.getRequest());
 	Cgi *cgi = client.getCgi();
+
 	cgi->launch(*client.getServerConfig());
+
 	if (errno)
 	{
 		closeConnection(&client);
 		return ;
 	}
-	if (cgi->getStdinWriteEnd() != -1)
+
+	if (cgi->getPipeWriteEnd() != -1)
 	{
-		addToEpoll(_epollFd, cgi->getStdinWriteEnd(), EPOLLOUT);
-		this->_pipeFd[cgi->getStdinWriteEnd()] = &client;
-		std::cout << "pipe to be written to is " << cgi->getStdinWriteEnd() << std::endl;
+		addToEpoll(_epollFd, cgi->getPipeWriteEnd(), EPOLLOUT);
+		this->_pipeFd[cgi->getPipeWriteEnd()] = &client;
+		std::cout << "pipe to be written to is " << cgi->getPipeWriteEnd() << std::endl;
 	}
-	if (cgi->getStdoutReadEnd() != -1)
+
+	if (cgi->getPipeReadEnd() != -1)
 	{
-		addToEpoll(_epollFd, cgi->getStdoutReadEnd(), EPOLLIN);
-		this->_pipeFd[cgi->getStdoutReadEnd()] = &client;
-		std::cout << "pipe to be read from " << cgi->getStdoutReadEnd() << std::endl;
+		addToEpoll(_epollFd, cgi->getPipeReadEnd(), EPOLLIN);
+		this->_pipeFd[cgi->getPipeReadEnd()] = &client;
+		std::cout << "pipe to be read from " << cgi->getPipeReadEnd() << std::endl;
 
 	}
+
 	return;
 }
 
-void Server::readFromPipe(int stdoutPipeReadFd)
+void Server::readFromPipe(int pipeReadEnd)
 {
-	Client *client = this->_pipeFd[stdoutPipeReadFd];
+	Client *client = this->_pipeFd[pipeReadEnd];
+	Response *response = client->getResponse();
+
 	char buffer[BUFFER_SIZE];
 	ssize_t nbytes = 0;
-	nbytes = read(stdoutPipeReadFd, buffer, BUFFER_SIZE);
+
+	nbytes = read(pipeReadEnd, buffer, BUFFER_SIZE);
 	if (nbytes > 0){
 		client->setOutput(client->getOutput().append(buffer, nbytes));
 		return;
@@ -180,7 +210,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	else if (nbytes == 0)
 	{
 		std::cout << "entered the isdone case after the read" << std::endl;
-		client->getResponse()->buildCgiResponse(client->getOutput());
+		response->buildCgiResponse(client->getOutput());
 		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{
 			std::cout << "entered the case of read from pipe modify" << std::endl;
@@ -190,29 +220,23 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 		pid_t pid = client->getCgi()->getPid();
 		int status = 0;
 		waitpid(pid, &status, 0);
-		// if ( ! (WIFEXITED(status) && (WEXITSTATUS(status) == 0)))
-		// {
-		// 	client->getResponse().
-		// close the connection in this case
-		// }
 	}
 	else {
-		client->getResponse()->setError(502);
+		response->setError(502);
 		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{
 			closeConnection(client);
 			return;
 		}
 	}
-	//closeConnection(client);
 }
 
-void Server::writeToPipe(Client &client, int stdinPipeWriteFd)
+void Server::writeToPipe(Client &client, int pipeWriteEnd)
 {
 	Request *request = client.getRequest();
 	ssize_t writtenBytes = 0;
 
-	writtenBytes = write(stdinPipeWriteFd, request->getBody().c_str() + client.bodyoffset, request->getBody().size() - client.bodyoffset);
+	writtenBytes = write(pipeWriteEnd, request->getBody().c_str() + client.bodyoffset, request->getBody().size() - client.bodyoffset);
 	if (writtenBytes < 0)
 	{
 		perror("Error: ");
@@ -249,31 +273,6 @@ void Server::writeToClient(int fd)
 	}
 }
 
-void Server::closeConnection(Client *client)
-{
-	std::cout << "stdoutreadend is " << client->getCgi()->getStdoutReadEnd() << std::endl;
-	std::cout << "stdinwriteend is " << client->getCgi()->getStdinWriteEnd() << std::endl;
-	std::cout << "clientfd is " << client->getClientFd() << std::endl;
-
-	if (client->getCgi())
-	{
-		if (client->getCgi()->getStdinWriteEnd() != -1)
-			delFromEpoll(this->_epollFd, client->getCgi()->getStdoutReadEnd());
-		if (client->getCgi()->getStdinWriteEnd() != -1)
-			delFromEpoll(this->_epollFd, client->getCgi()->getStdinWriteEnd());
-	}
-	delFromEpoll(this->_epollFd, client->getClientFd());
-
-	if (_clients.count(client->getClientFd()))
-	{
-		std::cout << "delte client" << std::endl;
-		int fd = client->getClientFd(); // extract fd contained in client
-		delete _clients[fd]; // delete the client pointer
-		_clients.erase(fd); // remove the entry without access to client which has been deleted 
-	}
-}
-
-// EPOLL HELPER FUNCTIONS
 
 int Server::getEpollFd(void) const
 {
