@@ -32,13 +32,15 @@ void Response::handleGetMethod(Request& request){
         _headers["Location"] = request.getPath() + "/";
         return ;
     }
+    std::string dirPath = _internalPath;
     std::vector<std::string> indexes = _loc->getIndexes();
     std::vector<std::string>::iterator it = indexes.begin();
     for (; it != indexes.end(); it++){
-        _internalPath = *it;
+        _internalPath = dirPath + *it;
         if (serveFile())
             return ;
     }
+    _internalPath = dirPath;
     if (!_loc->getAutoIndex()){
         setError(FORBIDDEN);
         return ;
