@@ -60,7 +60,6 @@ void Cgi::buildEnv(const ServerConfig &config)
 	_tempEnv.push_back("SERVER_PORT=" + intToString(config.getPort()));
 	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
 	_tempEnv.push_back("SERVER_NAME=" + resolveHostname());
-	std::cout << "content length sent to the cgi is " << _request->getContentLength() << std::endl;
 	if (_request->getMethod() == "POST" && _request->getContentLength() != 0)
 	{
 		std::string contentType   = getHeaderVariable(header, "content-type");
@@ -126,11 +125,9 @@ void Cgi::executeScript()
 	if (_request->getMethod() == "POST")
 	{
 		_pipeWriteEnd = stdinPipe[WRITE_END];
-		std::cout << "POST CASE the stdinwrite end is " << _pipeWriteEnd << std::endl;
 	}
 	else
 	{
-		std::cout << "This is the GET in CGI, the stdinwrite end is " << _pipeWriteEnd << std::endl;
 		safeClose(stdinPipe[WRITE_END]);
 	}
 	

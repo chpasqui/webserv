@@ -67,7 +67,6 @@ void Server::run()
 			{
 				if (this->_pipeFd.count(fd))
 				{
-					std::cout << "the pipe we want to write to is" << fd << std::endl;
 					Client *client = this->_pipeFd[fd];
 					writeToPipe(*client, fd);
 				}
@@ -108,27 +107,47 @@ bool Server::acceptNewConnection(int listeningFd)
 	return (true);
 }
 
+/**
+ * @brief Clean up function for if the connection encounters an error it will:
+ * - remove all the pipes form the epoll interest list
+ * - delete the instance of the client, which will call the destructors in
+ * CGI, Request and Response and close client fd. The pipes are closed inside
+ * the CGI destructor (chain of destruction).
+ * 
+ * The check for if they are in the array is necessary as this would be in the case where the 
+ * read and write did not function.
+ * 
+ * @param client as it has access to all the fd that I need (access to the pipe map and the clients map)
+ */
 void Server::closeConnection(Client *client)
 {
-	std::cout << "ENTERED THE CLOSE CONNECTION FUNCITON" << std::endl;
 	if (client->getCgi())
 	{
-		if (client->getCgi()->getPipeWriteEnd() != -1)
+		// this is a precautionary measure, in case the read and write have failed, then i need to double check that they are rempoved from epoll
+		if (this->_pipeFd[client->getCgi()->getPipeWriteEnd()] && client->getCgi()->getPipeWriteEnd() != -1)
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeWriteEnd());
-		if (client->getCgi()->getPipeReadEnd() != -1)
+		if (this->_pipeFd[client->getCgi()->getPipeReadEnd()] && client->getCgi()->getPipeReadEnd() != -1)
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeReadEnd());
 	}
 	delFromEpoll(this->_epollFd, client->getClientFd());
 
 	if (_clients.count(client->getClientFd()))
 	{
-		std::cout << "delte client" << std::endl;
 		int fd = client->getClientFd(); // extract fd contained in client
 		delete _clients[fd]; // delete the client pointer
 		_clients.erase(fd); // remove the entry without access to client which has been deleted 
 	}
 }
-// potentially rename to treatClientRequest
+
+/**
+ * @brief First function called to read and parse the request from the newly accepted function. 
+ * It parses the request and identifies if
+ * - it is a CGI in which case it launches the CGI 
+ * - it is not a CGI, meaning it will call epol_ctl to change to EPOLLOUt so that we can
+ * treat the normal POST/GET/DELETE requests. 
+ * 
+ * @param clientFd 
+ */
 void Server::readFromClient(int clientFd)
 {
 	Client *client = _clients[clientFd];
@@ -136,7 +155,6 @@ void Server::readFromClient(int clientFd)
 	client->parseRequest();
 	if (client->getParsingStatus() == CLOSEFD)
 	{
-		std::cout << "entered the CLOSEFD condition" << std::endl;
 		closeConnection(client);
 		return;
 	}
@@ -154,15 +172,23 @@ void Server::readFromClient(int clientFd)
 		{
 			if (!modifyEpoll(this->_epollFd, clientFd, EPOLLOUT))
 			{
-				std::cout << "entered the not modify epoll condition" << std::endl;
 				closeConnection(client);
 				return;
 			}
 		}
-		std::cout << "the reading from the client is comlplete" << std::endl;
 	}
 }
 
+/**
+ * @brief Opens the Common Gateway Interface (forks a child process for the script) and 
+ * returns the pipe ends:
+ * - only the PipeReadEnd in the case of a "GET" request (just needs to read the child output)
+ * - both the PipeWriteEnd and the PipeReadEnd in the case of a "POST" requerst (needs
+ * to send the body to the cgi and then read from the cgi once the pipe is ready to be read
+ * from (EPOLLIN))
+ * 
+ * @param client 
+ */
 void Server::launchCgi(Client &client)
 {
 	client.setCgi(client.getResponse(), client.getRequest());
@@ -180,20 +206,31 @@ void Server::launchCgi(Client &client)
 	{
 		addToEpoll(_epollFd, cgi->getPipeWriteEnd(), EPOLLOUT);
 		this->_pipeFd[cgi->getPipeWriteEnd()] = &client;
-		std::cout << "pipe to be written to is " << cgi->getPipeWriteEnd() << std::endl;
 	}
 
 	if (cgi->getPipeReadEnd() != -1)
 	{
 		addToEpoll(_epollFd, cgi->getPipeReadEnd(), EPOLLIN);
 		this->_pipeFd[cgi->getPipeReadEnd()] = &client;
-		std::cout << "pipe to be read from " << cgi->getPipeReadEnd() << std::endl;
 
 	}
 
 	return;
 }
 
+/**
+ * @brief Common path for all CGI requests, parent process reads from the pipe
+ * for the CGI output in chunks and once all bytes are read, it will 
+ * call buildCgiResponse() which will parse and create the headers
+ * for the client output.
+ * 
+ * Once the function has finished reading, it rmoves the connection from epoll,
+ * erases it from the pipefd map, and close it. It does not call close connection
+ * else it would close both the read and write pipe ends which would cause 
+ * a broken pipe error.
+ * 
+ * @param pipeReadEnd 
+ */
 void Server::readFromPipe(int pipeReadEnd)
 {
 	Client *client = this->_pipeFd[pipeReadEnd];
@@ -209,11 +246,13 @@ void Server::readFromPipe(int pipeReadEnd)
 	}
 	else if (nbytes == 0)
 	{
-		std::cout << "entered the isdone case after the read" << std::endl;
+		delFromEpoll(this->_epollFd, pipeReadEnd);
+		this->_pipeFd.erase(pipeReadEnd);
+		safeClose(pipeReadEnd);
+		
 		response->buildCgiResponse(client->getOutput());
 		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{
-			std::cout << "entered the case of read from pipe modify" << std::endl;
 			closeConnection(client);
 			return;
 		}
@@ -231,6 +270,12 @@ void Server::readFromPipe(int pipeReadEnd)
 	}
 }
 
+/**
+ * @brief In the case of a "POST" request, the partent process needs to send the 
+ * 
+ * @param client 
+ * @param pipeWriteEnd 
+ */
 void Server::writeToPipe(Client &client, int pipeWriteEnd)
 {
 	Request *request = client.getRequest();
@@ -247,7 +292,9 @@ void Server::writeToPipe(Client &client, int pipeWriteEnd)
 		client.bodyoffset += writtenBytes;
 		if (client.bodyoffset >= request->getContentLength())
 		{
-			closeConnection(&client);
+			delFromEpoll(this->_epollFd, pipeWriteEnd);
+			this->_pipeFd.erase(pipeWriteEnd);
+			safeClose(pipeWriteEnd);
 			return;
 		}
 	}
@@ -267,7 +314,7 @@ void Server::writeToClient(int fd)
 		client->sendoffset += nbytes;
 		if (client->sendoffset >= response.size())
 		{
-			closeConnection(client);
+			closeConnection(client); 
 			return ;
 		}
 	}
