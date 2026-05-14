@@ -41,6 +41,13 @@ void Cgi::launch(const ServerConfig &config)
 	{
 		std::cerr << "access issue" << std::endl;
 	}
+	// std::string directoryPath;
+	// size_t pos = this->_fileSystemPath.find_last_of('/');
+	// directoryPath = this->_fileSystemPath.substr(0, pos);
+	// std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
+	// if (chdir(directoryPath.c_str()) != 0)
+	// 	std::cerr << "chdir error\n" << std::endl;
+	// this->_fileName = filename;
 	buildEnv(config);
 	executeScript();
 }
@@ -49,9 +56,11 @@ void Cgi::buildEnv(const ServerConfig &config)
 {
 
 	const std::map<std::string, std::string> &header = _request->getHeaders();
-	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(".py") + 3);
+	std::string extension = this->_response->getCgiExtension();
+	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(extension) + extension.length());
 
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	_tempEnv.push_back("REDIRECT_STATUS=200");
 	_tempEnv.push_back("REQUEST_METHOD=" + _request->getMethod());
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName);
 	_tempEnv.push_back("PATH_INFO=" + this->_fileSystemPath.substr(_scriptName.length())); // derived from the portion of the uri path following the part that identifies the script itself
@@ -70,7 +79,10 @@ void Cgi::buildEnv(const ServerConfig &config)
 	}
 
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
-		this->_finalEnv.push_back(const_cast<char *>((*it).c_str()));
+	{
+		this->_finalEnv.push_back((strdup((*it).c_str())));
+		std::cout << GREEN << *it << RESET << std::endl;
+	}
 	this->_finalEnv.push_back(NULL);
 }
 
@@ -113,7 +125,7 @@ void Cgi::executeScript()
 			std::exit(EXIT_FAILURE);
 		}
 		safeClose(stdoutPipe[WRITE_END]);
-		std::string executable = parseShebang(this->_fileSystemPath);
+		std::string executable = this->_response->getCgiPass();
 
 		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileSystemPath.c_str()), NULL}; // NULL marks the end of the array
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)

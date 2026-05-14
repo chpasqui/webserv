@@ -40,6 +40,7 @@ void Response::build(Request &request, const ServerConfig *config)
 	}
 	if (isCGI())
 	{
+		LOG("the path sent is " << this->_internalPath << std::endl);
 		this->_isCgi = true;
 		return;
 	}
@@ -109,6 +110,7 @@ bool Response::isCGI()
 			if (end == _internalPath.size() || _internalPath[end] == '/')
 			{
 				_cgiPass = it->second;
+				_cgiExtension = it->first;
 				return true;
 			}
 		}
@@ -170,7 +172,10 @@ void Response::parseCgiHeaders(std::string &headerSection)
 
 		size_t colonPos = line.find(':');
 		if (colonPos == std::string::npos)
+		{
+			std::cout << RED << "this is where PHP fails" << RESET << std::endl;
 			continue;
+		}
 
 		std::string name = line.substr(0, colonPos);
 		std::string value = line.substr(colonPos + 1);
@@ -206,6 +211,7 @@ bool Response::splitOutput(const std::string &output, std::string &headerSection
 
 void Response::buildCgiResponse(const std::string &output)
 {
+	std::cout << "output received is " << output << std::endl;
 	std::string headerSection;
 	LOG(std::cout << "output send from cgi : " << output << std::endl);
 	if (!splitOutput(output, headerSection))

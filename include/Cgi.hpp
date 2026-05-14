@@ -41,6 +41,7 @@ class Cgi
 
 		std::string _scriptName;
 		std::string _pathInfo;
+		std::string _fileName;
 
 		int _pipeWriteEnd;
 		int _pipeReadEnd;

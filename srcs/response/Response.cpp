@@ -108,3 +108,8 @@ void Response::setError(int code, const std::string &context) {
     (void)context;
     buildError();
 }
+
+std::string Response::getCgiExtension(void)
+{
+    return this->_cgiExtension;
+}

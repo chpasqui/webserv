@@ -25,6 +25,7 @@ class Response {
 		bool								_isCgi;
 
 		std::string							_cgiPass;
+		std::string							_cgiExtension;
 		
 
 		//route
@@ -63,6 +64,7 @@ class Response {
 		void		parseCgiHeaders(std::string& headerSection);
 		void		setError(int code, const std::string &context);
 		void 		setSyscallError(const std::string &context);
+		std::string getCgiExtension(void);
 
 		void serverSessionPage();
 		void handleLogin(Request& request);
