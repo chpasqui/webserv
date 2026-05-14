@@ -174,3 +174,13 @@ Cgi::~Cgi()
 	safeClose(this->_pipeWriteEnd);
 	safeClose(this->_pipeReadEnd);
 }
+
+void Cgi::closePipeReadEnd()
+{
+	safeClose(this->_pipeReadEnd);
+}
+
+void Cgi::closePipeWriteEnd()
+{
+	safeClose(this->_pipeWriteEnd);
+}

@@ -33,6 +33,8 @@ class Cgi
 		int	getPipeWriteEnd() const;
 		int getPipeReadEnd() const;
 		int getPid(void) const;
+		void closePipeReadEnd();
+		void closePipeWriteEnd();
 
 	private:
 		std::string _fileSystemPath;

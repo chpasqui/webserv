@@ -255,8 +255,8 @@ void Server::readFromPipe(int pipeReadEnd)
 	{
 		delFromEpoll(this->_epollFd, pipeReadEnd);
 		this->_pipeFd.erase(pipeReadEnd);
-		safeClose(pipeReadEnd);
-		
+		client->getCgi()->closePipeReadEnd();
+
 		response->buildCgiResponse(client->getOutput());
 	}
 	else
@@ -294,7 +294,7 @@ void Server::writeToPipe(int pipeWriteEnd)
 		{
 			delFromEpoll(this->_epollFd, pipeWriteEnd);
 			this->_pipeFd.erase(pipeWriteEnd);
-			safeClose(pipeWriteEnd);
+			client->getCgi()->closePipeWriteEnd();
 			return;
 		}
 	}
