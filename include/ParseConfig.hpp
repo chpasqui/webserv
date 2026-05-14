@@ -51,7 +51,6 @@ class ParseConfig {
 		void												processErrorPageToken(void);
 		void												processRedirectionToken(void);
 		void												processCgiPassToken(void);
-		void												processUploadStoreToken(void);
 		//----Atributes----//
 		std::ifstream										_configFile;
 		int													_contextLevel;

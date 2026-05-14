@@ -21,11 +21,6 @@ void	AConfig::setRedirePath(const std::string redirePath) {
 	throw (std::runtime_error("wrong context with \"return\" (redirePath)"));
 }
 
-void	AConfig::setUploadStore(const std::string uploadDir) {
-	(void) uploadDir;
-	throw (std::runtime_error("wrong context with \"upload_store\""));
-}
-
 void	AConfig::addCgiExtension(const std::string extension, const std::string path) {
 	(void) extension;
 	(void) path;
