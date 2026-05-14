@@ -49,6 +49,7 @@ void Server::run()
 		//check if nFd equals -1 if signals arrived
 		//need to change the timeout of epoll_wait for checks 
 		timeoutCheck();
+		_closedFds.clear();
 		for (int i = 0; i < nFd; i++)
 		{
 			int fd = events[i].data.fd;
@@ -57,11 +58,13 @@ void Server::run()
 				if (!acceptNewConnection(fd))
 					continue;
 			}
+			else if (_closedFds.count(fd))
+				continue;
 			else if (events[i].events & (EPOLLIN | EPOLLHUP))
 			{
 				if (this->_pipeFd.count(fd))
 					readFromPipe(fd);
-				else if (this->_clients.count(fd)) 
+				else if (this->_clients.count(fd))
 					readFromClient(fd);
 			}
 			// else if (events[i].events & (EPOLLERR))
@@ -128,9 +131,10 @@ void Server::closeConnection(Client *client)
 	int fd = client->getClientFd();// extract fd contained in client
 	if (_clients.count(client->getClientFd()) && _clients[client->getClientFd()] == client)
 	{
-		 delFromEpoll(this->_epollFd, client->getClientFd());
+		_closedFds.insert(fd);
+		delFromEpoll(this->_epollFd, client->getClientFd());
 		delete _clients[fd]; // delete the client pointer
-		_clients.erase(fd); // remove the entry without access to client which has been deleted 
+		_clients.erase(fd); // remove the entry without access to client which has been deleted
 	}
 	else
 		delete client;
