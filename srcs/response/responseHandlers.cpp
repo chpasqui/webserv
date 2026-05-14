@@ -69,6 +69,7 @@ bool Response::serveFile() {
  */
 void Response::displayAutoIndex(){
     DIR *dir = opendir(_internalPath.c_str());
+    std::cout << "internal path is " << _internalPath << std::endl;
     if (dir == NULL){
         setSyscallError();
         return ;
@@ -101,12 +102,7 @@ void Response::handlePostMethod(Request& request){
         LOG(std::cout << "can't handle multipart without cgi" << std::endl);
         return ;
     }
-    if (_loc->getUploadStore().empty()){
-        setError(FORBIDDEN);
-        LOG(std::cout << "can't upload, no upload store" << std::endl);
-        return ;
-    }
-    std::string uploadDir = _loc->getUploadStore();
+    std::string uploadDir = _loc->getRoot();
     if(!uploadDir.empty() && uploadDir[uploadDir.size() - 1] == '/')
         uploadDir = uploadDir.substr(0, uploadDir.size() - 1);
     struct stat dirStat;
