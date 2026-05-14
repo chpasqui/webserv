@@ -10,3 +10,4 @@ Notes to be adressed:
 - In TimeOutCheck : the actual function is for incomplete request, there is an error on the it, and is not yet called anywhere. Need to complete the timeoutCheck functions for CGIs --- WORK IN PROGRESS
 - In Session.cpp : maybe add with possibilty to add passwords or more, for more clarity. Need something that enables us to check in a better way whether it is a new or old session
 - handle the open fd when ctrl C is pressed 
+- For script.php : add SCRIPT_FILENAME in buildEnv

@@ -211,7 +211,6 @@ bool Response::splitOutput(const std::string &output, std::string &headerSection
 
 void Response::buildCgiResponse(const std::string &output)
 {
-	std::cout << "output received is " << output << std::endl;
 	std::string headerSection;
 	LOG(std::cout << "output send from cgi : " << output << std::endl);
 	if (!splitOutput(output, headerSection))
