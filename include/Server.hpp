@@ -11,7 +11,7 @@
 #include "Session.hpp"
 
 extern int serverSignal;
-extern void safeClose(int fd);
+extern void safeClose(int &fd);
 
 #define MAX_EVENTS 1024
 #define BACKLOG 20

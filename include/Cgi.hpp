@@ -20,7 +20,7 @@
 #define BOLD "\033[1m"
 #endif
 
-extern void safeClose(int fd);
+extern void safeClose(int &fd);
 
 class Cgi
 {
