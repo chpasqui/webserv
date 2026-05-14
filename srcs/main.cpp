@@ -11,6 +11,12 @@
 int	checkInputArgs(int ac, char **av, std::string &filename);
 int	checkResponse(const std::string &response);
 
+/**
+ * @brief Server(Serverconfigs) will loop over the vector of serverConfigs and will
+ * 1. create a new socket for the listening fd
+ * 2. bind the listening fd to the corresponding port in the configuration file. The port number is used by the kernel to match an incoming packet to a certin process's socket descriptotr
+ * 3. set it to listen to incoming connecitons on a specific port. Backllog says how many connections are allower to queue up
+ */
 int main(int ac, char **av) {
 	std::string configFileName;
 	std::vector<ServerConfig*> configs;
@@ -21,19 +27,13 @@ int main(int ac, char **av) {
 			return (1);
 
 		ParseConfig pc(&configs);
-		if (pc.parsingConfigFile(av[1]) == 1)
+		if (pc.parsingConfigFile(configFileName) == 1)
 			return (1);
 	}
 
 	Server server;
 
 	try {
-		/**
-		 * @brief Server(Serverconfigs) will loop over the vector of serverConfigs and will
-		 * 1. create a new socket for the listening fd
-		 * 2. bind the listening fd to the corresponding port in the configuration file. The port number is used by the kernel to match an incoming packet to a certin process's socket descriptotr
-		 * 3. set it to listen to incoming connecitons on a specific port. Backllog says how many connections are allower to queue up
-		 */
 		server.setupListeningSockets(configs);
 		server.run(); // server instance out of scope if declared outside, I need it here but run does not 
 	}
@@ -46,45 +46,25 @@ int main(int ac, char **av) {
 	return (0);
 }
 
-// map <int, *serverconfig> _listeningToConfig
-
-// int main()
-// {
-	// Config Parse -> vector<ServerConfigs>
-	// severconfig[{port 8080, root: /root/www/, (GET,ADD,etc) }, {port: 9090, root: /var/www }] // vector owns the congig and is never changed
-
-	/**
-	 * @brief Server(Serverconfigs) will loop over the vector of serverConfigs and will
-	 * 1. create a new socket for the listeniing fd
-	 * 2. bind the listening fd to the corresponding port in the configuration file. The port number is used by the kernel to match an incoming packet to a certin process's socket descriptotr
-	 * 3. set it to listen to incoming connecitons on a specific port. Backllog says how many connections are allower to queue up
-	 */
-	//	Server server(ServerConfigs);
-
-
-	//	server.run()
-	//	return 0
-//}
-//
-
 /**
- * @brief [TODO:description]
+ * @brief Checks the number of parameters passed to the program.
+ * If no parameters are provided, it asks the user if they want to use the default configuration file.
  *
- * @param ac [TODO:parameter]
- * @param av [TODO:parameter]
- * @param filename [TODO:parameter]
- * @return [TODO:return]
+ * @param filename: Write the file name to "filename" based on the user's input
+ * @return 0 if successful and 1 if unsuccessful
+ *
+ * @warn The default configuration file must exist; otherwise, an error will be returned
  */
 int	checkInputArgs(int ac, char **av, std::string &filename) {
-	int			status, i;
+	int			status;
 	std::string	response;
 
 	if (ac > 2) {
-		std::cerr << C_RED << "Please use only one configuration file" << RESET << std::endl;
+		std::cerr << C_YELLOW << "This program can only use a single configuration file, stopping webserv" << RESET << std::endl;
 		return 1;
 	}
 	else if (ac == 1) {
-		i = 0;
+		int i = 0;
 		do {
 			std::cout << C_BLUE << "No configuration file was provided. Would you like to try using the default one ?\n[Y/n]" <<  RESET << std::endl;
 			std::getline(std::cin, response);
@@ -92,11 +72,11 @@ int	checkInputArgs(int ac, char **av, std::string &filename) {
 			status = checkResponse(response);
 			i++;
 		}
-		while (!status && i < 10);
+		while (!status && i < 5);
 		if (status == 1)
 			filename = "config/default.conf";
 		else {
-			std::cout << C_RED << "Please provide a configuration file" << RESET << std::endl;
+			std::cerr << C_YELLOW << "no configuration file provided. stopping webserv" << RESET << std::endl;
 			return (1);
 		}
 	}
@@ -112,3 +92,4 @@ int	checkResponse(const std::string &response) {
 		return (2);
 	return (0);
 }
+

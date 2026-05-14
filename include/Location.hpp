@@ -16,7 +16,6 @@ class Location : public AConfig
 		//----Setter----//
 		void						setRedireCode(const int redireCode);
 		void						setRedirePath(const std::string redirePath);
-		void						setUploadStore(const std::string uploadDir);
 		void						addCgiExtension(const std::string extension, const std::string path);
 		void						setMaxBodySize(const int maxBodySize);
 		void						setAutoindex(const bool autoindex);
@@ -28,7 +27,6 @@ class Location : public AConfig
 		int							getRedirCode(void) const;
 		std::string					getPath(void) const;
 		std::string					getRedirPath(void) const;
-		std::string					getUploadStore() const;
 		std::map<std::string, std::string>	getCgiExtensions(void) const;
 		int							getClientTimeout(void) const;
 		int							getMaxBodySize(void) const;
@@ -46,7 +44,6 @@ class Location : public AConfig
 		int									_redireCode; //WARN: Waht if we have two return in the same location ?
 		std::string							_path;
 		std::string							_redirePath;
-		std::string							_uploadStore;
 		std::map<std::string, std::string>	_cgiExtensions;
 
 		int									_clientTimeout;
