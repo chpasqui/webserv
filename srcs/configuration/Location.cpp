@@ -17,7 +17,7 @@ Location::Location() :
 	_allowedMethods(""),
 	_indexes(),
 	_errorPages() {
-	LOG(C_CSTR << "Location: Default constructor called" << RESET);
+	// LOG(C_CSTR << "Location: Default constructor called" << RESET);
 	return ;
 }
 
@@ -35,12 +35,12 @@ Location::Location(const ServerConfig &serverConfig, const std::string path) :
 	_allowedMethods(serverConfig.getAllowedMethods()),
 	_indexes(serverConfig.getIndexes()) {
 	_errorPages = serverConfig.getErrorPages();
-	LOG(C_CSTR << "Location: Normal constructor called" << RESET);
+	// LOG(C_CSTR << "Location: Normal constructor called" << RESET);
 	return ;
 }
 
 Location::~Location() {
-	LOG(C_DSTR << "Location: Destructor called" << RESET);
+	// LOG(C_DSTR << "Location: Destructor called" << RESET);
 	return ;
 }
 

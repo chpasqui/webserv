@@ -96,12 +96,12 @@ void Response::displayAutoIndex(){
 void Response::handlePostMethod(Request& request){
     if (_remain.empty() || _remain[_remain.size() - 1] == '/') {
         setError(BAD_REQUEST);
-        LOG(std::cout << "can't upload body without specifying the file in URL" << std::endl);
+        // LOG(std::cout << "can't upload body without specifying the file in URL" << std::endl);
         return;
     }
     if (request.getHeader("content-type").find("multipart/form-data") != std::string::npos){
         setError(FORBIDDEN);
-        LOG(std::cout << "can't handle multipart without cgi" << std::endl);
+        // LOG(std::cout << "can't handle multipart without cgi" << std::endl);
         return ;
     }
     std::string uploadDir = _loc->getRoot();
@@ -110,15 +110,15 @@ void Response::handlePostMethod(Request& request){
     struct stat dirStat;
     if (stat(uploadDir.c_str(), &dirStat) != 0 || !S_ISDIR(dirStat.st_mode)){
         setSyscallError();
-        LOG(std::cout << "upload folder doesnt exist" << std::endl);
+        // LOG(std::cout << "upload folder doesnt exist" << std::endl);
         return ;
     }
     std::string uploadPath = uploadDir + "/" + _remain;
-    LOG(std::cout << "uploadDir='" << uploadDir << "' uploadPath='" << uploadPath << "'" << std::endl);
+    // LOG(std::cout << "uploadDir='" << uploadDir << "' uploadPath='" << uploadPath << "'" << std::endl);
     struct stat fileStat;
     if (stat(uploadPath.c_str(), &fileStat) == 0){
         setError(CONFLICT);
-        LOG(std::cout << "file already exist" << std::endl);
+        // LOG(std::cout << "file already exist" << std::endl);
         return ;
     }
     std::ofstream file(uploadPath.c_str());
@@ -139,7 +139,7 @@ void Response::handlePostMethod(Request& request){
 void Response::handleDeleteMethod(Request& request){
     struct stat sb;
    
-    LOG(std::cout << "internal path is : " << _internalPath << std::endl);
+    // LOG(std::cout << "internal path is : " << _internalPath << std::endl);
     if (stat(_internalPath.c_str(), &sb) != 0){
         setSyscallError();
         return;

@@ -1,6 +1,7 @@
 #ifndef DEBUG_HPP
 # define DEBUG_HPP
 
+#include <sstream>
 # include <string>
 # include <map>
 
@@ -18,7 +19,7 @@ class Debug {
 		Debug();
 		~Debug();
 
-		static void log(const std::string &msg, int level);
+		static void log(std::ostream, int level);
 		static void log(const std::string &msg, const std::string &ctx);
 		void debugListHeader(std::map<std::string, std::string> &_headers);
 	private:

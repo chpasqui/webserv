@@ -4,11 +4,11 @@
 #include "../../include/color.hpp"
 
 AConfig::AConfig() {
-	LOG(C_CSTR << "AConfig: Default constructor called"<< RESET);
+	// LOG(C_CSTR << "AConfig: Default constructor called"<< RESET);
 }
 
 AConfig::~AConfig() {
-	LOG(C_DSTR << "AConfig: Destructor called" << RESET);
+	// LOG(C_DSTR << "AConfig: Destructor called" << RESET);
 }
 
 void	AConfig::setRedireCode(const int redireCode){

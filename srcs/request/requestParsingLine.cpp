@@ -16,8 +16,8 @@ bool Request::parseRequestLine(const std::string &message){
 		return false;
 	if (!validMethod() || !validVersion() || !validUrl())
 		return false; 
-	LOG("method : " << _method << "\nurl : " << _url << "\nversion : " 
-        << _version << "\npath : " << _path << "\nquery : " << _query);
+	// LOG("method : " << _method << "\nurl : " << _url << "\nversion : " 
+        // << _version << "\npath : " << _path << "\nquery : " << _query);
 	return true;
 }
 
@@ -101,3 +101,4 @@ void	Request::stockIfQuery(std::string url_decode){
 	else
 		_path = _url;
 }
+

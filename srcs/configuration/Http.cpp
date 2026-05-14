@@ -10,12 +10,12 @@ Http::Http() :
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() {
-	LOG(C_CSTR << "Http: Default constructor called" << RESET);
+	// LOG(C_CSTR << "Http: Default constructor called" << RESET);
 	return ;
 }
 
 Http::~Http() {
-	LOG(C_DSTR << "Http: Destructor called" << RESET);
+	// LOG(C_DSTR << "Http: Destructor called" << RESET);
 	return ;
 }
 
