@@ -48,7 +48,6 @@ private:
 	std::map<int, Client *> _clients;
 	std::map<std::string, Session> _sessions;
 	std::map<int, Client *> _pipeFd;
-	std::set<int> _closedFds;
 
 	Session &resolveSession(const std::string &cookieHeader, bool &isNew);
 };
