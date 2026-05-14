@@ -41,8 +41,6 @@ Cgi::Cgi(Response *response, Request *request) :
 
 void Cgi::launch(const ServerConfig &config)
 {
-	errno = 0;
-
 	this->_fileSystemPath = _response->getInternalPath();
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{

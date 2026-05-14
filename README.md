@@ -13,3 +13,4 @@ Notes to be adressed:
 - For script.php : add SCRIPT_FILENAME in buildEnv
 - Check if it is all good for : DeleteFromEpoll in ReadFromClient && addToEpoll from ReadFromPipe
 - In Session.cpp : maybe add with possibilty to add passwords or more, for more clarity. Need something that enables us to check in a better way whether it is a new or old sesion - SIEGE regarder comment il fait (voir video et verifier)
+- launch devrait etre bool pour return true ou false

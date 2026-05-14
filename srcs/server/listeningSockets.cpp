@@ -38,7 +38,8 @@ void Server::setupListeningSockets(const std::vector<ServerConfig *>& serverConf
 		int listenFd = openListeningSocket();
 		bindAndListen(listenFd, serverConfigsVec[i]->getPort());
 		this->_listenFds[listenFd] = serverConfigsVec[i];
-		addToEpoll(this->_epollFd, listenFd, EPOLLIN);
+		if (!addToEpoll(this->_epollFd, listenFd, EPOLLIN))
+			throw(std::runtime_error(errorMsg));
 	}
 }
 

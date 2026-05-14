@@ -36,15 +36,20 @@ void	Server::timeoutCheck(void) {
 			if (client->getResponse() != NULL){
 				client->getResponse()->setError(GATEWAY_TIMEOUT, "timeoutCheck: response is not NULL");
 				if (client->getCgi()){
-					addToEpoll(_epollFd, it->first, EPOLLOUT);
-					updateTimeStamp(client);
+					if (!addToEpoll(_epollFd, it->first, EPOLLOUT)){
+						closeConnection(client);
+						return;
+					}
 				}
 				else 
-					modifyEpoll(_epollFd, it->first, EPOLLOUT);
+					if(!modifyEpoll(_epollFd, it->first, EPOLLOUT)){
+						closeConnection(client);
+						return ;
+					}
+				updateTimeStamp(client);
 				return ;
 			}
-			else
-				closeConnection(client);
+			closeConnection(client);
 			std::cout << "connection closed" << std::endl;
 			if (_clients.empty())
 				return ;
@@ -52,7 +57,6 @@ void	Server::timeoutCheck(void) {
 		}
 	}
 }
-
 
 // SIGNAL HANDLING UTILS
 

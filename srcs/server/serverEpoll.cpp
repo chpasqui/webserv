@@ -34,7 +34,7 @@ void Server::createEpollInstance(void)
  * @brief Registers fdToModify with the epoll instance to monitor it for the
  * events specified by flag (e.g. EPOLLIN, EPOLLOUT).
  */
-void Server::addToEpoll(int _epollFd, int newFd, uint32_t flag)
+bool Server::addToEpoll(int _epollFd, int newFd, uint32_t flag)
 {
 	struct epoll_event event;
 	event.events = flag;
@@ -42,8 +42,9 @@ void Server::addToEpoll(int _epollFd, int newFd, uint32_t flag)
 	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, newFd, &event) == -1)
 	{
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
-		throw(std::runtime_error(errorMsg));
+		return false;
 	}
+	return true;
 }
 
 /**

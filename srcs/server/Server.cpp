@@ -91,20 +91,13 @@ bool Server::acceptNewConnection(int listeningFd)
 		perror("accept error");
 		return false;
 	}
-	
-	try
-	{
-		addToEpoll(this->_epollFd, clientFd, EPOLLIN);
-		// add the multiple serverconfigs in one fd and map with the host name (multiple config for one port)
-		const ServerConfig *config = _listenFds[listeningFd];
-		_clients.insert(std::make_pair(clientFd, new Client(clientFd, config)));
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << e.what() << '\n';
+	if (!addToEpoll(this->_epollFd, clientFd, EPOLLIN)){
 		safeClose(clientFd);
 		return false;
 	}
+	// add the multiple serverconfigs in one fd and map with the host name (multiple config for one port)
+	const ServerConfig *config = _listenFds[listeningFd];
+	_clients.insert(std::make_pair(clientFd, new Client(clientFd, config)));
 	return (true);
 }
 
@@ -131,14 +124,16 @@ void Server::closeConnection(Client *client)
 		if (client->getCgi()->getPipeReadEnd() != -1 && this->_pipeFd[client->getCgi()->getPipeReadEnd()])
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeReadEnd());
 	}
-	delFromEpoll(this->_epollFd, client->getClientFd());
-
-	if (_clients.count(client->getClientFd()))
+	
+	int fd = client->getClientFd();// extract fd contained in client
+	if (_clients.count(client->getClientFd()) && _clients[client->getClientFd()] == client)
 	{
-		int fd = client->getClientFd(); // extract fd contained in client
+		 delFromEpoll(this->_epollFd, client->getClientFd());
 		delete _clients[fd]; // delete the client pointer
 		_clients.erase(fd); // remove the entry without access to client which has been deleted 
 	}
+	else
+		delete client;
 }
 
 /**
@@ -196,7 +191,8 @@ void Server::launchCgi(Client &client)
 {
 	client.setCgi(client.getResponse(), client.getRequest());
 	Cgi *cgi = client.getCgi();
-
+	
+	errno = 0;
 	cgi->launch(*client.getServerConfig());
 
 	if (errno)
@@ -207,17 +203,21 @@ void Server::launchCgi(Client &client)
 
 	if (cgi->getPipeWriteEnd() != -1)
 	{
-		addToEpoll(_epollFd, cgi->getPipeWriteEnd(), EPOLLOUT);
+		if (!addToEpoll(_epollFd, cgi->getPipeWriteEnd(), EPOLLOUT)){
+			closeConnection(&client);
+			return ;
+		}
 		this->_pipeFd[cgi->getPipeWriteEnd()] = &client;
 	}
 
 	if (cgi->getPipeReadEnd() != -1)
 	{
-		addToEpoll(_epollFd, cgi->getPipeReadEnd(), EPOLLIN);
+		if (!addToEpoll(_epollFd, cgi->getPipeReadEnd(), EPOLLIN)){
+			closeConnection(&client);
+			return ;
+		}
 		this->_pipeFd[cgi->getPipeReadEnd()] = &client;
-
 	}
-
 	return;
 }
 
@@ -254,19 +254,13 @@ void Server::readFromPipe(int pipeReadEnd)
 		safeClose(pipeReadEnd);
 		
 		response->buildCgiResponse(client->getOutput());
-		addToEpoll(_epollFd, client->getClientFd(), EPOLLOUT);
-		// {
-		// 	closeConnection(client);
-		// 	return;
-		// }
 	}
-	else {
+	else
 		client->getResponse()->setError(BAD_GATEWAY, "readFromPipe: read failed");
-		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
-		{
-			closeConnection(client);
-			return;
-		}
+	if (!addToEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
+	{
+		closeConnection(client);
+		return;
 	}
 }
 

@@ -36,7 +36,7 @@ public:
 	void timeoutCheck(void);
 
 	void closeConnection(Client *client);
-	static void addToEpoll(int epollFd, int fdToModify, uint32_t flag);
+	static bool addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static bool modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static void delFromEpoll(int epollFd, int fdToModify);
 	static void signalHandler(int signal);
