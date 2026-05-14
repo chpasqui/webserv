@@ -41,8 +41,6 @@ void Server::addToEpoll(int _epollFd, int newFd, uint32_t flag)
 	event.data.fd = newFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, newFd, &event) == -1)
 	{
-		close(newFd);
-		close(_epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
 		throw(std::runtime_error(errorMsg));
 	}
@@ -59,9 +57,8 @@ bool Server::modifyEpoll(int _epollFd, int fdToModify, uint32_t flag)
 	event.data.fd = fdToModify;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, fdToModify, &event) == -1)
 	{
-		close(fdToModify);
-		close(_epollFd);
 		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
+		return false;
 	}
 	return true;
 }
@@ -74,18 +71,10 @@ void Server::delFromEpoll(int _epollFd, int fdToModify)
 	struct epoll_event event;
 	event.events = 0;
 	event.data.fd = fdToModify;
+	std::cout << "fd received in delfromepoll is " << fdToModify << std::endl;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_DEL, fdToModify, &event) == -1)
 	{
-		// WARN: if (errno == ENOENT) //don't close an inexistant file (Double close);
-		//			return;
-		close(fdToModify);
-		close(_epollFd);
-		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
+		std::string errorMsg = std::string("Epoll_ctl() DEL error: ") + strerror(errno);
 		throw(std::runtime_error(errorMsg));
 	}
-	// if (_clients.count(fdToModify))
-	// {
-	// 	delete clients[fdToModify];
-	// 	_clients.erase(fdToModify);
-	// }
 }

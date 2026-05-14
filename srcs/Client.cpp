@@ -15,8 +15,6 @@ Client::Client() :	bodyoffset(0),
 					sendoffset(0),
 					_clientFd(-1),
 					_cgiPipeFd(-1),
-					_writeCgiPipeEnd(-1),
-					_readCgiPipeEnd(-1),
 					_output(""),
 					_bytesRead(-1),
 					_buffer(""),
@@ -33,8 +31,6 @@ Client::Client(int fd, const ServerConfig *config) : bodyoffset(0),
 													sendoffset(0),
 													_clientFd(fd),
 													 _cgiPipeFd(-1),
-													 _writeCgiPipeEnd(-1),
-													 _readCgiPipeEnd(-1),
 													 _output(""),
 													 _bytesRead(-1),
 													 _buffer(""),
@@ -51,8 +47,6 @@ Client::Client(const Client &other) :	bodyoffset(other.bodyoffset),
 										sendoffset(0),
 										_clientFd(other._clientFd),
 										_cgiPipeFd(other._cgiPipeFd),
-										_writeCgiPipeEnd(other._writeCgiPipeEnd),
-										_readCgiPipeEnd(other._readCgiPipeEnd),
 										_output(other._output),
 										_bytesRead(other._bytesRead),
 										_buffer(other._buffer),
@@ -213,6 +207,7 @@ std::string	Client::getOutput(void) const
  */
 Client::~Client()
 {
+	safeClose(_clientFd);
 	if (this->_request)
 		delete this->_request;
 	if (this->_response)

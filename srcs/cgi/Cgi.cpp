@@ -24,11 +24,11 @@
 #define WRITE_END 1
 #define BUFFER_SIZE 1024
 
-Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1)
+Cgi::Cgi() : _fileSystemPath(""), _tempEnv(), _finalEnv(), _pipeWriteEnd(-1), _pipeReadEnd(-1)
 {
 }
 
-Cgi::Cgi(Response *response, Request *request) : _fileSystemPath(""), _tempEnv(), _finalEnv(), _stdinWriteEnd(-1), _stdoutReadEnd(-1), _response(response), _request(request)
+Cgi::Cgi(Response *response, Request *request) : _fileSystemPath(""), _tempEnv(), _finalEnv(), _pipeWriteEnd(-1), _pipeReadEnd(-1), _response(response), _request(request)
 {
 }
 
@@ -36,13 +36,11 @@ void Cgi::launch(const ServerConfig &config)
 {
 	errno = 0;
 
-	std::cout << "internal path received is " << _response->getInternalPath() << std::endl;
 	this->_fileSystemPath = _response->getInternalPath();
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
 		std::cerr << "access issue" << std::endl;
 	}
-	std::cout << "no access issue anymore" << std::endl;
 	buildEnv(config);
 	executeScript();
 }
@@ -62,7 +60,6 @@ void Cgi::buildEnv(const ServerConfig &config)
 	_tempEnv.push_back("SERVER_PORT=" + intToString(config.getPort()));
 	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
 	_tempEnv.push_back("SERVER_NAME=" + resolveHostname());
-	std::cout << "content length sent to the cgi is " << _request->getContentLength() << std::endl;
 	if (_request->getMethod() == "POST" && _request->getContentLength() != 0)
 	{
 		std::string contentType   = getHeaderVariable(header, "content-type");
@@ -127,22 +124,27 @@ void Cgi::executeScript()
 	safeClose(stdinPipe[READ_END]);
 	if (_request->getMethod() == "POST")
 	{
-		_stdinWriteEnd = stdinPipe[WRITE_END];
-		std::cout << "POST CASE the stdinwrite end is " << _stdinWriteEnd << std::endl;
+		_pipeWriteEnd = stdinPipe[WRITE_END];
 	}
 	else
+	{
 		safeClose(stdinPipe[WRITE_END]);
+	}
 	
 	safeClose(stdoutPipe[WRITE_END]);
-	_stdoutReadEnd = stdoutPipe[READ_END];
-	std::cout << "ALL CASES the _stdoutReadEnd end is " << _stdoutReadEnd << std::endl;
+	_pipeReadEnd = stdoutPipe[READ_END];
 	this->_pid = pid;
 }
 
 
-int Cgi::getStdinWriteEnd() const
+int Cgi::getPipeWriteEnd() const
 {
-	return this->_stdinWriteEnd;
+	return this->_pipeWriteEnd;
+}
+
+int Cgi::getPipeReadEnd() const
+{
+	return this->_pipeReadEnd;
 }
 
 int Cgi::getPid(void) const
@@ -150,11 +152,9 @@ int Cgi::getPid(void) const
 	return this->_pid;
 }
 
-int Cgi::getStdoutReadEnd() const
-{
-	return this->_stdoutReadEnd;
-}
 
 Cgi::~Cgi()
 {
+	safeClose(this->_pipeWriteEnd);
+	safeClose(this->_pipeReadEnd);
 }
