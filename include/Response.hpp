@@ -61,8 +61,8 @@ class Response {
 		void 		buildCgiResponse(const std::string& output);
 		bool		splitOutput(const std::string& output, std::string& headers);
 		void		parseCgiHeaders(std::string& headerSection);
-		void 		setError(int code);
-		void 		setSyscallError();
+		void		setError(int code, const std::string &context);
+		void 		setSyscallError(const std::string &context);
 
 		void serverSessionPage();
 		void handleLogin(Request& request);

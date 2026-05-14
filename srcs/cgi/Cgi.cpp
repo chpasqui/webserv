@@ -80,11 +80,11 @@ void Cgi::buildEnv(const ServerConfig &config)
 void	Cgi::openPipes(int *stdinPipe, int * stdoutPipe)
 {
 	if (pipe(stdoutPipe) == -1 || fcntl(stdoutPipe[READ_END], F_SETFL, O_NONBLOCK) < 0)
-		_response->setSyscallError();
+		_response->setSyscallError("openPipes: failed to open stdoutPipe");
 	else if (pipe(stdinPipe) == -1 
 		|| fcntl(stdinPipe[WRITE_END], F_SETFL, O_NONBLOCK) < 0
 		|| fcntl(stdinPipe[READ_END], F_SETFL, O_NONBLOCK) < 0)
-		_response->setSyscallError();
+		_response->setSyscallError("openPipes: failed to open stdinPipe");
 }
 
 void Cgi::executeScript()

@@ -1,6 +1,7 @@
 #include "../../include/Response.hpp"
 #include "../../include/ServerConfig.hpp"
 #include "../../include/statusCode.hpp"
+#include "../../include/Debug.hpp"
 
 Response::Response() :
     _config(NULL),
@@ -101,7 +102,9 @@ std::string	Response::getCgiPass(void) const{
     return this->_cgiPass;
 }
 
-void Response::setError(int code){
+void Response::setError(int code, const std::string &context) {
     _statusCode = code;
+    LOG_ERR(code, context);
+    (void)context;
     buildError();
 }

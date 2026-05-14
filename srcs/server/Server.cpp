@@ -1,6 +1,7 @@
 #include "../../include/Server.hpp"
 #include "../../include/Session.hpp"
 #include "../../include/Cgi.hpp"
+#include "../../include/statusCode.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -135,6 +136,7 @@ void Server::readFromClient(int clientFd)
 		{
 			std::cout << "launch cgi entered" << std::endl;
 			launchCgi(client);
+			delFromEpoll(this->_epollFd, clientFd);
 		}
 		else
 		{
@@ -189,11 +191,11 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 	{
 		std::cout << "entered the isdone case after the read" << std::endl;
 		client->getResponse()->buildCgiResponse(client->getOutput());
-		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
-		{
-			closeConnection(client->getClientFd());
-			return;
-		}
+		addToEpoll(_epollFd, client->getClientFd(), EPOLLOUT);
+		// {
+		// 	closeConnection(client->getClientFd());
+		// 	return;
+		// }
 		pid_t pid = client->getCgi()->getPid();
 		int status = 0;
 		waitpid(pid, &status, 0);
@@ -204,7 +206,7 @@ void Server::readFromPipe(int stdoutPipeReadFd)
 		// }
 	}
 	else {
-		client->getResponse()->setError(502);
+		client->getResponse()->setError(BAD_GATEWAY, "readFromPipe: read failed");
 		if (!modifyEpoll(_epollFd, client->getClientFd(), EPOLLOUT))
 		{
 			closeConnection(client->getClientFd());

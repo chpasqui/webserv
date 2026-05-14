@@ -21,11 +21,11 @@ void Response::build(Request &request, const ServerConfig *config)
 	_loc = findLocation(request.getPath());
 	if (request.getStatusCode() != 0)
 	{
-		setError(request.getStatusCode());
+		setError(request.getStatusCode(), "error given from parse request");
 		return;
 	}
 	if (request.getContentLength() > _loc->getMaxBodySize())
-		return (setError(PAYLOAD_TOO_LARGE));
+		return (setError(PAYLOAD_TOO_LARGE, "build: contentLenght > client_max_body_size"));
 	_internalPath = buildFileSystemPath(request.getPath());
 	if (_loc->getRedirCode() != 0)
 	{
@@ -35,7 +35,7 @@ void Response::build(Request &request, const ServerConfig *config)
 	}
 	if (!methodAllowed(request.getMethod()))
 	{
-		setError(METHOD_NOT_ALLOWED);
+		setError(METHOD_NOT_ALLOWED, "build: method is not allowed in location");
 		return;
 	}
 	if (isCGI())
@@ -137,14 +137,14 @@ void Response::handleMethod(Request &request)
 /**
  * @brief Sets _statusCode from errno and calls buildError().
  */
-void Response::setSyscallError()
+void Response::setSyscallError(const std::string &context)
 {
 	if (errno == ENOENT || errno == ENOTDIR)
-		setError(NOT_FOUND);
+		setError(NOT_FOUND, context);
 	else if (errno == EACCES)
-		setError(FORBIDDEN);
+		setError(FORBIDDEN, context);
 	else
-		setError(INTERNAL_SERVER_ERROR);
+		setError(INTERNAL_SERVER_ERROR, context);
 }
 
 void normalizeHeaders(std::string& name){
@@ -207,15 +207,15 @@ bool Response::splitOutput(const std::string &output, std::string &headerSection
 void Response::buildCgiResponse(const std::string &output)
 {
 	std::string headerSection;
-
+	LOG(std::cout << "output send from cgi : " << output << std::endl);
 	if (!splitOutput(output, headerSection))
 	{
-		setError(INTERNAL_SERVER_ERROR);
+		setError(INTERNAL_SERVER_ERROR, "buildCgiResponse: error on splitOutput");
 		return;
 	}
 	parseCgiHeaders(headerSection);
 	if (!_body.empty() && !_headers.count("Content-Type"))
-		setError(INTERNAL_SERVER_ERROR);
+		setError(INTERNAL_SERVER_ERROR, "buildCgiResponse: body available but missing Content-Type");
 	if (_headers.count("Status"))
 	{
 		_statusCode = std::atoi(_headers["Status"].c_str());

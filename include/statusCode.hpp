@@ -22,6 +22,7 @@ typedef enum e_statusCode {
 
 	INTERNAL_SERVER_ERROR = 500,
 	NOT_IMPLEMENTED = 501,
+	BAD_GATEWAY = 502,
 	WRONG_HTTP = 505,
 } statusCode;
 
