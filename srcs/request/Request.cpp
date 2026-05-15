@@ -9,7 +9,7 @@ Request::Request() :
     _method(""),
 	_version(""),
 	_url(""),
-     _path(""),
+     _path("/"),
      _body(""),
      _query(""),
      _contentLength(-1),
