@@ -10,7 +10,7 @@ Notes to be adressed:
 - In TimeOutCheck : the actual function is for incomplete request, there is an error on the it, and is not yet called anywhere. Need to complete the timeoutCheck functions for CGIs --- WORK IN PROGRESS
 - In Session.cpp : maybe add with possibilty to add passwords or more, for more clarity. Need something that enables us to check in a better way whether it is a new or old session
 - handle the open fd when ctrl C is pressed 
-- For script.php : add SCRIPT_FILENAME in buildEnv
-- Check if it is all good for : DeleteFromEpoll in ReadFromClient && addToEpoll from ReadFromPipe
+- For script.php : add SCRIPT_FILENAME in buildEnv - WORK IN PROGRESS
+- Check if it is all good for : DeleteFromEpoll in ReadFromClient && addToEpoll from ReadFromPipe --  addToEpoll ok change to bool
 - In Session.cpp : maybe add with possibilty to add passwords or more, for more clarity. Need something that enables us to check in a better way whether it is a new or old sesion - SIEGE regarder comment il fait (voir video et verifier)
 - launch devrait etre bool pour return true ou false
