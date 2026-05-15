@@ -63,8 +63,9 @@ void Cgi::buildEnv(const ServerConfig &config)
 	const std::map<std::string, std::string> &header = _request->getHeaders();
 	std::string extension = this->_response->getCgiExtension();
 	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(extension) + extension.length());
-
+	
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
+	_tempEnv.push_back("SCRIPT_FILENAME=" + _fileSystemPath);
 	_tempEnv.push_back("REDIRECT_STATUS=200");
 	_tempEnv.push_back("REQUEST_METHOD=" + _request->getMethod());
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName);

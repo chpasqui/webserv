@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     net-tools \
     python3 \
+    php-cgi \
     bash-completion \
     && rm -rf /var/lib/apt/lists/*
 
