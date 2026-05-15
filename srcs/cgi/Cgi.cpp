@@ -3,6 +3,7 @@
 #include "../../include/Request.hpp"
 #include "../../include/ServerConfig.hpp"
 #include "../../include/Client.hpp"
+#include "../../include/Debug.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -87,7 +88,7 @@ void Cgi::buildEnv(const ServerConfig &config)
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
 	{
 		this->_finalEnv.push_back((strdup((*it).c_str())));
-		std::cout << GREEN << *it << RESET << std::endl;
+		LOG(std::cout << GREEN << *it << RESET << std::endl);
 	}
 	this->_finalEnv.push_back(NULL);
 }
@@ -174,6 +175,8 @@ Cgi::~Cgi()
 {
 	safeClose(this->_pipeWriteEnd);
 	safeClose(this->_pipeReadEnd);
+	for (size_t i = 0; i < _finalEnv.size(); ++i)
+		free(_finalEnv[i]);
 }
 
 void Cgi::closePipeReadEnd()
