@@ -40,7 +40,7 @@ void Response::build(Request &request, const ServerConfig *config)
 	}
 	if (isCGI())
 	{
-		LOG("the path sent is " << this->_internalPath << std::endl);
+		LOG_DEBUG("the path sent is " << this->_internalPath << std::endl);
 		this->_isCgi = true;
 		return;
 	}
@@ -79,7 +79,7 @@ std::string Response::buildFileSystemPath(const std::string &url)
 	_remain = url.substr(prefix.size());
 	if (!_remain.empty() && _remain[0] == '/')
 		_remain = _remain.substr(1);
-	LOG_DEBUG(std::cout << "prefix='" << prefix << "' remain='" << _remain << "' path='" << _loc->getRoot() + _remain << "'" << std::endl);
+	LOG_DEBUG("prefix='" << prefix << "' remain='" << _remain << "' path='" << _loc->getRoot() + _remain << "'");
 	return _loc->getRoot() + _remain;
 }
 
@@ -212,7 +212,7 @@ bool Response::splitOutput(const std::string &output, std::string &headerSection
 void Response::buildCgiResponse(const std::string &output)
 {
 	std::string headerSection;
-	LOG(std::cout << "output send from cgi : " << output << std::endl);
+	LOG_DEBUG("output send from cgi : " << output);
 	if (!splitOutput(output, headerSection))
 	{
 		setError(INTERNAL_SERVER_ERROR, "buildCgiResponse: error on splitOutput");
