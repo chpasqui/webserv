@@ -78,7 +78,7 @@ std::string Response::buildFileSystemPath(const std::string &url)
 	_remain = url.substr(prefix.size());
 	if (!_remain.empty() && _remain[0] == '/')
 		_remain = _remain.substr(1);
-	// LOG(std::cout << "prefix='" << prefix << "' remain='" << _remain << "' path='" << _loc->getRoot() + _remain << "'" << std::endl);
+	LOG_DEBUG(std::cout << "prefix='" << prefix << "' remain='" << _remain << "' path='" << _loc->getRoot() + _remain << "'" << std::endl);
 	return _loc->getRoot() + _remain;
 }
 

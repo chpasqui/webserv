@@ -1,37 +1,33 @@
 #ifndef DEBUG_HPP
 # define DEBUG_HPP
 
-#include <sstream>
+# include <iostream>
 # include <string>
 # include <map>
+# include "color.hpp"
 
-# define LOG 0
+#ifndef LOG_LEVEL
+# define LOG_LEVEL 0
+#endif
 
 enum DEBUG_LEVEL {
-	DEBUG = 1,
-	INFO = 2,
-	WARN = 3,
-	ERR = 4
+	ERR = 1,
+	WARN = 2,
+	INFO = 3,
+	DEBUG = 4
 };
+
+# define LOG_DEBUG(log) if(LOG_LEVEL >= DEBUG) std::cout << C_PINK << log << RESET << std::endl
+# define LOG_INFO(log) if(LOG_LEVEL >= INFO) std::cout << C_BLUE << log << RESET << std::endl
+# define LOG_WARN(log) if(LOG_LEVEL >= WARN) std::cout << C_YELLOW << log << RESET << std::endl
+# define LOG_ERR(code, ctx) if(LOG_LEVEL >= ERR) std::cerr << C_RED << "Error" << code << " : " << ctx << RESET << std::endl
 
 class Debug {
 	public:
+		static void debugListHeader(std::map<std::string, std::string> &_headers);
+	private:
 		Debug();
 		~Debug();
-
-		static void log(std::ostream, int level);
-		static void log(const std::string &msg, const std::string &ctx);
-		void debugListHeader(std::map<std::string, std::string> &_headers);
-	private:
 };
-
-
-//# ifdef DEBUG
-// #  define LOG(msg) std::cerr << msg << std::endl
-// #  define LOG_ERR(code, ctx) std::cerr << "Error " << code << " : " << ctx << std::endl
-// # else
-// #  define LOG(msg) (void)0
-// #  define LOG_ERR(code, ctx) (void)0
-// # endif
 
 #endif

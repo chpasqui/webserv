@@ -10,12 +10,12 @@ Http::Http() :
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() {
-	// LOG(C_CSTR << "Http: Default constructor called" << RESET);
+	 LOG_DEBUG(C_CSTR << "Http: Default constructor called" << RESET);
 	return ;
 }
 
 Http::~Http() {
-	// LOG(C_DSTR << "Http: Destructor called" << RESET);
+	LOG_DEBUG(C_DSTR << "Http: Destructor called" << RESET);
 	return ;
 }
 
@@ -53,7 +53,7 @@ std::map<int, std::string> Http::getErrorPages(void) const
 //----Setter----//
 
 void Http::setClientTimeout(int clientTimeout) {
-	clientTimeout = _clientTimeout;
+	_clientTimeout = clientTimeout;
 }
 
 void Http::setMaxBodySize(int maxBodySize) {

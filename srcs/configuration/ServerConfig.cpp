@@ -16,7 +16,7 @@ ServerConfig::ServerConfig() :
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() { //WARN: add the default "index.html" if this is empty after parsing
-	// LOG(C_CSTR << "ServerConfig: Default constructor called" << RESET);
+	LOG_DEBUG(C_CSTR << "ServerConfig: Default constructor called" << RESET);
 	return ;
 }
 
@@ -31,7 +31,7 @@ ServerConfig::ServerConfig(const Http &http) :
 	_allowedMethods(http.getAllowedMethods()),
 	_indexes(http.getIndexes()),
 	_errorPages(http.getErrorPages()) {
-	// LOG(C_CSTR << "ServerConfig: Normal constructor called" << RESET);
+	LOG_DEBUG(C_CSTR << "ServerConfig: Normal constructor called" << RESET);
 	return ;
 }
 
@@ -41,7 +41,7 @@ ServerConfig::~ServerConfig(){
 			delete (*it);
 	_locations.clear();
 	return ;
-	// LOG(C_DSTR << "ServerConfig: Destructor called" << RESET);
+	LOG_DEBUG(C_DSTR << "ServerConfig: Destructor called" << RESET);
 }
 
 //----Setter---//

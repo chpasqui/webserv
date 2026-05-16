@@ -16,8 +16,8 @@ bool Request::parseRequestLine(const std::string &message){
 		return false;
 	if (!validMethod() || !validVersion() || !validUrl())
 		return false; 
-	// LOG("method : " << _method << "\nurl : " << _url << "\nversion : " 
-        // << _version << "\npath : " << _path << "\nquery : " << _query);
+	LOG_DEBUG("method : " << _method << "\nurl : " << _url << "\nversion : "
+         << _version << "\npath : " << _path << "\nquery : " << _query);
 	return true;
 }
 

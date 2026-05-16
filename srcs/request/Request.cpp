@@ -70,7 +70,7 @@ const std::map<std::string, std::string>& Request::getHeaders() const{
  */
 bool Request::setError(int code, const std::string &context) {
     _statusCode = code;
-    // LOG_ERR(code, context);
+    LOG_ERR(code, context);
     (void)context;
     return false;
 }

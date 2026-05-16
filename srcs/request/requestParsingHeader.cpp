@@ -48,7 +48,7 @@ bool Request::parseHeader(const std::string &request){
 	}
 	if (!validateHeader())
 		return false;
-	//LOG(debugListHeader(_headers));
+	Debug::debugListHeader(_headers);
 	return true ;
 }
 

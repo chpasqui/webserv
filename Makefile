@@ -5,8 +5,8 @@ DIR_INCLUDE =   ./include
 CXX         =   c++
 CXXFLAGS    =   -std=c++98 -Wall -Werror -Wextra -g
 
-ifdef DEBUG
-	CXXFLAGS += -DDEBUG -g
+ifdef LOG_LEVEL
+	CXXFLAGS += -DLOG_LEVEL=$(LOG_LEVEL) -g
 endif
 LDINCLUDE   =   -I$(DIR_INCLUDE)
 

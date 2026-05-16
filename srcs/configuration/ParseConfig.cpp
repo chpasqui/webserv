@@ -23,7 +23,7 @@ ParseConfig::ParseConfig() :
 	_location(0),
 	_serverConfigs(0),
 	_dictionary() {
-	// LOG(C_CSTR << "ParseConfig: Default constructor called" << RESET);
+	LOG_DEBUG(C_CSTR << "ParseConfig: Default constructor called" << RESET);
 }
 
 ParseConfig::ParseConfig(std::vector<ServerConfig *> *serverConfigs) :
@@ -49,14 +49,14 @@ ParseConfig::ParseConfig(std::vector<ServerConfig *> *serverConfigs) :
 	_dictionary["index"] = &ParseConfig::processIndexToken;
 	_dictionary["return"] = &ParseConfig::processRedirectionToken;
 	_dictionary["cgi_pass"] = &ParseConfig::processCgiPassToken;
-	// LOG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
+	LOG_DEBUG(C_CSTR << "ParseConfig: Normal construtor called" << RESET);
 }
 
 ParseConfig::~ParseConfig() {
 	if (_http)
 		delete (_http);
 	_configFile.close();
-	// LOG(C_DSTR << "ParseConfig: Destructor called" << RESET);
+	LOG_DEBUG(C_DSTR << "ParseConfig: Destructor called" << RESET);
 }
 
 int	ParseConfig::parsingConfigFile(const std::string &filename) {
@@ -147,7 +147,7 @@ int		ParseConfig::getNextToken(std::string &token) {
 		if (_configFile.eof() || _configFile.fail())
 			return (0);
 	}
-	// LOG(C_PINK << token << RESET);
+	LOG_DEBUG(C_PINK << token << RESET);
 	return (1);
 }
 
@@ -194,14 +194,14 @@ void	ParseConfig::processEndBraquetToken(void) {
 			break;
 		case SERVER:
 			if (!thereIsDefaultLocation()) {
-				// LOG(C_PINK << "No default location found, create one" << RESET);
+				LOG_WARN("No default location found, create one");
 				_currentConfig->addLocation(new Location(*_currentConfig, "/"));
 			}
 			_currentConfig = 0;
 			break;
 		case LOCATION:
 			if (!thereIsIndex()) {
-				// LOG(C_PINK << "No index found for location " << _location->getPath() << ", add default index \"index.html\"" << RESET);
+				LOG_WARN("No index found for location " << _location->getPath() << ", add default index \"index.html\"");
 				_location->addIndex("index.html");
 			}
 			_location = 0;
