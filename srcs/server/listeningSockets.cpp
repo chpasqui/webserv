@@ -30,14 +30,16 @@ void Server::setupListeningSockets(const std::vector<ServerConfig *>& serverConf
 	std::string errorMsg;
 	
 	signal(SIGINT, Server::signalHandler);
-	signal(SIGQUIT, Server::signalHandler);
+	//signal(SIGQUIT, Server::signalHandler);
+	signal(SIGCHLD, SIG_IGN);
 	
 	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
 	{
 		int listenFd = openListeningSocket();
 		bindAndListen(listenFd, serverConfigsVec[i]->getPort());
 		this->_listenFds[listenFd] = serverConfigsVec[i];
-		addToEpoll(this->_epollFd, listenFd, EPOLLIN);
+		if (!addToEpoll(this->_epollFd, listenFd, EPOLLIN))
+			throw(std::runtime_error(errorMsg));
 	}
 }
 

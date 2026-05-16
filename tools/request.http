@@ -1,7 +1,4 @@
-GET /cgi-bin/pink.py HTTP/1.1
+GET /cgi-bin/hello.php HTTP/1.1
 Host: localhost
-Content-Type: text/plain
-Content-Length: 22
-Connection: close
 
-Hello My name is Alice
+

@@ -142,7 +142,7 @@ check("POST body > client_max_body_size → 413", r, 413)
 section("DELETE")
 
 r = send_raw("DELETE /uploads/test_upload.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("DELETE fichier existant → 200/204", r, 200)
+check("DELETE fichier existant → 200/204", r, 204)
 
 r = send_raw("DELETE /uploads/test_upload.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
 check("DELETE fichier inexistant → 404", r, 404)

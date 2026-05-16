@@ -20,7 +20,7 @@
 #define BOLD "\033[1m"
 #endif
 
-extern void safeClose(int fd);
+extern void safeClose(int &fd);
 
 class Cgi
 {
@@ -30,9 +30,11 @@ class Cgi
 		Cgi(Response *response, Request *request);
 		~Cgi();
 		void launch(const ServerConfig &config);
-		int	getStdinWriteEnd() const;
-		int getStdoutReadEnd() const;
+		int	getPipeWriteEnd() const;
+		int getPipeReadEnd() const;
 		int getPid(void) const;
+		void closePipeReadEnd();
+		void closePipeWriteEnd();
 
 	private:
 		std::string _fileSystemPath;
@@ -41,9 +43,10 @@ class Cgi
 
 		std::string _scriptName;
 		std::string _pathInfo;
+		std::string _fileName;
 
-		int _stdinWriteEnd;
-		int _stdoutReadEnd;
+		int _pipeWriteEnd;
+		int _pipeReadEnd;
 		int _pid;
 
 		void buildEnv(const ServerConfig &config);
@@ -52,6 +55,7 @@ class Cgi
 
 		Response *_response;
 		Request *_request;
+
 };
 
 std::string getHeaderVariable(const std::map<std::string, std::string> &header, const std::string &key);

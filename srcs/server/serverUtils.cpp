@@ -1,5 +1,7 @@
-#include "../include/Server.hpp"
-#include "../include/color.hpp"
+#include "../../include/Server.hpp"
+#include "../../include/color.hpp"
+#include "../../include/Cgi.hpp"
+#include "../../include/statusCode.hpp"
 
 #include <iostream>
 #include <ctime>
@@ -16,26 +18,42 @@
 #include <csignal>
 #include <signal.h>
 
+
+void Server:: updateTimeStamp(Client *client){
+	time_t currentTime;
+	time(&currentTime);
+
+	client->setTimestamp(currentTime);
+}
+
 void	Server::timeoutCheck(void) {
 	time_t	currentTime;
 	time(&currentTime);
 
-	// timeoutCheckClient()
-	// step1 : first loop like below
-	// step2 : second loop of std::map<int, Client *> _pipeFd and check if the client = pipeFd in case a CGI is running
-	// step3 : keep the if difftime like below but change the logic cause this->_client.erase(it->first) invalids the pointer on it (not c++11)
-	// timeoutCheckCgi()
-	// step1 : loop on pipeFd 
-	// step2: check the diff time like below (need to see where to put the start time of cgi -> maybe launch ??)
-	// step3: same logic as before however not forgetting to kill the child before
-	for (std::map<int, Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
-	{
-		if (std::difftime(currentTime, it->second->getTimestamp()) == TIMEOUT)
-		{
-			//buildReponse();
-			//this->modifyEpoll(it->first, EPOLLOUT);
-			//sendResponse();
-			this->_clients.erase(it->first);
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		Client* client = it->second;
+		if (std::difftime(currentTime, client->getTimestamp()) >= client->getServerConfig()->getClientTimeout()){
+			if (client->getResponse() != NULL){
+				client->getResponse()->setError(GATEWAY_TIMEOUT, "timeoutCheck: response is not NULL");
+				if (client->getCgi()){
+					if (!addToEpoll(_epollFd, it->first, EPOLLOUT)){
+						closeConnection(client);
+						return;
+					}
+				}
+				else 
+					if(!modifyEpoll(_epollFd, it->first, EPOLLOUT)){
+						closeConnection(client);
+						return ;
+					}
+				updateTimeStamp(client);
+				return ;
+			}
+			closeConnection(client);
+			std::cout << "connection closed" << std::endl;
+			if (_clients.empty())
+				return ;
+			it = this->_clients.begin();
 		}
 	}
 }
@@ -45,8 +63,8 @@ void	Server::timeoutCheck(void) {
 void	Server::signalHandler(int signal) {
 	if (signal == SIGINT)
 		std::cout << "\nSIGINT signal detected, stopping server\n";
-	else if (signal == SIGQUIT)
-		std::cout << "\nSIGQUIT signal detected, stopping server\n";
+	// else if (signal == SIGQUIT)
+	// 	std::cout << "\nSIGQUIT signal detected, stopping server\n"; 
 	serverSignal = signal;
 }
 

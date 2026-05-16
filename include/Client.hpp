@@ -49,13 +49,12 @@ class Client
 		std::string	getOutput(void) const;
 		int bodyoffset;
 		size_t sendoffset;
+		void setTimestamp(time_t currentTime);
 
 	private:
 		Client(); // client constructor is in private so that we never create a client out of nowhere
 		int _clientFd;
 		int _cgiPipeFd;
-		int _writeCgiPipeEnd;
-		int _readCgiPipeEnd;
 		std::string _output;
 
 		ssize_t _bytesRead;
@@ -71,4 +70,3 @@ class Client
 };
 
 #endif
-        

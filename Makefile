@@ -2,7 +2,7 @@ NAME        =   webserv
 DIR_SRC     =   ./srcs
 DIR_BUILD   =   ./build
 DIR_INCLUDE =   ./include
-CXX         =   c++
+CXX         =   g++
 CXXFLAGS    =   -std=c++98 -Wall -Werror -Wextra -g
 
 ifdef LOG_LEVEL

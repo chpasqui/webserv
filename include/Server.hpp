@@ -11,15 +11,9 @@
 #include "Session.hpp"
 
 extern int serverSignal;
-extern void safeClose(int fd);
-
-// Client lives in server
-// ServerConfig lives in Client
-// Server lives in main
-// server outlives serverconfig so it can have a pointer to serverconfig and it will delete it when closing
+extern void safeClose(int &fd);
 
 #define MAX_EVENTS 1024
-#define TIMEOUT 10
 #define BACKLOG 20
 
 class Server
@@ -38,16 +32,15 @@ public:
 	void readFromPipe(int stdoutPipeReadFd);
 	void launchCgi(Client &client);
 	void writeToClient(int fd);
-	void writeToPipe(Client &client, int stdinPipeWriteFd);
+	void writeToPipe(int stdinPipeWriteFd);
 	void timeoutCheck(void);
 
-	bool cgiDead(int fd);
-
-	void closeConnection(int fd);
-	static void addToEpoll(int epollFd, int fdToModify, uint32_t flag);
+	void closeConnection(Client *client);
+	static bool addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static bool modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static void delFromEpoll(int epollFd, int fdToModify);
 	static void signalHandler(int signal);
+	void updateTimeStamp(Client *client);
 
 private:
 	int _epollFd;
