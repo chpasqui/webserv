@@ -1,6 +1,6 @@
 #include <algorithm>
 #include "../include/color.hpp"
-#include "../include/ParseConfig.hpp"
+#include "../include/ConfigParser.hpp"
 #include "../include/Server.hpp"
 #include "../include/Location.hpp"
 #include "../include/ServerConfig.hpp"
@@ -26,7 +26,7 @@ int main(int ac, char **av) {
 		if (checkInputArgs(ac, av, configFileName) == 1)
 			return (1);
 
-		ParseConfig pc(&configs);
+		ConfigParser pc(&configs);
 		if (pc.parsingConfigFile(configFileName) == 1)
 			return (1);
 	}

@@ -1,10 +1,9 @@
-#ifndef PARSECONFIG_HPP
-# define PARSECONFIG_HPP
+#ifndef CONFIGPARSER_HPP
+# define CONFIGPARSER_HPP
 
 #include <fstream>
 #include <map>
 #include <string>
-#include <sstream>
 #include <vector>
 
 #define FILENAME_EXT ".conf"
@@ -22,11 +21,11 @@ enum context {
 	LOCATION,
 };
 
-class ParseConfig {
+class ConfigParser {
 	public:
-		ParseConfig();
-		ParseConfig(std::vector<ServerConfig *> *serverConfigs);
-		~ParseConfig();
+		ConfigParser();
+		ConfigParser(std::vector<ServerConfig *> *serverConfigs);
+		~ConfigParser();
 		
 		int													parsingConfigFile(const std::string &filename);
 	private:
@@ -54,12 +53,12 @@ class ParseConfig {
 		//----Atributes----//
 		std::ifstream										_configFile;
 		int													_contextLevel;
-		AConfig												*_contextConfig;
+		AConfig												*_currentContext;
 		Http												*_http;
-		ServerConfig										*_currentConfig;
-		Location											*_location;
+		ServerConfig										*_currentServer;
+		Location											*_currentLocation;
 		std::vector<ServerConfig*>							*_serverConfigs;
-		std::map<std::string, void (ParseConfig::*)(void)>	_dictionary;
+		std::map<std::string, void (ConfigParser::*)(void)>	_dictionary;
 };
 
 #endif

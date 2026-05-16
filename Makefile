@@ -34,7 +34,7 @@ SRCS        =   main.cpp \
 				configuration/AConfig.cpp \
 				configuration/Http.cpp \
 				configuration/Location.cpp \
-				configuration/ParseConfig.cpp \
+				configuration/ConfigParser.cpp \
 				configuration/ServerConfig.cpp
 
 OBJS        =   $(SRCS:%.cpp=$(DIR_BUILD)/%.o)
