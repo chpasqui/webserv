@@ -195,7 +195,9 @@ void	ParseConfig::processEndBraquetToken(void) {
 		case SERVER:
 			if (!thereIsDefaultLocation()) {
 				LOG_WARN("No default location found, create one");
-				_currentConfig->addLocation(new Location(*_currentConfig, "/"));
+				Location *location = new Location(*_currentConfig, "/");
+				location->addIndex("index.html");
+				_currentConfig->addLocation(location);
 			}
 			_currentConfig = 0;
 			break;
