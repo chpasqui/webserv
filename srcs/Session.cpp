@@ -4,7 +4,7 @@
 #include <ctime>
 #include <cstdlib>
 
- Session::Session(){}
+ Session::Session() : _createdAt(std::time(NULL)) {}
 
 //Step 1: ce sera dans serveur, mais si aucun header cookie, generer un sessionId
 //Step 2: si y a un header Cookie, il faut que j'extracte le sessionId 
@@ -47,7 +47,9 @@ std::string Session::getId() const{
     return (_id);
 }
 
-
+time_t Session::getCreatedAt() const{
+	return (_createdAt);
+}
 
 Session::~Session(){}
 

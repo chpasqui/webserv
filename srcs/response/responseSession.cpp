@@ -5,12 +5,21 @@
 #include "../../include/Debug.hpp"
 
 #include <fstream>
+#include <ctime>
 
 
 void Response::serverSessionPage(){
     std::ostringstream page;
+    double sessionTime = std::difftime(std::time(NULL), _session->getCreatedAt());
 
 	page << "<html><body>";
+
+    if (_isNewSession)
+        page << "<p style='color:blue'>New session created: "<< _session->getId() << "</p>";
+    else
+        page << "<p style='color:green'>Welcome back - session: "<< _session->getId() 
+        << " active since " << sessionTime << "s</p>";
+
     if (!_session->data["user"].empty())
         page << "<h1>Hey " << _session->data["user"] << "!</h1>\n";
 	else 
