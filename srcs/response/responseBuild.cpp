@@ -24,8 +24,6 @@ void Response::build(Request &request, const ServerConfig *config)
 		setError(request.getStatusCode(), "error given from parse request");
 		return;
 	}
-	if (request.getContentLength() > _loc->getMaxBodySize())
-		return (setError(PAYLOAD_TOO_LARGE, "build: contentLenght > client_max_body_size"));
 	_internalPath = buildFileSystemPath(request.getPath());
 	if (_loc->getRedirCode() != 0)
 	{

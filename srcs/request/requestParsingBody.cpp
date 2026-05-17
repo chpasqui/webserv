@@ -14,7 +14,7 @@ bool Request::parseBody(const std::string &body){
 
     if (_headers.count("transfer-encoding")){
         if (!unchunkedBody(body))
-            return(setError(BAD_REQUEST, "parseBody: unchunked failed"));
+            return false;
         return true ;
     }
     else if (_headers.count("content-length")){
@@ -40,12 +40,13 @@ bool Request::unchunkedBody(const std::string &body){
 
     while (pos < body.size()){
         if (!parseChunkSize(body, pos, chunkSize))
-            return false;
-        if (chunkSize == 0){
+            return (setError(BAD_REQUEST, "unchunkedBody: parseChunkSize failed"));
+        if (chunkSize == 0)
             break ;
-        }
         if (!extractChunkData(body, pos, chunkSize))
-            return false;
+            return (setError(BAD_REQUEST, "unchunkedBody: extractChunkData failed"));
+        if (_maxBodySize > 0 && _contentLength > _maxBodySize)
+            return (setError(PAYLOAD_TOO_LARGE, "unchunkedBody: chunked body exceeded maxBodySize"));
     }
     return true;
 } 

@@ -2,6 +2,7 @@
 #include "../include/Cgi.hpp"
 #include "../include/ServerConfig.hpp"
 #include "../include/Server.hpp"
+#include "../include/statusCode.hpp"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -73,7 +74,12 @@ bool Client::bodyRead(std::string &buffer)
 }
 
 bool Client::checkMaxBodySize(){
-	
+	Location *loc = _config->findLocation(_request->getPath());
+	int maxBodySize = loc->getMaxBodySize();
+	_request->setMaxBodySize(maxBodySize);
+	if (_request->getContentLength() > 0 && _request->getContentLength() > maxBodySize)
+		return(_request->setError(PAYLOAD_TOO_LARGE, "build: contentLenght > client_max_body_size"));
+	return true ;
 }
 
 void Client::parseRequest()
@@ -100,7 +106,7 @@ void Client::parseRequest()
 	}
 	if (this->_parsingStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
 	{
-		if (!_request->parseHeader(_buffer))
+		if (!_request->parseHeader(_buffer) || !checkMaxBodySize())
 		{
 			this->_parsingStatus = COMPLETE;
 			return;
