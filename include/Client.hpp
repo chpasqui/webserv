@@ -67,6 +67,8 @@ class Client
 		Request *_request;
 		Response *_response;
 		Cgi *_cgi;
+
+		bool checkMaxBodySize();
 };
 
 #endif

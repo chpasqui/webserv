@@ -72,6 +72,10 @@ bool Client::bodyRead(std::string &buffer)
 	return true;
 }
 
+bool Client::checkMaxBodySize(){
+	
+}
+
 void Client::parseRequest()
 {
 	char buffer[BUFFERSIZE];

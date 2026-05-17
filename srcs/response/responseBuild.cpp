@@ -18,7 +18,7 @@
 void Response::build(Request &request, const ServerConfig *config)
 {
 	_config = config;
-	_loc = findLocation(request.getPath());
+	_loc = _config->findLocation(request.getPath());
 	if (request.getStatusCode() != 0)
 	{
 		setError(request.getStatusCode(), "error given from parse request");
@@ -45,29 +45,6 @@ void Response::build(Request &request, const ServerConfig *config)
 		return;
 	}
 	handleMethod(request);
-}
-
-/**
- * @brief Returns the longest-prefix matching location for the given URL.
- * @return Pointer to matching Location, or NULL if none found.
- */
-Location *Response::findLocation(const std::string &url)
-{
-	Location *best = NULL;
-	size_t bestLen = 0;
-
-	std::vector<Location *> locs = _config->getLocations();
-	std::vector<Location *>::iterator it = locs.begin();
-	for (; it != locs.end(); it++)
-	{
-		const std::string &prefix = (*it)->getPath();
-		if (url.substr(0, prefix.size()) == prefix && prefix.size() > bestLen)
-		{
-			best = *it;
-			bestLen = prefix.size();
-		}
-	}
-	return best;
 }
 
 /**

@@ -129,3 +129,26 @@ void ServerConfig::addErrorPage(int code, std::string page) {
 	_errorPages.insert(std::map<int, std::string>::value_type(code, page));
 }
 
+/**
+ * @brief Returns the longest-prefix matching location for the given URL.
+ * @return Pointer to matching Location, or NULL if none found.
+ */
+Location *ServerConfig::findLocation(const std::string &url) const
+{
+	Location *best = NULL;
+	size_t bestLen = 0;
+
+	std::vector<Location *> locs = getLocations();
+	std::vector<Location *>::const_iterator it = locs.begin();
+	for (; it != locs.end(); it++)
+	{
+		const std::string &prefix = (*it)->getPath();
+		if (url.substr(0, prefix.size()) == prefix && prefix.size() > bestLen)
+		{
+			best = *it;
+			bestLen = prefix.size();
+		}
+	}
+	return best;
+}
+
