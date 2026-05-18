@@ -47,6 +47,7 @@ std::string Response::getReasonPhrase() const{
         case INTERNAL_SERVER_ERROR : return "Internal server loop";
         case NOT_IMPLEMENTED : return "Not implemented";
         case WRONG_HTTP : return "Wrong HTTP";
+        case GATEWAY_TIMEOUT : return "Gateway Timeout";
         default : return "Error";
 
     }
