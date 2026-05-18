@@ -138,6 +138,7 @@ void Cgi::executeScript()
 			safeClose(stdinPipe[READ_END]);
 			safeClose(stdoutPipe[READ_END]);
 			safeClose(stdoutPipe[WRITE_END]);
+			this->_server->~Server();
 			std::exit(EXIT_FAILURE);
 		}
 		safeClose(stdinPipe[READ_END]);
@@ -145,6 +146,7 @@ void Cgi::executeScript()
 		if (dup2(stdoutPipe[WRITE_END], STDOUT_FILENO) == -1)
 		{
 			safeClose(stdoutPipe[WRITE_END]);
+			this->_server->~Server();
 			std::exit(EXIT_FAILURE);
 		}
 		safeClose(stdoutPipe[WRITE_END]);
