@@ -190,7 +190,7 @@ void Server::readFromClient(int clientFd)
  */
 bool Server::launchCgi(Client &client)
 {
-	client.setCgi(client.getResponse(), client.getRequest());
+	client.setCgi(client.getResponse(), client.getRequest(), this);
 	Cgi *cgi = client.getCgi();
 	
 	errno = 0;
@@ -346,6 +346,7 @@ Server::~Server()
 	for (; listenIt != this->_listenFds.end(); ++listenIt)
 	{
 		close(listenIt->first);
+		delete (listenIt->second);
 	}
 	_listenFds.clear();
 	safeClose(this->_epollFd);

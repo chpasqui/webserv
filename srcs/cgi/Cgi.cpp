@@ -30,15 +30,19 @@ Cgi::Cgi() :
 	_tempEnv(), 
 	_finalEnv(), 
 	_pipeWriteEnd(-1), 
-	_pipeReadEnd(-1){}
+	_pipeReadEnd(-1),
+	_server(NULL),
+	_response(NULL),
+	_request(NULL) {}
 
-Cgi::Cgi(Response *response, Request *request) : 
+Cgi::Cgi(Response *response, Request *request, Server *server) : 
 	_fileSystemPath(""),
 	_tempEnv(), _finalEnv(),
 	_pipeWriteEnd(-1),
 	_pipeReadEnd(-1),
+	_server(server),
 	_response(response),
-	_request(request){}
+	_request(request) {}
 
 void Cgi::launch(const ServerConfig &config)
 {
@@ -112,18 +116,21 @@ void Cgi::executeScript()
 	pid_t pid = fork(); //
 	if (pid == 0)
 	{
-		char buffer[1024];
-		std::cout << "current working dirwectory before the chdir is " << getcwd(buffer, 1024) << std::endl;
 		std::string directoryPath;
 		size_t pos = this->_fileSystemPath.find_last_of('/');
 		directoryPath = this->_fileSystemPath.substr(0, pos);
 		std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
-		std::cout << "directory path is " << directoryPath.c_str() << std::endl;
-		if (chdir(directoryPath.c_str()) != 0)
-			std::cerr << "chdir error\n" << std::endl;
-		std::cout << "current working dirwectory before the chdir is " << getcwd(buffer, 1024) << std::endl;
+		if (chdir("./HAHAHA") == -1)
+		{
+			_response->setSyscallError("executeScript: chdir failed in child");
+			safeClose(stdinPipe[WRITE_END]);
+			safeClose(stdinPipe[READ_END]);
+			safeClose(stdoutPipe[READ_END]);
+			safeClose(stdoutPipe[WRITE_END]);
+			this->_server->~Server();
+			std::exit(EXIT_FAILURE);
+		}
 		this->_fileName = filename;
-		std::cout << "filename is " << _fileName << std::endl;
 
 		safeClose(stdinPipe[WRITE_END]);
 		if (dup2(stdinPipe[READ_END], STDIN_FILENO) == -1)
@@ -146,6 +153,7 @@ void Cgi::executeScript()
 		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileName.c_str()), NULL}; // NULL marks the end of the array
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 		{
+			this->_response->setSyscallError("ExecuteScript: execve failed");
 			std::exit(EXIT_FAILURE); //WARN: What we do if execve() failed;
 		}
 	}
