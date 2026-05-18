@@ -60,16 +60,18 @@ Client::Client(const Client &other) :	bodyoffset(other.bodyoffset),
 
 bool Client::bodyRead(std::string &buffer)
 {
-	size_t pos = buffer.find("\r\n\r\n");
-	buffer = buffer.substr(pos + 4);
 	if (this->_request->getContentLength() == -1)
 	{
 		if (buffer.find("0\r\n\r\n") == std::string::npos)
 			return false;
 		return true;
 	}
-	if (buffer.size() < (size_t)_request->getContentLength())
+	if (buffer.size() < (size_t)_request->getContentLength()){
+		std::cout << buffer << std::endl;
+		std::cout << "FALSE" << std::endl;
 		return false;
+	}
+	buffer = buffer.substr(0, _request->getContentLength());
 	return true;
 }
 
@@ -104,10 +106,13 @@ void Client::parseRequest()
 		}
 		this->_parsingStatus = PARSING_HEADERS;
 	}
+	std::cout << "BEFORE PARSING_HEADER" << std::endl;
 	if (this->_parsingStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
 	{
+		std::cout << "AFTER PARSING_HEADER" << std::endl;
 		if (!_request->parseHeader(_buffer) || !checkMaxBodySize())
 		{
+			std::cout << "HELLOOOO" << std::endl;
 			this->_parsingStatus = COMPLETE;
 			return;
 		}
@@ -118,8 +123,11 @@ void Client::parseRequest()
 		}
 		this->_parsingStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
+	size_t pos = _buffer.find("\r\n\r\n");
+	_buffer = _buffer.substr(pos + 4);
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
+		std::cout << "IN PARSING BODY CONDITION" << std::endl;
 		if (!_request->parseBody(_buffer))
 		{
 			this->_parsingStatus = COMPLETE;
