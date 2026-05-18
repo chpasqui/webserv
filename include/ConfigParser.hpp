@@ -31,7 +31,7 @@ class ConfigParser {
 	private:
 		int													openFile(const std::string &filename);
 		int													getNextToken(std::string &token);
-		int													getNextToken(int &token);
+		int													getNextLine(void);
 		bool												thereIsDefaultLocation(void) const;
 		bool												thereIsIndex(void) const;
 		//----ProcessToken----//
@@ -52,7 +52,9 @@ class ConfigParser {
 		void												processCgiPassToken(void);
 		//----Atributes----//
 		std::ifstream										_configFile;
+		std::string											_currentLine;
 		int													_contextLevel;
+		int													_lineNumber;
 		AConfig												*_currentContext;
 		Http												*_http;
 		ServerConfig										*_currentServer;

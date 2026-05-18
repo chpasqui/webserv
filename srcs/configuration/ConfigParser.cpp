@@ -2,12 +2,10 @@
 #include <errno.h>
 #include <iostream>
 #include <iterator>
-#include <limits>
 #include <stdexcept>
 #include <stdlib.h>
 #include <cstring>
 #include <unistd.h>
-#include <sstream>
 #include "../../include/Http.hpp"
 #include "../../include/ServerConfig.hpp"
 #include "../../include/Location.hpp"
@@ -16,7 +14,9 @@
 
 ConfigParser::ConfigParser() :
 	_configFile(""),
+	_currentLine(""),
 	_contextLevel(0),
+	_lineNumber(0),
 	_currentContext(0),
 	_http(0),
 	_currentServer(0),
@@ -28,7 +28,9 @@ ConfigParser::ConfigParser() :
 
 ConfigParser::ConfigParser(std::vector<ServerConfig *> *serverConfigs) :
 	_configFile(""),
+	_currentLine(""),
 	_contextLevel(NONE),
+	_lineNumber(0),
 	_currentContext(0),
 	_http(0),
 	_currentServer(0),
@@ -117,50 +119,37 @@ int		ConfigParser::openFile(const std::string &filename) {
 }
 
 //TODO:
-//- Add a default location if no one is given. OK
 //- Ignore the end ligne with " #". OK
 //- Add a line number for errors. : Use a ss to get the line, and overload getNextToken() to take int OK
 //- Display a better error message.
-//- check if the file end with ".conf". OK
 //- Fix leaks when exception is thrown. Still some leaks : OK
-//- Rename variables with wrong names OK
-//- Read word by word the config file OK
+//- Rename variables with wrong names OK 
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
-//- remove the setPath function in location OK
-//- add default index.html if no one is provided OK
-//- Combine "client_header_timeout" and "client_body_timeout" into "client_timeout" OK
-//- Keep in mind that it may be necessary to remove upload_store OK
-//- Make a logger with different level ? OK
 //- unform some function (like setMaxBodySize, setClientTimeout, etc...)
 
 /**
  * @brief get the next token in the config file and remove it from the file string
  * @return the token or an empty string if the end of the file has been reached
  */
-int		ConfigParser::getNextToken(std::string &token) {
-	_configFile >> token;
-	if (_configFile.eof() || _configFile.fail())
+int	ConfigParser::getNextToken(std::string &token) {
+	if (getNextLine() == -1)
 		return (0);
-	while (*token.begin() == '#') {
-		_configFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //WARN: if the comment is the last word of the line , we skip the new line ???
-		_configFile >> token;
-		if (_configFile.eof() || _configFile.fail())
-			return (0);
-	}
-	LOG_DEBUG(C_PINK << token << RESET);
+	size_t pos = _currentLine.find_first_not_of(" \t\f\r\v\n");
+	_currentLine.erase(0, pos);
+	pos = _currentLine.find_first_of(" \t\f\r\v\n{}");
+	token = _currentLine.substr(0, pos);
+	_currentLine.erase(0, pos);
 	return (1);
 }
 
-int		ConfigParser::getNextToken(int &token) {
-	std::string str;
-
-	if (!getNextToken(str))
-		return (0);
-	std::stringstream ss(str);
-	ss >> token;
-	if (token < 0 || ss.fail())
-		return (0);
-	return (1);
+int ConfigParser::getNextLine(void) {
+	while (_currentLine.empty() || _currentLine.find_first_not_of(" \t\f\r\v\n") == std::string::npos) { //INFO: we don't really need \n, getline remove it
+		if(!getline(_configFile, _currentLine))
+			return (1);
+		_lineNumber++;
+		//TODO: remove the '#'
+	}
+	return (0);
 }
 
 bool	ConfigParser::thereIsDefaultLocation(void) const {
@@ -194,7 +183,7 @@ void	ConfigParser::processEndBraquetToken(void) {
 			break;
 		case SERVER:
 			if (!thereIsDefaultLocation()) {
-				LOG_WARN("No default location found, create one");
+				LOG_INFO("No default location found, create one");
 				Location *location = new Location(*_currentServer, "/");
 				location->addIndex("index.html");
 				_currentServer->addLocation(location);
@@ -203,7 +192,7 @@ void	ConfigParser::processEndBraquetToken(void) {
 			break;
 		case LOCATION:
 			if (!thereIsIndex()) {
-				LOG_WARN("No index found for location " << _currentLocation->getPath() << ", add default index \"index.html\"");
+				LOG_INFO("No index found for location " << _currentLocation->getPath() << ", add default index \"index.html\"");
 				_currentLocation->addIndex("index.html");
 			}
 			_currentLocation = 0;
@@ -247,8 +236,7 @@ void	ConfigParser::processLocationToken(void) {
 		throw (std::invalid_argument("fail to get the nextToken for \"location\""));
 	if (_currentLocation)
 		throw std::runtime_error("Nested location is not allowed");
-
-	if (braquet != "{" || _contextLevel!= SERVER || _currentLocation)
+	if (braquet != "{" || _contextLevel!= SERVER)
 		throw std::runtime_error("Unexcepted token after \"Location\"");
 
 	_currentLocation = new Location(*_currentServer, path);
@@ -262,11 +250,11 @@ void	ConfigParser::processLocationToken(void) {
  * @detail client_timeout context: http, server
  */
 void	ConfigParser::processClientTimeoutToken(void) {
-	int			timeout;
+	std::string	timeout;
 
 	if (!getNextToken(timeout))
 		throw (std::invalid_argument("fail to get the nextToken for \"cient_timeout\""));
-	_currentContext->setClientTimeout(timeout);
+	_currentContext->setClientTimeout(30);
 	return ;
 }
 
@@ -274,11 +262,11 @@ void	ConfigParser::processClientTimeoutToken(void) {
  * @detail client_max_body_size context: http, server, location
  */
 void	ConfigParser::processMaxBodySizeToken(void) {
-	int			maxBodySize;
+	std::string	maxBodySize;
 
 	if (!getNextToken(maxBodySize))
 		throw (std::invalid_argument("fail to get the nextToken for \"max_body_size\""));
-	_currentContext->setMaxBodySize(maxBodySize);
+	_currentContext->setMaxBodySize(100000);
 }
 
 /**
@@ -297,11 +285,11 @@ void	ConfigParser::processRootToken(void) {
  * @detail listen context: server
  */
 void	ConfigParser::processListenToken(void) {
-		int 		port;
+	std::string	port;
 
 	if (!getNextToken(port))
 		throw (std::invalid_argument("fail to get the nextToken for \"listen\""));
-	_currentContext->setPort(port);
+	_currentContext->setPort(30);
 	return;
 }
 
@@ -327,13 +315,13 @@ void	ConfigParser::processAutoindexToken(void) {
  * @detail error_page context: http, server, location
  */
 void	ConfigParser::processErrorPageToken(void) {
-	int			code;
+	std::string	code;
 	std::string	pageToken;
 
 	if (!getNextToken(code) || !getNextToken(pageToken))
 		throw (std::invalid_argument("fail to get the nextToken for \"error_page\""));
 
-	_currentContext->addErrorPage(code, pageToken);
+	_currentContext->addErrorPage(30, pageToken);
 }
 
 /**
@@ -365,12 +353,12 @@ void	ConfigParser::processIndexToken(void) {
 }
 
 void	ConfigParser::processRedirectionToken(void) {
-	int			code;
+	std::string	code;
 	std::string	redirectionPath;
 
 	if (!getNextToken(code) || !getNextToken(redirectionPath))
 		throw (std::invalid_argument("fail to get the nextToken for \"return\""));
-	_currentContext->setRedireCode(code);
+	_currentContext->setRedireCode(30);
 	_currentContext->setRedirePath(redirectionPath);
 }
 
