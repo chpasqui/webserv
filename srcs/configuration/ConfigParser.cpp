@@ -123,18 +123,18 @@ int		ConfigParser::openFile(const std::string &filename) {
 //- Display a better error message.
 //- check if the file end with ".conf". OK
 //- Fix leaks when exception is thrown. Still some leaks : OK
-//- Rename variables with wrong names
+//- Rename variables with wrong names OK
 //- Read word by word the config file OK
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
 //- remove the setPath function in location OK
 //- add default index.html if no one is provided OK
 //- Combine "client_header_timeout" and "client_body_timeout" into "client_timeout" OK
-//- Keep in mind that it may be necessary to remove upload_store
-//- Make a logger with different level ?
+//- Keep in mind that it may be necessary to remove upload_store OK
+//- Make a logger with different level ? OK
 //- unform some function (like setMaxBodySize, setClientTimeout, etc...)
 
 /**
- * @biref get the next token in the config file and remove it from the file string
+ * @brief get the next token in the config file and remove it from the file string
  * @return the token or an empty string if the end of the file has been reached
  */
 int		ConfigParser::getNextToken(std::string &token) {

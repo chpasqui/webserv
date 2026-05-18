@@ -53,7 +53,7 @@ int main(int ac, char **av) {
  * @param filename: Write the file name to "filename" based on the user's input
  * @return 0 if successful and 1 if unsuccessful
  *
- * @warn The default configuration file must exist; otherwise, an error will be returned
+ * @warning The default configuration file must exist; otherwise, an error will be returned
  */
 int	checkInputArgs(int ac, char **av, std::string &filename) {
 	int			status;

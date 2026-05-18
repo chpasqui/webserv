@@ -3,10 +3,12 @@
 #include <iostream>
 
 Debug::Debug() {
+	LOG_DEBUG(C_CSTR << "Debug: Default constructor called");
 	return ;
 }
 
 Debug::~Debug() {
+	LOG_DEBUG(C_DSTR << "Debug: Destructor called");
 	return ;
 }
 
