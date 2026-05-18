@@ -118,10 +118,10 @@ void Client::parseRequest()
 			this->_parsingStatus = COMPLETE;
 			return;
 		}
+		size_t pos = _buffer.find("\r\n\r\n");
+		_buffer = _buffer.substr(pos + 4);
 		this->_parsingStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
-	size_t pos = _buffer.find("\r\n\r\n");
-	_buffer = _buffer.substr(pos + 4);
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
 		if (!_request->parseBody(_buffer))
