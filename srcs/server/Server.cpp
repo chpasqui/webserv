@@ -126,7 +126,7 @@ void Server::closeConnection(Client *client)
 	}
 	
 	int fd = client->getClientFd();// extract fd contained in client
-	if (_clients.count(client->getClientFd()) && _clients[client->getClientFd()] == client)
+	if (_clients.count(client->getClientFd()) && _clients[fd] == client)
 	{
 		delFromEpoll(this->_epollFd, client->getClientFd());
 		delete _clients[fd]; // delete the client pointer
