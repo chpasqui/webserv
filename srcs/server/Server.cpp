@@ -119,9 +119,9 @@ void Server::closeConnection(Client *client)
 	{	if (client->getCgi()->getPid() > 0)
 			kill(client->getCgi()->getPid(), SIGKILL);
 		// this is a precautionary measure, in case the read and write have failed, then i need to double check that they are rempoved from epoll
-		if (client->getCgi()->getPipeWriteEnd() != -1 && this->_pipeFd[client->getCgi()->getPipeWriteEnd()])
+		if (client->getCgi()->getPipeWriteEnd() != -1 && _pipeFd.count(client->getCgi()->getPipeWriteEnd()))
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeWriteEnd());
-		if (client->getCgi()->getPipeReadEnd() != -1 && this->_pipeFd[client->getCgi()->getPipeReadEnd()])
+		if (client->getCgi()->getPipeReadEnd() != -1 && _pipeFd.count(client->getCgi()->getPipeReadEnd()))
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeReadEnd());
 	}
 	
