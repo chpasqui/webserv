@@ -9,12 +9,12 @@ Request::Request() :
     _method(""),
 	_version(""),
 	_url(""),
-     _path("/"),
-     _body(""),
-     _query(""),
-     _contentLength(-1),
-     _maxBodySize(0),
-     _statusCode(0) {}
+    _path("/"),
+    _body(""),
+    _query(""),
+    _contentLength(-1),
+    _maxBodySize(0),
+    _statusCode(0) {}
 
 Request::~Request(){}
 

@@ -1,6 +1,7 @@
-GET /cgi-bin/echo.py HTTP/1.1
+POST /cgi-bin/echo.py HTTP/1.1
 Host: localhost
-Content-Type: text/plain
-Connection: close
+Content-Length: 4
+
+test
 
 
