@@ -113,3 +113,8 @@ std::string Response::getCgiExtension(void)
 {
     return this->_cgiExtension;
 }
+
+int Response::getStatusCode(void) const
+{
+    return this->_statusCode;
+}

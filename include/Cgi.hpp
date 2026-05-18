@@ -33,6 +33,7 @@ class Cgi
 		int	getPipeWriteEnd() const;
 		int getPipeReadEnd() const;
 		int getPid(void) const;
+		Response *getResponse(void);
 		void closePipeReadEnd();
 		void closePipeWriteEnd();
 

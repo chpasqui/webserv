@@ -45,7 +45,8 @@ void Cgi::launch(const ServerConfig &config)
 	this->_fileSystemPath = _response->getInternalPath();
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
-		std::cerr << "access issue" << std::endl;
+		this->_response->setSyscallError("Launch: access failed");
+		return ;
 	}
 	std::cout << "filesystempath is " << this->_fileSystemPath << std::endl;
 	buildEnv(config);
@@ -177,6 +178,11 @@ int Cgi::getPipeReadEnd() const
 int Cgi::getPid(void) const
 {
 	return this->_pid;
+}
+
+Response *Cgi::getResponse(void)
+{
+	return (this->_response);
 }
 
 Cgi::~Cgi()
