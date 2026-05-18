@@ -57,14 +57,14 @@ int Server::openListeningSocket() {
 	}
 	if (fcntl(listenFd, F_SETFL, O_NONBLOCK) == -1)
 	{
-		close(listenFd);
+		safeClose(listenFd);
 		throw std::runtime_error("Server: fcntl() failed.");
 	}
 	int optval = 1;
 	socklen_t optlen = sizeof(optval);
 	if (setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &optval, optlen) == -1)
 	{
-		close(listenFd);
+		safeClose(listenFd);
 		throw std::runtime_error("Server: setsockopt() failed.");
 	}
 	return listenFd;
@@ -75,7 +75,7 @@ int Server::openListeningSocket() {
  * network interfaces INADDR_ANY and marks them as passive via
  * the listen() syscall, allowing it to queue up to BACKLOG incoming connections 
  * 
- * @param listenFd listening socket to be bound, closed upon failure
+ * @param listenFd listening socket to be bound, safeClosed upon failure
  * @param port which is the serverConfigVec[i].getport() so that we bind the
  * listen fd to that specific port
  */
@@ -90,12 +90,12 @@ void	Server::bindAndListen(int &listenFd, int port) const {
 
 	if (bind(listenFd, (struct sockaddr*)&server_addr, addrlen) == -1)
 	{
-		close(listenFd);
+		safeClose(listenFd);
 		throw std::runtime_error("Server: bind() failed.");
 	}
 	if (listen(listenFd, BACKLOG) == -1)
 	{
-		close(listenFd);
+		safeClose(listenFd);
 		throw std::runtime_error("Server: listen() failed.");
 	}
 	return ;

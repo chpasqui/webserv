@@ -32,9 +32,6 @@ void	Server::timeoutCheck(void) {
 	{
 		if (std::difftime(currentTime, it->second->getTimestamp()) == TIMEOUT)
 		{
-			//buildReponse();
-			//this->modifyEpoll(it->first, EPOLLOUT);
-			//sendResponse();
 			this->_clients.erase(it->first);
 		}
 	}
@@ -44,7 +41,10 @@ void	Server::timeoutCheck(void) {
 
 void	Server::signalHandler(int signal) {
 	if (signal == SIGINT)
+	{
+		
 		std::cout << "\nSIGINT signal detected, stopping server\n";
+	}
 	else if (signal == SIGQUIT)
 		std::cout << "\nSIGQUIT signal detected, stopping server\n";
 	serverSignal = signal;

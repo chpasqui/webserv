@@ -167,6 +167,14 @@ int Cgi::getPid(void) const
 
 Cgi::~Cgi()
 {
+	if (!this->_finalEnv.empty())
+	{
+		for (std::vector<char *>::iterator it = this->_finalEnv.begin(); it != this->_finalEnv.end(); it++)
+		{
+			free(*it);
+		}
+		_finalEnv.clear();
+	}
 	safeClose(this->_pipeWriteEnd);
 	safeClose(this->_pipeReadEnd);
 }

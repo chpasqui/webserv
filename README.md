@@ -4,8 +4,7 @@ https://docs.google.com/spreadsheets/d/1VZfzkXoYSBPIKUkYGd2LAbqP2WufRq0hg4a3hBml
 
 Notes to be adressed:
 - In executeScript : The CGI should be run in the correct directory for relative path file access (line from the subject) -> is it the case right now ?
-- In executeScript : maybe change the parseSheBang with the use of the cgiPass (from class Response) DONE
-- finish the waitpid and error codes in cgi 
+- finish the waitpid and error codes in cgi (to see with following TODO if waitpid is done)
 - In Server.cpp - SingalHandler : I think we need to add signals for SIGPIPE (if the pipe is closed and we try to write on it) and SIGCHLD (reapes automatically the dead child) therefore -> SIGCHLD can replace waitpid in readFromPipe (I think, need to be checked)
 - In TimeOutCheck : the actual function is for incomplete request, there is an error on the it, and is not yet called anywhere. Need to complete the timeoutCheck functions for CGIs --- WORK IN PROGRESS
 - In Session.cpp : maybe add with possibilty to add passwords or more, for more clarity. Need something that enables us to check in a better way whether it is a new or old session
