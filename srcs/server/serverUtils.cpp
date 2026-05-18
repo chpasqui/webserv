@@ -2,6 +2,7 @@
 #include "../../include/color.hpp"
 #include "../../include/Cgi.hpp"
 #include "../../include/statusCode.hpp"
+#include "../../include/Debug.hpp"
 
 #include <iostream>
 #include <ctime>
@@ -30,31 +31,35 @@ void	Server::timeoutCheck(void) {
 	time_t	currentTime;
 	time(&currentTime);
 
-	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+	std::map<int, Client*>::iterator it = _clients.begin();
+
+	while (it != _clients.end()) {
 		Client* client = it->second;
+		LOG_DEBUG(C_CSTR << "client fd=" << it->first << " config=" << client->getServerConfig());
 		if (std::difftime(currentTime, client->getTimestamp()) >= client->getServerConfig()->getClientTimeout()){
-			if (client->getResponse() != NULL){
-				client->getResponse()->setError(GATEWAY_TIMEOUT, "timeoutCheck: response is not NULL");
-				if (client->getCgi()){
-					if (!addToEpoll(_epollFd, it->first, EPOLLOUT)){
-						closeConnection(client);
-						return;
-					}
+			if (client->getResponse() == NULL)
+				client->setResponse();
+			client->getResponse()->setError(GATEWAY_TIMEOUT, "timeoutCheck: response is not NULL");
+			if (client->getCgi()){
+				if (!addToEpoll(_epollFd, it->first, EPOLLOUT)){
+					++it;
+					closeConnection(client);
+					continue;
 				}
-				else 
-					if(!modifyEpoll(_epollFd, it->first, EPOLLOUT)){
-						closeConnection(client);
-						return ;
-					}
-				updateTimeStamp(client);
-				return ;
 			}
-			closeConnection(client);
-			std::cout << "connection closed" << std::endl;
-			if (_clients.empty())
-				return ;
-			it = this->_clients.begin();
+			else {
+				if(!modifyEpoll(_epollFd, it->first, EPOLLOUT)){
+					++it;
+					closeConnection(client);
+					continue ;
+				}
+				std::cout << BLUE << "Connection closed" << RESET << std::endl;
+			}
+			updateTimeStamp(client);
+			++it;
 		}
+		else
+			++it;
 	}
 }
 

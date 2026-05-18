@@ -107,6 +107,10 @@ void Response::setError(int code, const std::string &context) {
     _statusCode = code;
     LOG_ERR(code, context);
     (void)context;
+    if (_loc == NULL) {
+        generateErrorPage();
+        return;
+    }
     buildError();
 }
 

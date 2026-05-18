@@ -38,6 +38,7 @@ class Client
 		const ServerConfig *getServerConfig(void) const;
 		Response *getResponse(void) const;
 		void setResponse(Session &session, bool isNew);
+		void setResponse();
 		std::string getResponseStr() const;
 		Cgi *getCgi(void) const;
 		void	setCgi(Response *response, Request *request);

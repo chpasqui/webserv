@@ -29,7 +29,6 @@ class Response {
 		
 
 		//route
-		Location* 	findLocation(const std::string& url); // serait mieux dans serverConfig ou location
 		std::string buildFileSystemPath(const std::string& url);
 		bool 		methodAllowed(const std::string& method);
 		bool 		isCGI();
