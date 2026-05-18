@@ -120,7 +120,7 @@ void Cgi::executeScript()
 		size_t pos = this->_fileSystemPath.find_last_of('/');
 		directoryPath = this->_fileSystemPath.substr(0, pos);
 		std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
-		if (chdir("./HAHAHA") == -1)
+		if (chdir(directoryPath.c_str()) == -1)
 		{
 			_response->setSyscallError("executeScript: chdir failed in child");
 			safeClose(stdinPipe[WRITE_END]);
