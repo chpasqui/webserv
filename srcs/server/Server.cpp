@@ -163,8 +163,9 @@ void Server::readFromClient(int clientFd)
 		client->getResponse()->build(*client->getRequest(), client->getServerConfig());
 		if (client->getResponse()->getCgiStatus() == true)
 		{
-			launchCgi(*client);
-			delFromEpoll(this->_epollFd, clientFd);
+			if (launchCgi(*client))
+				delFromEpoll(this->_epollFd, clientFd);
+			std::cout << "launchCgi failed" << std::endl;
 		}
 		else
 		{
@@ -187,38 +188,73 @@ void Server::readFromClient(int clientFd)
  * 
  * @param client 
  */
-void Server::launchCgi(Client &client)
+bool Server::launchCgi(Client &client)
 {
-	client.setCgi(client.getResponse(), client.getRequest());
+	client.setCgi(client.getResponse(), client.getRequest(), this);
 	Cgi *cgi = client.getCgi();
 	
 	errno = 0;
 	cgi->launch(*client.getServerConfig());
-
-	if (errno)
+	std::cout << "we are here after the access failed" << std::endl;
+	if (cgi->getResponse()->getStatusCode())
 	{
-		closeConnection(&client);
-		return ;
+		std::cout << "entered here" << std::endl;
+		modifyEpoll(this->_epollFd, client.getClientFd(), EPOLLOUT);
+		return false;
 	}
-
 	if (cgi->getPipeWriteEnd() != -1)
 	{
+		std::cout << "Got in the pipe function " << std::endl;
 		if (!addToEpoll(_epollFd, cgi->getPipeWriteEnd(), EPOLLOUT)){
 			closeConnection(&client);
-			return ;
+			return false;
 		}
 		this->_pipeFd[cgi->getPipeWriteEnd()] = &client;
 	}
 
 	if (cgi->getPipeReadEnd() != -1)
 	{
+		std::cout << "Got in the pipe function " << std::endl;
 		if (!addToEpoll(_epollFd, cgi->getPipeReadEnd(), EPOLLIN)){
 			closeConnection(&client);
-			return ;
+			return false;
 		}
 		this->_pipeFd[cgi->getPipeReadEnd()] = &client;
 	}
-	return;
+	return true;
+}
+
+/**
+ * @brief In the case of a "POST" request, the partent process needs to send the 
+ * 
+ * @param client 
+ * @param pipeWriteEnd 
+ */
+void Server::writeToPipe(int pipeWriteEnd)
+{
+
+	Client *client = this->_pipeFd[pipeWriteEnd];
+	Request *request = client->getRequest();
+	ssize_t writtenBytes = 0;
+
+	writtenBytes = write(pipeWriteEnd, request->getBody().c_str() + client->bodyoffset, request->getBody().size() - client->bodyoffset);
+	if (writtenBytes < 0)
+	{
+		perror("Error: ");
+		return ;
+	}
+	else if (writtenBytes > 0)
+	{
+		updateTimeStamp(client);
+		client->bodyoffset += writtenBytes;
+		if (client->bodyoffset >= request->getContentLength())
+		{
+			delFromEpoll(this->_epollFd, pipeWriteEnd);
+			this->_pipeFd.erase(pipeWriteEnd);
+			client->getCgi()->closePipeWriteEnd();//pour close le PipeWriteEnd de la classe Cgi (pas la variable locale)
+			return;
+		}
+	}
 }
 
 /**
@@ -264,40 +300,10 @@ void Server::readFromPipe(int pipeReadEnd)
 	}
 }
 
-/**
- * @brief In the case of a "POST" request, the partent process needs to send the 
- * 
- * @param client 
- * @param pipeWriteEnd 
- */
-void Server::writeToPipe(int pipeWriteEnd)
-{
-	Client *client = this->_pipeFd[pipeWriteEnd];
-	Request *request = client->getRequest();
-	ssize_t writtenBytes = 0;
-
-	writtenBytes = write(pipeWriteEnd, request->getBody().c_str() + client->bodyoffset, request->getBody().size() - client->bodyoffset);
-	if (writtenBytes < 0)
-	{
-		perror("Error: ");
-		return ;
-	}
-	else if (writtenBytes > 0)
-	{
-		updateTimeStamp(client);
-		client->bodyoffset += writtenBytes;
-		if (client->bodyoffset >= request->getContentLength())
-		{
-			delFromEpoll(this->_epollFd, pipeWriteEnd);
-			this->_pipeFd.erase(pipeWriteEnd);
-			client->getCgi()->closePipeWriteEnd();//pour close le PipeWriteEnd de la classe Cgi (pas la variable locale)
-			return;
-		}
-	}
-}
 
 void Server::writeToClient(int fd)
 {
+	std::cout << "entered the write to client function" << std::endl;
 	Client *client = _clients[fd];
 	std::string response = client->getResponseStr();
 	ssize_t nbytes = send(fd, response.c_str() + client->sendoffset, response.size() - client->sendoffset, 0);
@@ -340,6 +346,7 @@ Server::~Server()
 	for (; listenIt != this->_listenFds.end(); ++listenIt)
 	{
 		close(listenIt->first);
+		delete (listenIt->second);
 	}
 	_listenFds.clear();
 	safeClose(this->_epollFd);

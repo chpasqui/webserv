@@ -9,6 +9,7 @@
 #include <string>
 #include <sys/types.h>
 
+class Server;
 class ServerConfig;
 class Cgi;
 
@@ -41,7 +42,7 @@ class Client
 		void setResponse();
 		std::string getResponseStr() const;
 		Cgi *getCgi(void) const;
-		void	setCgi(Response *response, Request *request);
+		void	setCgi(Response *response, Request *request, Server *server);
 		// void setPid(pid_t pid);
 		// pid_t	getPid(void) const;
 		int getCgiPipeFd(void) const;

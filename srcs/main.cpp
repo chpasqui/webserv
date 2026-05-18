@@ -41,16 +41,15 @@ int main(int ac, char **av) {
 		std::cerr << e.what() << '\n';
 	}
 	
-	for (std::vector<ServerConfig*>::iterator it = configs.begin(); it != configs.end(); it++)
-		delete (*it);
+	// for (std::vector<ServerConfig*>::iterator it = configs.begin(); it != configs.end(); it++)
+	// 	delete (*it);
 	return (0);
 }
 
 /**
  * @brief Checks the number of parameters passed to the program.
  * If no parameters are provided, it asks the user if they want to use the default configuration file.
- *
- * @param filename: Write the file name to "filename" based on the user's input
+ * based on the user's input
  * @return 0 if successful and 1 if unsuccessful
  *
  * @warn The default configuration file must exist; otherwise, an error will be returned

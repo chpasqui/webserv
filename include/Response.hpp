@@ -48,11 +48,11 @@ class Response {
 		std::string extractContentType();
 		std::string getReasonPhrase() const;
 		
-	public:
+		public:
 		Response();
 		Response(Session& session, bool isNew);
 		~Response();
-
+		
 		void 		build(Request& request, const ServerConfig *config);
 		std::string responseFormat(Request& request);
 		bool		getCgiStatus(void) const;
@@ -64,6 +64,7 @@ class Response {
 		void		setError(int code, const std::string &context);
 		void 		setSyscallError(const std::string &context);
 		std::string getCgiExtension(void);
+		int 		getStatusCode(void) const;
 
 		void serverSessionPage();
 		void handleLogin(Request& request);
