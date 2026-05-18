@@ -165,7 +165,6 @@ void Server::readFromClient(int clientFd)
 		{
 			if (launchCgi(*client))
 				delFromEpoll(this->_epollFd, clientFd);
-			std::cout << "launchCgi failed" << std::endl;
 		}
 		else
 		{
@@ -195,16 +194,13 @@ bool Server::launchCgi(Client &client)
 	
 	errno = 0;
 	cgi->launch(*client.getServerConfig());
-	std::cout << "we are here after the access failed" << std::endl;
 	if (cgi->getResponse()->getStatusCode())
 	{
-		std::cout << "entered here" << std::endl;
 		modifyEpoll(this->_epollFd, client.getClientFd(), EPOLLOUT);
 		return false;
 	}
 	if (cgi->getPipeWriteEnd() != -1)
 	{
-		std::cout << "Got in the pipe function " << std::endl;
 		if (!addToEpoll(_epollFd, cgi->getPipeWriteEnd(), EPOLLOUT)){
 			closeConnection(&client);
 			return false;
@@ -214,7 +210,6 @@ bool Server::launchCgi(Client &client)
 
 	if (cgi->getPipeReadEnd() != -1)
 	{
-		std::cout << "Got in the pipe function " << std::endl;
 		if (!addToEpoll(_epollFd, cgi->getPipeReadEnd(), EPOLLIN)){
 			closeConnection(&client);
 			return false;
@@ -303,7 +298,6 @@ void Server::readFromPipe(int pipeReadEnd)
 
 void Server::writeToClient(int fd)
 {
-	std::cout << "entered the write to client function" << std::endl;
 	Client *client = _clients[fd];
 	std::string response = client->getResponseStr();
 	ssize_t nbytes = send(fd, response.c_str() + client->sendoffset, response.size() - client->sendoffset, 0);

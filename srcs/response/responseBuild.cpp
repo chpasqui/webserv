@@ -148,7 +148,6 @@ void Response::parseCgiHeaders(std::string &headerSection)
 		size_t colonPos = line.find(':');
 		if (colonPos == std::string::npos)
 		{
-			std::cout << RED << "this is where PHP fails" << RESET << std::endl;
 			continue;
 		}
 

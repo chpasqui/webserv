@@ -52,7 +52,6 @@ void Cgi::launch(const ServerConfig &config)
 		this->_response->setSyscallError("Launch: access failed");
 		return ;
 	}
-	std::cout << "filesystempath is " << this->_fileSystemPath << std::endl;
 	buildEnv(config);
 	executeScript();
 }
@@ -112,7 +111,6 @@ void Cgi::executeScript()
 	if (errno)
 		return ;
 	
-	std::cout << "HERE" << std::endl;
 	pid_t pid = fork(); //
 	if (pid == 0)
 	{

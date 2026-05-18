@@ -67,8 +67,6 @@ bool Client::bodyRead(std::string &buffer)
 		return true;
 	}
 	if (buffer.size() < (size_t)_request->getContentLength()){
-		std::cout << buffer << std::endl;
-		std::cout << "FALSE" << std::endl;
 		return false;
 	}
 	buffer = buffer.substr(0, _request->getContentLength());
