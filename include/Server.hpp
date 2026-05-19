@@ -38,7 +38,7 @@ public:
 	void closeConnection(Client *client);
 	static bool addToEpoll(int epollFd, int fdToModify, uint32_t flag);
 	static bool modifyEpoll(int epollFd, int fdToModify, uint32_t flag);
-	static void delFromEpoll(int epollFd, int fdToModify);
+	static bool delFromEpoll(int epollFd, int fdToModify);
 	static void signalHandler(int signal);
 	void updateTimeStamp(Client *client);
 
