@@ -4,6 +4,7 @@
 #include "../../include/Location.hpp"
 #include "../../include/Debug.hpp"
 #include "../../include/utils.hpp"
+#include "../../include/Server.hpp"
 
 #include <fstream>
 #include <ctime>
@@ -70,5 +71,13 @@ void Response::handleLogin(Request& request){
         _session->data["user"] = username;
     
     _statusCode = FOUND;
+    _headers["Location"] = "/";
+}
+
+void Response::serverLogoutPage(){
+    _sessions->erase(_session->getId());
+
+    _headers["Set-Cookie"] = "session_id=; Max-Age=0; Path=/";
+    _statusCode = MOVED_PERMANENTLY;
     _headers["Location"] = "/";
 }

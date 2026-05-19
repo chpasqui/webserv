@@ -9,16 +9,18 @@ Response::Response() :
     _statusCode(0),
     _body(""), 
     _session(NULL),
+    _sessions(NULL),
     _isNewSession(false),
 	_isCgi(false), 
     _cgiPass("") {}
 
-Response::Response(Session& session, bool isNew) : 
+Response::Response(Session& session, bool isNew, std::map<std::string, Session>& sessions) : 
     _config(NULL),
     _loc(NULL),
     _statusCode(0),
     _body(""),
     _session(&session),
+    _sessions(&sessions),
     _isNewSession(isNew),
 	_isCgi(false),
     _cgiPass("") {}

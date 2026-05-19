@@ -19,6 +19,7 @@ SRCS        =   main.cpp \
 				server/serverEpoll.cpp \
 				server/serverUtils.cpp \
 				server/listeningSockets.cpp \
+				server/serverSession.cpp \
 				request/Request.cpp \
 				request/requestParsingLine.cpp \
 				request/requestParsingHeader.cpp \

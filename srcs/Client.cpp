@@ -162,9 +162,9 @@ Response *Client::getResponse(void) const
 	return (this->_response);
 }
 
-void Client::setResponse(Session &session, bool isNew)
+void Client::setResponse(Session &session, bool isNew, std::map<std::string, Session>& sessions)
 {
-	this->_response = new Response(session, isNew);
+	this->_response = new Response(session, isNew, sessions);
 }
 
 void Client::setResponse()

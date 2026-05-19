@@ -34,6 +34,7 @@ std::string Session::extractSessionId(std::string cookieHeader){
 	return "";
 }
 
+
 std::string Session::toSetCookieString() const
 {
     return "session_id=" + _id + "; Path=/";

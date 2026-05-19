@@ -25,7 +25,8 @@ void Response::handleGetMethod(Request& request){
         return ;
     }
     if (request.getPath() == "/logout" && !_session->data["user"].empty()){
-
+        serverLogoutPage();
+        return;
     }
     if (stat(_internalPath.c_str(), &sb) != 0){
         setSyscallError("handleGetMethod: stat failed");
@@ -114,8 +115,7 @@ void Response::handlePostMethod(Request& request){
         uploadDir = uploadDir.substr(0, uploadDir.size() - 1);
     struct stat dirStat;
     if (stat(uploadDir.c_str(), &dirStat) != 0 || !S_ISDIR(dirStat.st_mode)){
-        setSyscallError(""); //WARN: No context in setSyscallError() for this case, should we add one ?
-        LOG_WARN("upload folder doesnt exist");
+        setSyscallError("upload folder doesnt exist");
         return ;
     }
     std::string uploadPath = uploadDir + "/" + _remain;

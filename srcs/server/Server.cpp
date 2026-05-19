@@ -159,7 +159,7 @@ void Server::readFromClient(int clientFd)
 	{
 		bool isNew = false;
 		Session &session = resolveSession(client->getRequest()->getHeader("cookie"), isNew);
-		client->setResponse(session, isNew);
+		client->setResponse(session, isNew, _sessions);
 		client->getResponse()->build(*client->getRequest(), client->getServerConfig());
 		if (client->getResponse()->getCgiStatus() == true)
 		{
@@ -272,7 +272,7 @@ void Server::readFromPipe(int pipeReadEnd)
 
 	char buffer[BUFFER_SIZE];
 	ssize_t nbytes = 0;
-
+	
 	nbytes = read(pipeReadEnd, buffer, BUFFER_SIZE);
 	if (nbytes > 0){
 		client->setOutput(client->getOutput().append(buffer, nbytes));
