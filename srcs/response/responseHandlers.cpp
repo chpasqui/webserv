@@ -19,6 +19,14 @@ void Response::handleGetMethod(Request& request){
         serverSessionPage();
         return ;
     }
+    if (request.getPath() == "/login.html" && !_session->data["user"].empty()){
+        _statusCode = MOVED_PERMANENTLY;
+        _headers["Location"] = "/";
+        return ;
+    }
+    if (request.getPath() == "/logout" && !_session->data["user"].empty()){
+
+    }
     if (stat(_internalPath.c_str(), &sb) != 0){
         setSyscallError("handleGetMethod: stat failed");
         return;
