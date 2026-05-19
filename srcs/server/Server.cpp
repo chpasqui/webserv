@@ -119,14 +119,14 @@ void Server::closeConnection(Client *client)
 	{	if (client->getCgi()->getPid() > 0)
 			kill(client->getCgi()->getPid(), SIGKILL);
 		// this is a precautionary measure, in case the read and write have failed, then i need to double check that they are rempoved from epoll
-		if (client->getCgi()->getPipeWriteEnd() != -1 && this->_pipeFd[client->getCgi()->getPipeWriteEnd()])
+		if (client->getCgi()->getPipeWriteEnd() != -1 && _pipeFd.count(client->getCgi()->getPipeWriteEnd()))
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeWriteEnd());
-		if (client->getCgi()->getPipeReadEnd() != -1 && this->_pipeFd[client->getCgi()->getPipeReadEnd()])
+		if (client->getCgi()->getPipeReadEnd() != -1 && _pipeFd.count(client->getCgi()->getPipeReadEnd()))
 			delFromEpoll(this->_epollFd, client->getCgi()->getPipeReadEnd());
 	}
 	
 	int fd = client->getClientFd();// extract fd contained in client
-	if (_clients.count(client->getClientFd()) && _clients[client->getClientFd()] == client)
+	if (_clients.count(client->getClientFd()) && _clients[fd] == client)
 	{
 		delFromEpoll(this->_epollFd, client->getClientFd());
 		delete _clients[fd]; // delete the client pointer
@@ -161,10 +161,11 @@ void Server::readFromClient(int clientFd)
 		Session &session = resolveSession(client->getRequest()->getHeader("cookie"), isNew);
 		client->setResponse(session, isNew);
 		client->getResponse()->build(*client->getRequest(), client->getServerConfig());
+		
 		if (client->getResponse()->getCgiStatus() == true)
 		{
-			launchCgi(*client);
-			delFromEpoll(this->_epollFd, clientFd);
+			if (launchCgi(*client))
+				delFromEpoll(this->_epollFd, clientFd);
 		}
 		else
 		{
@@ -187,25 +188,23 @@ void Server::readFromClient(int clientFd)
  * 
  * @param client 
  */
-void Server::launchCgi(Client &client)
+bool Server::launchCgi(Client &client)
 {
-	client.setCgi(client.getResponse(), client.getRequest());
+	client.setCgi(client.getResponse(), client.getRequest(), this);
 	Cgi *cgi = client.getCgi();
 	
 	errno = 0;
 	cgi->launch(*client.getServerConfig());
-
-	if (errno)
+	if (cgi->getResponse()->getStatusCode())
 	{
-		closeConnection(&client);
-		return ;
+		modifyEpoll(this->_epollFd, client.getClientFd(), EPOLLOUT);
+		return false;
 	}
-
 	if (cgi->getPipeWriteEnd() != -1)
 	{
 		if (!addToEpoll(_epollFd, cgi->getPipeWriteEnd(), EPOLLOUT)){
 			closeConnection(&client);
-			return ;
+			return false;
 		}
 		this->_pipeFd[cgi->getPipeWriteEnd()] = &client;
 	}
@@ -214,11 +213,44 @@ void Server::launchCgi(Client &client)
 	{
 		if (!addToEpoll(_epollFd, cgi->getPipeReadEnd(), EPOLLIN)){
 			closeConnection(&client);
-			return ;
+			return false;
 		}
 		this->_pipeFd[cgi->getPipeReadEnd()] = &client;
 	}
-	return;
+	return true;
+}
+
+/**
+ * @brief In the case of a "POST" request, the partent process needs to send the 
+ * 
+ * @param client 
+ * @param pipeWriteEnd 
+ */
+void Server::writeToPipe(int pipeWriteEnd)
+{
+
+	Client *client = this->_pipeFd[pipeWriteEnd];
+	Request *request = client->getRequest();
+	ssize_t writtenBytes = 0;
+
+	writtenBytes = write(pipeWriteEnd, request->getBody().c_str() + client->bodyoffset, request->getBody().size() - client->bodyoffset);
+	if (writtenBytes < 0)
+	{
+		perror("Error: ");
+		return ;
+	}
+	else if (writtenBytes > 0)
+	{
+		updateTimeStamp(client);
+		client->bodyoffset += writtenBytes;
+		if (client->bodyoffset >= request->getContentLength())
+		{
+			delFromEpoll(this->_epollFd, pipeWriteEnd);
+			this->_pipeFd.erase(pipeWriteEnd);
+			client->getCgi()->closePipeWriteEnd();//pour close le PipeWriteEnd de la classe Cgi (pas la variable locale)
+			return;
+		}
+	}
 }
 
 /**
@@ -264,37 +296,6 @@ void Server::readFromPipe(int pipeReadEnd)
 	}
 }
 
-/**
- * @brief In the case of a "POST" request, the partent process needs to send the 
- * 
- * @param client 
- * @param pipeWriteEnd 
- */
-void Server::writeToPipe(int pipeWriteEnd)
-{
-	Client *client = this->_pipeFd[pipeWriteEnd];
-	Request *request = client->getRequest();
-	ssize_t writtenBytes = 0;
-
-	writtenBytes = write(pipeWriteEnd, request->getBody().c_str() + client->bodyoffset, request->getBody().size() - client->bodyoffset);
-	if (writtenBytes < 0)
-	{
-		perror("Error: ");
-		return ;
-	}
-	else if (writtenBytes > 0)
-	{
-		updateTimeStamp(client);
-		client->bodyoffset += writtenBytes;
-		if (client->bodyoffset >= request->getContentLength())
-		{
-			delFromEpoll(this->_epollFd, pipeWriteEnd);
-			this->_pipeFd.erase(pipeWriteEnd);
-			client->getCgi()->closePipeWriteEnd();//pour close le PipeWriteEnd de la classe Cgi (pas la variable locale)
-			return;
-		}
-	}
-}
 
 void Server::writeToClient(int fd)
 {
@@ -340,6 +341,7 @@ Server::~Server()
 	for (; listenIt != this->_listenFds.end(); ++listenIt)
 	{
 		close(listenIt->first);
+		delete (listenIt->second);
 	}
 	_listenFds.clear();
 	safeClose(this->_epollFd);

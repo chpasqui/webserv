@@ -47,6 +47,7 @@ std::string Response::getReasonPhrase() const{
         case INTERNAL_SERVER_ERROR : return "Internal server loop";
         case NOT_IMPLEMENTED : return "Not implemented";
         case WRONG_HTTP : return "Wrong HTTP";
+        case GATEWAY_TIMEOUT : return "Gateway Timeout";
         default : return "Error";
 
     }
@@ -106,10 +107,19 @@ void Response::setError(int code, const std::string &context) {
     _statusCode = code;
     LOG_ERR(code, context);
     (void)context;
+    if (_loc == NULL) {
+        generateErrorPage();
+        return;
+    }
     buildError();
 }
 
 std::string Response::getCgiExtension(void)
 {
     return this->_cgiExtension;
+}
+
+int Response::getStatusCode(void) const
+{
+    return this->_statusCode;
 }

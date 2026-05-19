@@ -71,7 +71,6 @@ bool Response::serveFile() {
  */
 void Response::displayAutoIndex(){
     DIR *dir = opendir(_internalPath.c_str());
-    std::cout << "internal path is " << _internalPath << std::endl;
     if (dir == NULL){
         setSyscallError("displayAutoIndex: dir is NULL");
         return ;

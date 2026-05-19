@@ -16,8 +16,6 @@ bool Request::parseRequestLine(const std::string &message){
 		return false;
 	if (!validMethod() || !validVersion() || !validUrl())
 		return false; 
-	LOG_DEBUG("method : " << _method << "\nurl : " << _url << "\nversion : "
-         << _version << "\npath : " << _path << "\nquery : " << _query);
 	return true;
 }
 
@@ -42,6 +40,7 @@ bool Request::validSynthax(const std::string &message){
 	_method = tokens[0];
 	_url = tokens[1];
 	_version = tokens[2];
+	LOG_DEBUG("method='" << _method << "' url='" << _url << "' version='" << _version << "'");
 	return true;
 }
 

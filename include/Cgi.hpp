@@ -27,12 +27,13 @@ class Cgi
 	public:
 		// Cgi();
 		Cgi();
-		Cgi(Response *response, Request *request);
+		Cgi(Response *response, Request *request, Server *server);
 		~Cgi();
 		void launch(const ServerConfig &config);
 		int	getPipeWriteEnd() const;
 		int getPipeReadEnd() const;
 		int getPid(void) const;
+		Response *getResponse(void);
 		void closePipeReadEnd();
 		void closePipeWriteEnd();
 
@@ -53,6 +54,7 @@ class Cgi
 		void executeScript();
 		void openPipes(int *stdinPipe, int * stdoutPipe);
 
+		Server *_server;
 		Response *_response;
 		Request *_request;
 

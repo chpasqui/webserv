@@ -8,6 +8,7 @@
 class Session {
     private :
         std::string _id;
+        time_t      _createdAt;
 
     public:
         std::map<std::string, std::string> data;
@@ -16,11 +17,10 @@ class Session {
         static std::string generateId();
         static std::string extractSessionId(std::string cookieHeader);
         std::string toSetCookieString() const;
-        void serverSessionPage();
-        void handleLogin();
 
         void setId(const std::string& id);
         std::string getId() const;
+        time_t getCreatedAt() const;
 
         ~Session();
 };

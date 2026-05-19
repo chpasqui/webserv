@@ -9,11 +9,12 @@ Request::Request() :
     _method(""),
 	_version(""),
 	_url(""),
-     _path("/"),
-     _body(""),
-     _query(""),
-     _contentLength(-1),
-     _statusCode(0) {}
+    _path("/"),
+    _body(""),
+    _query(""),
+    _contentLength(-1),
+    _maxBodySize(0),
+    _statusCode(0) {}
 
 Request::~Request(){}
 
@@ -61,6 +62,10 @@ std::string Request::getQuery(void) const{
 
 const std::map<std::string, std::string>& Request::getHeaders() const{
 	return this->_headers;
+}
+
+void Request::setMaxBodySize(int maxBodySize){
+    _maxBodySize = maxBodySize;
 }
 
 /**

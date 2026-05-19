@@ -1,4 +1,5 @@
 #include "../../include/Server.hpp"
+#include "../../include/Debug.hpp"
 
 #include <iostream>
 #include <ctime>
@@ -58,7 +59,7 @@ bool Server::modifyEpoll(int _epollFd, int fdToModify, uint32_t flag)
 	event.data.fd = fdToModify;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, fdToModify, &event) == -1)
 	{
-		std::string errorMsg = std::string("Epoll_ctl() error: ") + strerror(errno);
+		LOG_WARN("Epoll_ctl() error: " << strerror(errno));
 		return false;
 	}
 	return true;
@@ -72,10 +73,9 @@ void Server::delFromEpoll(int _epollFd, int fdToModify)
 	struct epoll_event event;
 	event.events = 0;
 	event.data.fd = fdToModify;
-	std::cout << "fd received in delfromepoll is " << fdToModify << std::endl;
+	LOG_DEBUG(C_CSTR << "fd received in delfromepoll is " << fdToModify);
 	if (epoll_ctl(_epollFd, EPOLL_CTL_DEL, fdToModify, &event) == -1)
 	{
-		std::string errorMsg = std::string("Epoll_ctl() DEL error: ") + strerror(errno);
-		throw(std::runtime_error(errorMsg));
+		LOG_WARN("Epoll_ctl() error: " << strerror(errno));
 	}
 }

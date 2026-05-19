@@ -30,7 +30,7 @@ public:
 	bool acceptNewConnection(int listeningFd);
 	void readFromClient(int fd);
 	void readFromPipe(int stdoutPipeReadFd);
-	void launchCgi(Client &client);
+	bool launchCgi(Client &client);
 	void writeToClient(int fd);
 	void writeToPipe(int stdinPipeWriteFd);
 	void timeoutCheck(void);
