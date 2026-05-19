@@ -62,9 +62,13 @@ void Cgi::buildEnv(const ServerConfig &config)
 	const std::map<std::string, std::string> &header = _request->getHeaders();
 	std::string extension = this->_response->getCgiExtension();
 	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(extension) + extension.length());
-	
+	size_t pos = this->_fileSystemPath.find_last_of('/');
+	std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
+	std::cout << "filename is " << filename << std::endl;
+	std::cout << "fileSystemPath is " << _fileSystemPath << std::endl;
+
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
-	_tempEnv.push_back("SCRIPT_FILENAME=" + _fileSystemPath);
+	_tempEnv.push_back("SCRIPT_FILENAME=" + filename);
 	_tempEnv.push_back("REDIRECT_STATUS=200");
 	_tempEnv.push_back("REQUEST_METHOD=" + _request->getMethod());
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName);
@@ -72,7 +76,6 @@ void Cgi::buildEnv(const ServerConfig &config)
 	_tempEnv.push_back("QUERY_STRING=" + _request->getQuery());							   // query string must be defined as empty string if not found (treated by getHeaderVariable)
 	_tempEnv.push_back("SERVER_PROTOCOL=" + _request->getVersion());
 	_tempEnv.push_back("SERVER_PORT=" + intToString(config.getPort()));
-	_tempEnv.push_back("HTTP_HOST=" + getHeaderVariable(header, "host"));
 	_tempEnv.push_back("SERVER_NAME=" + resolveHostname());
 	if (_request->getMethod() == "POST" && _request->getContentLength() != 0)
 	{
@@ -136,6 +139,8 @@ void Cgi::executeScript()
 			std::exit(EXIT_FAILURE);
 		}
 		this->_fileName = filename;
+		char buff[1024];
+		std::cout << "the current working directory is now " << getcwd(buff, 1024) << std::endl;
 
 		safeClose(stdinPipe[WRITE_END]);
 		if (dup2(stdinPipe[READ_END], STDIN_FILENO) == -1)
