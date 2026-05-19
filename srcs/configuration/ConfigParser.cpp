@@ -122,8 +122,10 @@ int		ConfigParser::openFile(const std::string &filename) {
 }
 
 //TODO:
+//- Read {}
 //- Fix leaks when exception is thrown. Still some leaks : OK
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
+//- Add to the test_webserv.py some test for the config files parsing
 
 /**
  * @brief get the next token in the config file and remove it from the file string
