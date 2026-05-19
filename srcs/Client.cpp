@@ -104,6 +104,7 @@ void Client::parseRequest()
 		}
 		this->_parsingStatus = PARSING_HEADERS;
 	}
+	std::cout << "buffer is : " << _buffer << std::endl;
 	if (this->_parsingStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
 	{
 		if (!_request->parseHeader(_buffer) || !checkMaxBodySize())
