@@ -83,6 +83,13 @@ void Cgi::buildEnv(const ServerConfig &config)
 			_tempEnv.push_back("CONTENT_TYPE=" + contentType);
 	}
 
+	for (std::map<std::string, std::string>::const_iterator it = header.begin(); it != header.end(); ++it)
+	{
+		std::string key = "HTTP_" + it->first;
+		std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+		_tempEnv.push_back(key + "=" + it->second);
+	}
+
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
 	{
 		this->_finalEnv.push_back((strdup((*it).c_str())));
