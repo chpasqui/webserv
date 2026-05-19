@@ -21,6 +21,7 @@ class Response {
 		std::string 						_body;
 
 		Session*							_session;
+		std::map<std::string, Session>*		_sessions;
 		bool								_isNewSession;
 		bool								_isCgi;
 
@@ -50,7 +51,7 @@ class Response {
 		
 		public:
 		Response();
-		Response(Session& session, bool isNew);
+		Response(Session& session, bool isNew, std::map<std::string, Session>& sessions);
 		~Response();
 		
 		void 		build(Request& request, const ServerConfig *config);
@@ -68,6 +69,7 @@ class Response {
 
 		void serverSessionPage();
 		void handleLogin(Request& request);
+		void serverLogoutPage();
 };
 
 #endif 

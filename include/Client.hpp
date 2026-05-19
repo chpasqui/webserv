@@ -38,7 +38,7 @@ class Client
 		Request *getRequest(void) const;
 		const ServerConfig *getServerConfig(void) const;
 		Response *getResponse(void) const;
-		void setResponse(Session &session, bool isNew);
+		void setResponse(Session &session, bool isNew, std::map<std::string, Session>& sessions);
 		void setResponse();
 		std::string getResponseStr() const;
 		Cgi *getCgi(void) const;

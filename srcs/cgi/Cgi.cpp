@@ -4,6 +4,7 @@
 #include "../../include/ServerConfig.hpp"
 #include "../../include/Client.hpp"
 #include "../../include/Debug.hpp"
+#include "../../include/utils.hpp"
 
 #include <unistd.h>
 #include <string>
@@ -57,9 +58,11 @@ void Cgi::buildEnv(const ServerConfig &config)
 	const std::map<std::string, std::string> &header = _request->getHeaders();
 	std::string extension = this->_response->getCgiExtension();
 	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(extension) + extension.length());
-	
+	size_t pos = this->_fileSystemPath.find_last_of('/');
+	std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
+
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
-	_tempEnv.push_back("SCRIPT_FILENAME=" + _fileSystemPath);
+	_tempEnv.push_back("SCRIPT_FILENAME=" + filename);
 	_tempEnv.push_back("REDIRECT_STATUS=200");
 	_tempEnv.push_back("REQUEST_METHOD=" + _request->getMethod());
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName);
@@ -80,9 +83,15 @@ void Cgi::buildEnv(const ServerConfig &config)
 
 	for (std::map<std::string, std::string>::const_iterator it = header.begin(); it != header.end(); ++it)
 	{
-		std::string key = "HTTP_" + it->first;
+		std::string httpPostFix;
 		for (size_t i = 0; i < it->first.size(); i++)
-			key += std::toupper(it->first[i]);
+		{
+			if (it->first[i] == '-')
+				httpPostFix += '_';
+			else
+				httpPostFix += std::toupper(it->first[i]);
+		}
+		std::string key = "HTTP_" + httpPostFix;
 		_tempEnv.push_back(key + "=" + it->second);
 	}
 
@@ -114,13 +123,14 @@ void Cgi::executeScript()
 	if (errno)
 		return ;
 	
+	char* filename = realpath(_fileSystemPath.c_str(), NULL);
+	std::string fileName(filename);
+	size_t pos = fileName.find_last_of('/');
+	std::string directoryPath = fileName.substr(0, pos);
+	std::cout << directoryPath << std::endl;
 	pid_t pid = fork(); //
 	if (pid == 0)
 	{
-		std::string directoryPath;
-		size_t pos = this->_fileSystemPath.find_last_of('/');
-		directoryPath = this->_fileSystemPath.substr(0, pos);
-		std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
 		if (chdir(directoryPath.c_str()) == -1)
 		{
 			_response->setSyscallError("executeScript: chdir failed in child");

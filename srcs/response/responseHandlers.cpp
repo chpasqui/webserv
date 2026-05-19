@@ -15,9 +15,18 @@
 void Response::handleGetMethod(Request& request){
     struct stat sb;
     
-    if (request.getPath() == "/welcome"){
+    if (request.getPath() == "/"){
         serverSessionPage();
         return ;
+    }
+    if (request.getPath() == "/login.html" && !_session->data["user"].empty()){
+        _statusCode = MOVED_PERMANENTLY;
+        _headers["Location"] = "/";
+        return ;
+    }
+    if (request.getPath() == "/logout" && !_session->data["user"].empty()){
+        serverLogoutPage();
+        return;
     }
     if (stat(_internalPath.c_str(), &sb) != 0){
         setSyscallError("handleGetMethod: stat failed");

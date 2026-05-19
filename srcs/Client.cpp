@@ -103,6 +103,7 @@ void Client::parseRequest()
 		}
 		this->_parsingStatus = PARSING_HEADERS;
 	}
+	std::cout << "buffer is : " << _buffer << std::endl;
 	if (this->_parsingStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
 	{
 		if (!_request->parseHeader(_buffer) || !checkMaxBodySize())
@@ -161,9 +162,9 @@ Response *Client::getResponse(void) const
 	return (this->_response);
 }
 
-void Client::setResponse(Session &session, bool isNew)
+void Client::setResponse(Session &session, bool isNew, std::map<std::string, Session>& sessions)
 {
-	this->_response = new Response(session, isNew);
+	this->_response = new Response(session, isNew, sessions);
 }
 
 void Client::setResponse()
