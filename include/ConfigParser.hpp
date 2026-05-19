@@ -34,6 +34,7 @@ class ConfigParser {
 		int													getNextLine(void);
 		bool												thereIsDefaultLocation(void) const;
 		bool												thereIsIndex(void) const;
+		static int											strToInt(const std::string &str);
 		//----ProcessToken----//
 		void												processEndBraquetToken(void);
 		void												processTokenHttp(void);

@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 #include <stdexcept>
 #include <stdlib.h>
 #include <cstring>
@@ -264,7 +265,9 @@ void	ConfigParser::processClientTimeoutToken(void) {
 
 	if (!getNextToken(timeout))
 		throw (std::invalid_argument("fail to get the nextToken for \"cient_timeout\""));
-	_currentContext->setClientTimeout(30);
+
+	int n = ConfigParser::strToInt(timeout);
+	_currentContext->setClientTimeout(n);
 	return ;
 }
 
@@ -276,7 +279,9 @@ void	ConfigParser::processMaxBodySizeToken(void) {
 
 	if (!getNextToken(maxBodySize))
 		throw (std::invalid_argument("fail to get the nextToken for \"max_body_size\""));
-	_currentContext->setMaxBodySize(100000);
+	
+	int n = ConfigParser::strToInt(maxBodySize);
+	_currentContext->setMaxBodySize(n);
 }
 
 /**
@@ -288,7 +293,6 @@ void	ConfigParser::processRootToken(void) {
 	if (!getNextToken(nextToken))
 		throw (std::invalid_argument("fail to get the nextToken for \"root\""));
 	_currentContext->setRoot(nextToken);
-	return;
 }
 
 /**
@@ -299,8 +303,9 @@ void	ConfigParser::processListenToken(void) {
 
 	if (!getNextToken(port))
 		throw (std::invalid_argument("fail to get the nextToken for \"listen\""));
-	_currentContext->setPort(30);
-	return;
+
+	int n = ConfigParser::strToInt(port);
+	_currentContext->setPort(n);
 }
 
 /**
@@ -318,7 +323,6 @@ void	ConfigParser::processAutoindexToken(void) {
 		_currentContext->setAutoindex(false);
 	else
 		throw std::runtime_error("value " + value + " unrecognized after autoindex");
-	return;
 }
 
 /**
@@ -331,7 +335,8 @@ void	ConfigParser::processErrorPageToken(void) {
 	if (!getNextToken(code) || !getNextToken(pageToken))
 		throw (std::invalid_argument("fail to get the nextToken for \"error_page\""));
 
-	_currentContext->addErrorPage(30, pageToken);
+	int n = ConfigParser::strToInt(code);
+	_currentContext->addErrorPage(n, pageToken);
 }
 
 /**
@@ -368,7 +373,9 @@ void	ConfigParser::processRedirectionToken(void) {
 
 	if (!getNextToken(code) || !getNextToken(redirectionPath))
 		throw (std::invalid_argument("fail to get the nextToken for \"return\""));
-	_currentContext->setRedireCode(30);
+
+	int n = ConfigParser::strToInt(code);
+	_currentContext->setRedireCode(n);
 	_currentContext->setRedirePath(redirectionPath);
 }
 
@@ -383,3 +390,12 @@ void	ConfigParser::processCgiPassToken(void) {
 	_currentContext->addCgiExtension(extension, path);
 }
 
+int	ConfigParser::strToInt(const std::string &str) {
+	int nb;
+	std::stringstream ss(str);
+
+	ss >> nb;
+	if (ss.fail() || nb < 0)
+		throw(std::invalid_argument("invalid number"));
+	return (nb);
+}
