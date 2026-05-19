@@ -5,14 +5,9 @@
 #include "../../include/Client.hpp"
 #include "../../include/Debug.hpp"
 
-#include <iostream>
-#include <fstream>
 #include <unistd.h>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <fstream>
-#include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -161,7 +156,7 @@ void Cgi::executeScript()
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 		{
 			this->_response->setSyscallError("ExecuteScript: execve failed");
-			std::exit(EXIT_FAILURE); //WARN: What we do if execve() failed;
+			std::exit(EXIT_FAILURE);
 		}
 	}
 	safeClose(stdinPipe[READ_END]);
@@ -217,3 +212,4 @@ void Cgi::closePipeWriteEnd()
 {
 	safeClose(this->_pipeWriteEnd);
 }
+

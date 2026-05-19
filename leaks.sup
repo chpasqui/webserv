@@ -1,5 +1,0 @@
-{
-	ignore_python_leaks
-	Memcheck:Leak
-	obj:*/python*
-}

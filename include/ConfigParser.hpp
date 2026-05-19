@@ -29,11 +29,13 @@ class ConfigParser {
 		
 		int													parsingConfigFile(const std::string &filename);
 	private:
+		class												EndOfConfigFile;
 		int													openFile(const std::string &filename);
-		int													getNextToken(std::string &token);
-		int													getNextToken(int &token);
+		void												getNextToken(std::string &token);
+		void												getNextLine(void);
 		bool												thereIsDefaultLocation(void) const;
 		bool												thereIsIndex(void) const;
+		static int											strToInt(const std::string &str);
 		//----ProcessToken----//
 		void												processEndBraquetToken(void);
 		void												processTokenHttp(void);
@@ -52,13 +54,20 @@ class ConfigParser {
 		void												processCgiPassToken(void);
 		//----Atributes----//
 		std::ifstream										_configFile;
+		std::string											_currentLine;
 		int													_contextLevel;
+		int													_lineNumber;
 		AConfig												*_currentContext;
 		Http												*_http;
 		ServerConfig										*_currentServer;
 		Location											*_currentLocation;
 		std::vector<ServerConfig*>							*_serverConfigs;
 		std::map<std::string, void (ConfigParser::*)(void)>	_dictionary;
+};
+
+class ConfigParser::EndOfConfigFile : public std::exception {
+	public:
+		virtual const char *what() const throw();
 };
 
 #endif

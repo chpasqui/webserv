@@ -4,7 +4,7 @@
 
 Http::Http() :
 	_clientTimeout(30),
-	_maxBodysize(1000), //WARN: check the correct convertion of 1m in bit
+	_maxBodysize(1000),
 	_autoindex(true),
 	_root(""),
 	_allowedMethods("GET|POST|DELETE"),
@@ -79,3 +79,4 @@ void Http::addIndex(std::string index) {
 void Http::addErrorPage(int code, std::string page) {
 	_errorPages.insert(std::map<int, std::string>::value_type(code, page));
 }
+

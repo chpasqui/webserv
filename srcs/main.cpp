@@ -8,8 +8,8 @@
 #include <vector>
 #include <iostream>
 
-int	checkInputArgs(int ac, char **av, std::string &filename);
-int	checkResponse(const std::string &response);
+static int	checkInputArgs(int ac, char **av, std::string &filename);
+static int	checkResponse(const std::string &response);
 
 /**
  * @brief Server(Serverconfigs) will loop over the vector of serverConfigs and will
@@ -41,8 +41,6 @@ int main(int ac, char **av) {
 		std::cerr << e.what() << '\n';
 	}
 	
-	// for (std::vector<ServerConfig*>::iterator it = configs.begin(); it != configs.end(); it++)
-	// 	delete (*it);
 	return (0);
 }
 
@@ -52,9 +50,9 @@ int main(int ac, char **av) {
  * based on the user's input
  * @return 0 if successful and 1 if unsuccessful
  *
- * @warn The default configuration file must exist; otherwise, an error will be returned
+ * @warning The default configuration file must exist; otherwise, an error will be returned
  */
-int	checkInputArgs(int ac, char **av, std::string &filename) {
+static int	checkInputArgs(int ac, char **av, std::string &filename) {
 	int			status;
 	std::string	response;
 
@@ -84,7 +82,7 @@ int	checkInputArgs(int ac, char **av, std::string &filename) {
 	return (0);
 }
 
-int	checkResponse(const std::string &response) {
+static int	checkResponse(const std::string &response) {
 	if (response == "y" || response == "yes" || response.empty())
 		return (1);
 	if (response == "n" || response == "no")

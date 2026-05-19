@@ -1,6 +1,5 @@
 #include "../../include/Request.hpp"
 #include "../../include/statusCode.hpp"
-#include "../../include/Debug.hpp"
 
 
 static bool parseChunkSize(const std::string &body, size_t &pos, long &chunkSize);
@@ -65,12 +64,12 @@ static bool parseChunkSize(const std::string &body, size_t &pos, long &chunkSize
     std::string chunkSizeHex = body.substr(pos, ctrf - pos);
     size_t semicolon = chunkSizeHex.find(';');
     if (semicolon != std::string::npos)
-    chunkSizeHex =chunkSizeHex.substr(0, semicolon);
-    if (chunkSizeHex.empty())
+    	chunkSizeHex =chunkSizeHex.substr(0, semicolon);
+    if (chunkSizeHex.empty()) 
         return false;
     std::string::iterator it = chunkSizeHex.end() - 1;
     if (*it == '\r')
-        chunkSizeHex.erase(it);
+    	chunkSizeHex.erase(it);
     char *end;
     chunkSize = strtol(chunkSizeHex.c_str(), &end, 16);
     if (*end != '\0' || chunkSize < 0)
@@ -96,5 +95,5 @@ bool Request::extractChunkData(const std::string &body, size_t &pos, long chunkS
             return false;
         pos += 2;
         return true ;
-    }
+}
 
