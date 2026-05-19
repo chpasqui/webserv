@@ -75,7 +75,7 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 			break;
 		it = _dictionary.find(token);
 		if (it == _dictionary.end()) {
-			std::cerr << C_RED << token << ": Unknow token on line: " << RESET  << std::endl;
+			std::cerr << C_RED << token << ": Unknow token on line: " << _lineNumber << RESET  << std::endl;
 			return (1);
 		}
 		
@@ -132,22 +132,32 @@ int		ConfigParser::openFile(const std::string &filename) {
  * @return the token or an empty string if the end of the file has been reached
  */
 int	ConfigParser::getNextToken(std::string &token) {
-	if (getNextLine() == -1)
+	if (getNextLine() == 1)
 		return (0);
 	size_t pos = _currentLine.find_first_not_of(" \t\f\r\v\n");
 	_currentLine.erase(0, pos);
-	pos = _currentLine.find_first_of(" \t\f\r\v\n{}");
+	pos = _currentLine.find_first_of(" \t\f\r\v\n");
 	token = _currentLine.substr(0, pos);
 	_currentLine.erase(0, pos);
+	LOG_DEBUG("Token is: \"" << token) << "\"";
 	return (1);
 }
 
 int ConfigParser::getNextLine(void) {
-	while (_currentLine.empty() || _currentLine.find_first_not_of(" \t\f\r\v\n") == std::string::npos) { //INFO: we don't really need \n, getline remove it
+	while (_currentLine.empty() || _currentLine.find_first_not_of(" \t\f\r\v\n") == std::string::npos || _currentLine.find("#") != std::string::npos) { //INFO: we don't really need \n, getline remove it, i keep it for safety
 		if(!getline(_configFile, _currentLine))
 			return (1);
 		_lineNumber++;
-		//TODO: remove the '#'
+		if (*_currentLine.begin() == '#') {
+			if(!getline(_configFile, _currentLine))
+				return (1);
+			_lineNumber++;
+			continue ;
+		}
+		size_t pos = _currentLine.find(" #");
+		if (pos != std::string::npos) {
+			_currentLine.erase(pos);
+		}
 	}
 	return (0);
 }
