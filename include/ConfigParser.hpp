@@ -29,6 +29,7 @@ class ConfigParser {
 		
 		int													parsingConfigFile(const std::string &filename);
 	private:
+		class												EndOfConfigFile;
 		int													openFile(const std::string &filename);
 		void												getNextToken(std::string &token);
 		void												getNextLine(void);
@@ -62,6 +63,11 @@ class ConfigParser {
 		Location											*_currentLocation;
 		std::vector<ServerConfig*>							*_serverConfigs;
 		std::map<std::string, void (ConfigParser::*)(void)>	_dictionary;
+};
+
+class ConfigParser::EndOfConfigFile : public std::exception {
+	public:
+		virtual const char *what() const throw();
 };
 
 #endif

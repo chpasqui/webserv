@@ -76,14 +76,17 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 			getNextToken(token);
 			it = _dictionary.find(token);
 			if (it == _dictionary.end()) {
-				std::cerr << C_RED << token << ": Unknow token on line: " << _lineNumber << RESET  << std::endl;
+				std::cerr << C_RED << "Error: Unknow token \"" << token << "\" on line : " << _lineNumber << RESET  << std::endl;
 				return (1);
 			}
 			(this->*it->second)();
 		}
 	}
+	catch (ConfigParser::EndOfConfigFile &e) {
+		LOG_INFO(e.what());
+	}
 	catch (std::exception &e) {
-		std::cerr << C_RED << e.what() << RESET << std::endl;
+		std::cerr << C_RED << "Error: "<< e.what() << " on line : " << _lineNumber << RESET << std::endl;
 		if (_serverConfigs && !_serverConfigs->empty()) {
 			for (std::vector<ServerConfig *>::iterator it = _serverConfigs->begin(); it != _serverConfigs->end(); it++)
 				delete *it;
@@ -136,18 +139,18 @@ void	ConfigParser::getNextToken(std::string &token) {
 	pos = _currentLine.find_first_of(" \t\f\r\v\n");
 	token = _currentLine.substr(0, pos);
 	_currentLine.erase(0, pos);
-	LOG_DEBUG("Token is: \"" << token) << "\"";
+	LOG_DEBUG("Token is: \"" << token << "\"");
 }
 
 void ConfigParser::getNextLine(void) {
 	while (_currentLine.empty() || _currentLine.find_first_not_of(" \t\f\r\v\n") == std::string::npos || _currentLine.find("#") != std::string::npos) { //INFO: we don't really need \n, getline remove it, i keep it for safety
 		if(!getline(_configFile, _currentLine))
-			throw(std::runtime_error("valid")); //TODO: change this for a custome exception
+			throw (ConfigParser::EndOfConfigFile());
 		_lineNumber++;
-
+		
 		if (*_currentLine.begin() == '#') {
 			if(!getline(_configFile, _currentLine))
-				throw(std::runtime_error("valid")); //TODO: change this for a custome exception
+				throw (ConfigParser::EndOfConfigFile());
 			_lineNumber++;
 			continue ;
 		}
@@ -261,7 +264,6 @@ void	ConfigParser::processClientTimeoutToken(void) {
 
 	int n = ConfigParser::strToInt(timeout);
 	_currentContext->setClientTimeout(n);
-	return ;
 }
 
 /**
@@ -283,7 +285,6 @@ void	ConfigParser::processRootToken(void) {
 	std::string nextToken;
 
 	getNextToken(nextToken);
-		throw (std::invalid_argument("fail to get the nextToken for \"root\""));
 	_currentContext->setRoot(nextToken);
 }
 
@@ -294,7 +295,6 @@ void	ConfigParser::processListenToken(void) {
 	std::string	port;
 
 	getNextToken(port);
-		throw (std::invalid_argument("fail to get the nextToken for \"listen\""));
 
 	int n = ConfigParser::strToInt(port);
 	_currentContext->setPort(n);
@@ -345,7 +345,6 @@ void	ConfigParser::processAllowedMethodsToken(void) {
 	std::string allowedMethods;
 
 	getNextToken(allowedMethods);
-		throw (std::invalid_argument("fail to get the nextToken for \"allowed_methods\""));
 	_currentContext->setAllowedMethods(allowedMethods);
 }
 
@@ -389,3 +388,6 @@ int	ConfigParser::strToInt(const std::string &str) {
 	return (nb);
 }
 
+const char *ConfigParser::EndOfConfigFile::what(void) const throw() {
+	return ("end of config file");
+}
