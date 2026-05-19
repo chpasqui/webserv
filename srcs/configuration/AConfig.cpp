@@ -1,14 +1,13 @@
 #include "../../include/AConfig.hpp"
 #include <stdexcept>
 #include "../../include/Debug.hpp"
-#include "../../include/color.hpp"
 
 AConfig::AConfig() {
-	LOG_DEBUG(C_CSTR << "AConfig: Default constructor called"<< RESET);
+	LOG_DEBUG("AConfig: Default constructor called");
 }
 
 AConfig::~AConfig() {
-	LOG_DEBUG(C_DSTR << "AConfig: Destructor called" << RESET);
+	LOG_DEBUG("AConfig: Destructor called");
 }
 
 void	AConfig::setRedireCode(const int redireCode){

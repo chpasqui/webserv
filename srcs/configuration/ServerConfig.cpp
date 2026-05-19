@@ -1,6 +1,5 @@
 #include "../../include/ServerConfig.hpp"
 #include "../../include/Debug.hpp"
-#include "../../include/color.hpp"
 #include "../../include/Http.hpp"
 #include "../../include/Location.hpp"
 
@@ -16,7 +15,7 @@ ServerConfig::ServerConfig() :
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() {
-	LOG_DEBUG(C_CSTR << "ServerConfig: Default constructor called" << RESET);
+	LOG_DEBUG("ServerConfig: Default constructor called");
 	return ;
 }
 
@@ -31,7 +30,7 @@ ServerConfig::ServerConfig(const Http &http) :
 	_allowedMethods(http.getAllowedMethods()),
 	_indexes(http.getIndexes()),
 	_errorPages(http.getErrorPages()) {
-	LOG_DEBUG(C_CSTR << "ServerConfig: Normal constructor called" << RESET);
+	LOG_DEBUG("ServerConfig: Normal constructor called");
 	return ;
 }
 
@@ -41,7 +40,7 @@ ServerConfig::~ServerConfig(){
 			delete (*it);
 	_locations.clear();
 	return ;
-	LOG_DEBUG(C_DSTR << "ServerConfig: Destructor called" << RESET);
+	LOG_DEBUG("ServerConfig: Destructor called");
 }
 
 //----Setter---//

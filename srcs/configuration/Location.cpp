@@ -1,5 +1,5 @@
 #include "../../include/Location.hpp"
-#include "../../include/color.hpp"
+
 #include "../../include/Debug.hpp"
 #include "../../include/ServerConfig.hpp"
 
@@ -17,7 +17,7 @@ Location::Location() :
 	_allowedMethods(""),
 	_indexes(),
 	_errorPages() {
-	LOG_DEBUG(C_CSTR << "Location: Default constructor called");
+	LOG_DEBUG("Location: Default constructor called");
 	return ;
 }
 
@@ -35,7 +35,7 @@ Location::Location(const ServerConfig &serverConfig, const std::string path) :
 	_allowedMethods(serverConfig.getAllowedMethods()),
 	_indexes(serverConfig.getIndexes()) {
 	_errorPages = serverConfig.getErrorPages();
-	LOG_DEBUG(C_CSTR << "Location: Normal constructor called");
+	LOG_DEBUG("Location: Normal constructor called");
 	return ;
 }
 

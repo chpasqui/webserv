@@ -1,6 +1,5 @@
 #include "../../include/Http.hpp"
 #include "../../include/Debug.hpp"
-#include "../../include/color.hpp"
 
 Http::Http() :
 	_clientTimeout(30),
@@ -10,12 +9,12 @@ Http::Http() :
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
 	_errorPages() {
-	 LOG_DEBUG(C_CSTR << "Http: Default constructor called" << RESET);
+	 LOG_DEBUG("Http: Default constructor called");
 	return ;
 }
 
 Http::~Http() {
-	LOG_DEBUG(C_DSTR << "Http: Destructor called" << RESET);
+	LOG_DEBUG("Http: Destructor called");
 	return ;
 }
 

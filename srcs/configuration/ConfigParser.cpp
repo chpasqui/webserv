@@ -24,7 +24,7 @@ ConfigParser::ConfigParser() :
 	_currentLocation(0),
 	_serverConfigs(0),
 	_dictionary() {
-	LOG_DEBUG(C_CSTR << "ConfigParser: Default constructor called" << RESET);
+	LOG_DEBUG("ConfigParser: Default constructor called");
 }
 
 ConfigParser::ConfigParser(std::vector<ServerConfig *> *serverConfigs) :
@@ -52,14 +52,14 @@ ConfigParser::ConfigParser(std::vector<ServerConfig *> *serverConfigs) :
 	_dictionary["index"] = &ConfigParser::processIndexToken;
 	_dictionary["return"] = &ConfigParser::processRedirectionToken;
 	_dictionary["cgi_pass"] = &ConfigParser::processCgiPassToken;
-	LOG_DEBUG(C_CSTR << "ConfigParser: Normal construtor called" << RESET);
+	LOG_DEBUG("ConfigParser: Normal construtor called");
 }
 
 ConfigParser::~ConfigParser() {
 	if (_http)
 		delete (_http);
 	_configFile.close();
-	LOG_DEBUG(C_DSTR << "ConfigParser: Destructor called" << RESET);
+	LOG_DEBUG("ConfigParser: Destructor called");
 }
 
 int	ConfigParser::parsingConfigFile(const std::string &filename) {
@@ -205,7 +205,7 @@ void	ConfigParser::processEndBraquetToken(void) {
 			_currentLocation = 0;
 			break;
 		default:
-			throw std::runtime_error("Unexcepted token \"}\"");
+			throw std::invalid_argument("Unexcepted token \"}\"");
 	}
 	_contextLevel -= 1;
 }
@@ -214,19 +214,23 @@ void	ConfigParser::processTokenHttp(void) {
 	std::string	braquet;
 
 	getNextToken(braquet);
-	if (braquet != "{" || _contextLevel != NONE || _http)
-		throw (std::runtime_error("Unexcepted token after \"http\""));
+	if (braquet != "{")
+		throw (std::invalid_argument("Unexcepted token after \"http\""));
+	if (_contextLevel != NONE)
+		throw (std::invalid_argument("Using the \"http\" keyword in the wrong context"));
 	_http = new Http();
 	_currentContext = _http;
 	_contextLevel = HTTP;
-	}
+}
 
 void	ConfigParser::processServerToken(void) {
 		std::string	nextToken;
 
 	getNextToken(nextToken);
-	if (nextToken != "{" || _contextLevel != HTTP || _currentServer)
-		throw (std::runtime_error("Unexcepted token after \"server\""));
+	if (nextToken != "{")
+		throw (std::invalid_argument("Unexcepted token after \"server\""));
+	if (_contextLevel != HTTP)
+		throw (std::invalid_argument("Using the \"server\" keyword in the wrong context"));
 	_serverConfigs->push_back(new ServerConfig( *_http));
 	_currentServer = *_serverConfigs->rbegin();
 	_currentContext = _currentServer;
