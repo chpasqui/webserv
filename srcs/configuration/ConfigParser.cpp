@@ -122,10 +122,7 @@ int		ConfigParser::openFile(const std::string &filename) {
 }
 
 //TODO:
-//- Ignore the end ligne with " #". OK
-//- Display a better error message.
 //- Fix leaks when exception is thrown. Still some leaks : OK
-//- Rename variables with wrong names OK 
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
 
 /**
@@ -143,7 +140,7 @@ void	ConfigParser::getNextToken(std::string &token) {
 }
 
 void ConfigParser::getNextLine(void) {
-	while (_currentLine.empty() || _currentLine.find_first_not_of(" \t\f\r\v\n") == std::string::npos || _currentLine.find("#") != std::string::npos) { //INFO: we don't really need \n, getline remove it, i keep it for safety
+	while (_currentLine.empty() || _currentLine.find_first_not_of(" \t\f\r\v\n") == std::string::npos || _currentLine.find("#") != std::string::npos) {
 		if(!getline(_configFile, _currentLine))
 			throw (ConfigParser::EndOfConfigFile());
 		_lineNumber++;
@@ -391,3 +388,4 @@ int	ConfigParser::strToInt(const std::string &str) {
 const char *ConfigParser::EndOfConfigFile::what(void) const throw() {
 	return ("end of config file");
 }
+

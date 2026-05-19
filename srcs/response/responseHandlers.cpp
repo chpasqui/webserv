@@ -106,8 +106,7 @@ void Response::handlePostMethod(Request& request){
         uploadDir = uploadDir.substr(0, uploadDir.size() - 1);
     struct stat dirStat;
     if (stat(uploadDir.c_str(), &dirStat) != 0 || !S_ISDIR(dirStat.st_mode)){
-        setSyscallError(""); //WARN: No context in setSyscallError() for this case, should we add one ?
-        LOG_WARN("upload folder doesnt exist");
+        setSyscallError("upload folder doesnt exist");
         return ;
     }
     std::string uploadPath = uploadDir + "/" + _remain;
@@ -152,3 +151,4 @@ void Response::handleDeleteMethod(Request& request){
     }
     _statusCode = NO_CONTENT;
 }
+

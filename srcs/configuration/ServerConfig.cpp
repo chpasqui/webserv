@@ -15,7 +15,7 @@ ServerConfig::ServerConfig() :
 	_root(""),
 	_allowedMethods("GET|POST|DELETE"),
 	_indexes(0),
-	_errorPages() { //WARN: add the default "index.html" if this is empty after parsing
+	_errorPages() {
 	LOG_DEBUG(C_CSTR << "ServerConfig: Default constructor called" << RESET);
 	return ;
 }

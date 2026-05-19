@@ -1,12 +1,7 @@
 #include "../../include/Response.hpp"
-#include "../../include/ServerConfig.hpp"
 #include "../../include/statusCode.hpp"
-#include "../../include/Location.hpp"
-#include "../../include/Debug.hpp"
 
-#include <fstream>
 #include <ctime>
-
 
 void Response::serverSessionPage(){
     std::ostringstream page;
@@ -22,7 +17,7 @@ void Response::serverSessionPage(){
 
     if (!_session->data["user"].empty())
         page << "<h1>Hey " << _session->data["user"] << "!</h1>\n";
-	else 
+	else
 		page << "<h1>Hey new visitor !</h1>" << "<a href='/login.html'>Login</a>";
 
 	page << "</body></html>";
@@ -46,3 +41,4 @@ void Response::handleLogin(Request& request){
     _statusCode = FOUND;
     _headers["Location"] = "/welcome";
 }
+
