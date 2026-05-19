@@ -1,5 +1,4 @@
 #include <unistd.h>
-#include <iostream>
 
 void	safeClose(int &fd)
 {
@@ -8,3 +7,4 @@ void	safeClose(int &fd)
 	close(fd);
 	fd = -1;
 }
+

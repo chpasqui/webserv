@@ -1,6 +1,4 @@
 #include "../../include/Request.hpp"
-#include "../../include/statusCode.hpp"
-#include "../../include/Debug.hpp"
 
 /**
  * @brief Decodes %XX sequences to ASCII.
@@ -50,3 +48,4 @@ bool isTokenChar(unsigned char c){
 	std::string special = "!#$%&'*+-.^_`|~";
 	return (special.find(c) != std::string::npos);
 }
+

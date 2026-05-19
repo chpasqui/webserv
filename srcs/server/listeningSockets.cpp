@@ -32,6 +32,7 @@ void Server::setupListeningSockets(const std::vector<ServerConfig *>& serverConf
 	signal(SIGINT, Server::signalHandler);
 	//signal(SIGQUIT, Server::signalHandler);
 	signal(SIGCHLD, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
 	
 	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
 	{

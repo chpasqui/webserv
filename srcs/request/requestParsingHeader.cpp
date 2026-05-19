@@ -2,13 +2,10 @@
 #include "../../include/statusCode.hpp"
 #include "../../include/Debug.hpp"
 
-#include <vector>
 #include <string>
 #include <climits>
 #include <algorithm>
 #include <errno.h>
-
-#define HEADERMAXSIZE 16000
 
 static std::string extractHeaderSection(std::string request);
 

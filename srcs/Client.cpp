@@ -8,7 +8,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <unistd.h>
-#include <iostream>
 
 #define BUFFERSIZE 1024
 
@@ -119,7 +118,7 @@ void Client::parseRequest()
 		}
 		size_t pos = _buffer.find("\r\n\r\n");
 		_buffer = _buffer.substr(pos + 4);
-		this->_parsingStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
+		this->_parsingStatus = PARSING_BODY; //INFO: as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
@@ -189,12 +188,12 @@ void	Client::setCgi(Response *response, Request *request, Server *server)
 	this->_cgi = new Cgi(response, request, server);
 }
 
-// void Client::setPid(pid_t pid)
+// void Client::setPid(pid_t pid) //WARN: Delete this ?
 // {
 // 	this->_pid = pid;
 // }
 
-// pid_t	Client::getPid(void) const
+// pid_t	Client::getPid(void) const //WARN: Delete this ?
 // {
 // 	return (this->_pid);
 // }
@@ -238,3 +237,4 @@ Client::~Client()
 	if (this->_cgi)
 		delete this->_cgi;
 }
+

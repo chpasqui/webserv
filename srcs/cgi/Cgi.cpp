@@ -6,14 +6,9 @@
 #include "../../include/Debug.hpp"
 #include "../../include/utils.hpp"
 
-#include <iostream>
-#include <fstream>
 #include <unistd.h>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <fstream>
-#include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -83,6 +78,14 @@ void Cgi::buildEnv(const ServerConfig &config)
 		_tempEnv.push_back("CONTENT_LENGTH=" + getHeaderVariable(header, "content-length"));
 		if (!contentType.empty())
 			_tempEnv.push_back("CONTENT_TYPE=" + contentType);
+	}
+
+	for (std::map<std::string, std::string>::const_iterator it = header.begin(); it != header.end(); ++it)
+	{
+		std::string key = "HTTP_" + it->first;
+		for (size_t i = 0; i < it->first.size(); i++)
+			key += std::toupper(it->first[i]);
+		_tempEnv.push_back(key + "=" + it->second);
 	}
 
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
@@ -157,7 +160,7 @@ void Cgi::executeScript()
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 		{
 			this->_response->setSyscallError("ExecuteScript: execve failed");
-			std::exit(EXIT_FAILURE); //WARN: What we do if execve() failed;
+			std::exit(EXIT_FAILURE);
 		}
 	}
 	safeClose(stdinPipe[READ_END]);
@@ -213,3 +216,4 @@ void Cgi::closePipeWriteEnd()
 {
 	safeClose(this->_pipeWriteEnd);
 }
+

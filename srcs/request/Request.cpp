@@ -1,8 +1,5 @@
 #include "../../include/Request.hpp"
-#include "../../include/statusCode.hpp"
 #include "../../include/Debug.hpp"
-
-#include <vector>
 
 
 Request::Request() :
@@ -79,3 +76,4 @@ bool Request::setError(int code, const std::string &context) {
     (void)context;
     return false;
 }
+

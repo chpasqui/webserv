@@ -161,6 +161,7 @@ void Server::readFromClient(int clientFd)
 		Session &session = resolveSession(client->getRequest()->getHeader("cookie"), isNew);
 		client->setResponse(session, isNew, _sessions);
 		client->getResponse()->build(*client->getRequest(), client->getServerConfig());
+		
 		if (client->getResponse()->getCgiStatus() == true)
 		{
 			if (launchCgi(*client))

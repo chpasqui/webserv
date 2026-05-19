@@ -1,5 +1,4 @@
 #include "../../include/Response.hpp"
-#include "../../include/ServerConfig.hpp"
 #include "../../include/statusCode.hpp"
 #include "../../include/Debug.hpp"
 
@@ -59,7 +58,6 @@ std::string Response::getReasonPhrase() const{
  * @brief Infers Content type from _internalPath extension.
  * @return Content type string, defaults to application/octet-stream.
  */
-// est ce qu'il y en a d'autres a mettre ?
 std::string Response::extractContentType(){
     static std::map<std::string, std::string> mime;
     if (mime.empty()) {
@@ -81,8 +79,8 @@ std::string Response::extractContentType(){
 
 /**
  * @brief Sets Content-Length and Server headers from current _body.
+ * To decide whether we want to put the date or not
  */
-// To decide whether we want to put the date or not
 void Response::setDefaultHeaders(){
     if (_headers.count("Content-Length") == 0 && !_body.empty()){
         std::ostringstream ss;
@@ -125,3 +123,4 @@ int Response::getStatusCode(void) const
 {
     return this->_statusCode;
 }
+

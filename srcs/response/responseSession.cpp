@@ -1,12 +1,10 @@
 #include "../../include/Response.hpp"
-#include "../../include/ServerConfig.hpp"
 #include "../../include/statusCode.hpp"
 #include "../../include/Location.hpp"
 #include "../../include/Debug.hpp"
 #include "../../include/utils.hpp"
 #include "../../include/Server.hpp"
 
-#include <fstream>
 #include <ctime>
 #include <sstream>
 #include <string>
@@ -81,3 +79,4 @@ void Response::serverLogoutPage(){
     _statusCode = MOVED_PERMANENTLY;
     _headers["Location"] = "/";
 }
+

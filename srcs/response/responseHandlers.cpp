@@ -160,3 +160,4 @@ void Response::handleDeleteMethod(Request& request){
     }
     _statusCode = NO_CONTENT;
 }
+
