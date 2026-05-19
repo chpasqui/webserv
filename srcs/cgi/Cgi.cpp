@@ -5,14 +5,9 @@
 #include "../../include/Client.hpp"
 #include "../../include/Debug.hpp"
 
-#include <iostream>
-#include <fstream>
 #include <unistd.h>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <fstream>
-#include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -30,30 +25,28 @@ Cgi::Cgi() :
 	_tempEnv(), 
 	_finalEnv(), 
 	_pipeWriteEnd(-1), 
-	_pipeReadEnd(-1){}
+	_pipeReadEnd(-1),
+	_server(NULL),
+	_response(NULL),
+	_request(NULL) {}
 
-Cgi::Cgi(Response *response, Request *request) : 
+Cgi::Cgi(Response *response, Request *request, Server *server) : 
 	_fileSystemPath(""),
 	_tempEnv(), _finalEnv(),
 	_pipeWriteEnd(-1),
 	_pipeReadEnd(-1),
+	_server(server),
 	_response(response),
-	_request(request){}
+	_request(request) {}
 
 void Cgi::launch(const ServerConfig &config)
 {
 	this->_fileSystemPath = _response->getInternalPath();
 	if (access(this->_fileSystemPath.c_str(), X_OK) == -1)
 	{
-		std::cerr << "access issue" << std::endl;
+		this->_response->setSyscallError("Launch: access failed");
+		return ;
 	}
-	// std::string directoryPath;
-	// size_t pos = this->_fileSystemPath.find_last_of('/');
-	// directoryPath = this->_fileSystemPath.substr(0, pos);
-	// std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
-	// if (chdir(directoryPath.c_str()) != 0)
-	// 	std::cerr << "chdir error\n" << std::endl;
-	// this->_fileName = filename;
 	buildEnv(config);
 	executeScript();
 }
@@ -116,12 +109,29 @@ void Cgi::executeScript()
 	pid_t pid = fork(); //
 	if (pid == 0)
 	{
+		std::string directoryPath;
+		size_t pos = this->_fileSystemPath.find_last_of('/');
+		directoryPath = this->_fileSystemPath.substr(0, pos);
+		std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
+		if (chdir(directoryPath.c_str()) == -1)
+		{
+			_response->setSyscallError("executeScript: chdir failed in child");
+			safeClose(stdinPipe[WRITE_END]);
+			safeClose(stdinPipe[READ_END]);
+			safeClose(stdoutPipe[READ_END]);
+			safeClose(stdoutPipe[WRITE_END]);
+			this->_server->~Server();
+			std::exit(EXIT_FAILURE);
+		}
+		this->_fileName = filename;
+
 		safeClose(stdinPipe[WRITE_END]);
 		if (dup2(stdinPipe[READ_END], STDIN_FILENO) == -1)
 		{
 			safeClose(stdinPipe[READ_END]);
 			safeClose(stdoutPipe[READ_END]);
 			safeClose(stdoutPipe[WRITE_END]);
+			this->_server->~Server();
 			std::exit(EXIT_FAILURE);
 		}
 		safeClose(stdinPipe[READ_END]);
@@ -129,15 +139,17 @@ void Cgi::executeScript()
 		if (dup2(stdoutPipe[WRITE_END], STDOUT_FILENO) == -1)
 		{
 			safeClose(stdoutPipe[WRITE_END]);
+			this->_server->~Server();
 			std::exit(EXIT_FAILURE);
 		}
 		safeClose(stdoutPipe[WRITE_END]);
 		std::string executable = this->_response->getCgiPass();
 
-		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileSystemPath.c_str()), NULL}; // NULL marks the end of the array
+		char *argv[] = {const_cast<char *>(executable.c_str()), const_cast<char *>(this->_fileName.c_str()), NULL}; // NULL marks the end of the array
 		if (execve(executable.c_str(), argv, this->_finalEnv.data()) == -1)
 		{
-			std::exit(EXIT_FAILURE); //WARN: What we do if execve() failed;
+			this->_response->setSyscallError("ExecuteScript: execve failed");
+			std::exit(EXIT_FAILURE);
 		}
 	}
 	safeClose(stdinPipe[READ_END]);
@@ -171,6 +183,11 @@ int Cgi::getPid(void) const
 	return this->_pid;
 }
 
+Response *Cgi::getResponse(void)
+{
+	return (this->_response);
+}
+
 Cgi::~Cgi()
 {
 	safeClose(this->_pipeWriteEnd);
@@ -188,3 +205,4 @@ void Cgi::closePipeWriteEnd()
 {
 	safeClose(this->_pipeWriteEnd);
 }
+

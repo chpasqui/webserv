@@ -1,6 +1,5 @@
 #include "../../include/Request.hpp"
 #include "../../include/statusCode.hpp"
-#include "../../include/Debug.hpp"
 
 
 static bool parseChunkSize(const std::string &body, size_t &pos, long &chunkSize);
@@ -14,7 +13,7 @@ bool Request::parseBody(const std::string &body){
 
     if (_headers.count("transfer-encoding")){
         if (!unchunkedBody(body))
-            return(setError(BAD_REQUEST, "parseBody: unchunked failed"));
+            return false;
         return true ;
     }
     else if (_headers.count("content-length")){
@@ -40,12 +39,13 @@ bool Request::unchunkedBody(const std::string &body){
 
     while (pos < body.size()){
         if (!parseChunkSize(body, pos, chunkSize))
-            return false;
-        if (chunkSize == 0){
+            return (setError(BAD_REQUEST, "unchunkedBody: parseChunkSize failed"));
+        if (chunkSize == 0)
             break ;
-        }
         if (!extractChunkData(body, pos, chunkSize))
-            return false;
+            return (setError(BAD_REQUEST, "unchunkedBody: extractChunkData failed"));
+        if (_maxBodySize > 0 && _contentLength > _maxBodySize)
+            return (setError(PAYLOAD_TOO_LARGE, "unchunkedBody: chunked body exceeded maxBodySize"));
     }
     return true;
 } 
@@ -64,12 +64,12 @@ static bool parseChunkSize(const std::string &body, size_t &pos, long &chunkSize
     std::string chunkSizeHex = body.substr(pos, ctrf - pos);
     size_t semicolon = chunkSizeHex.find(';');
     if (semicolon != std::string::npos)
-    chunkSizeHex =chunkSizeHex.substr(0, semicolon);
-    if (chunkSizeHex.empty())
+    	chunkSizeHex =chunkSizeHex.substr(0, semicolon);
+    if (chunkSizeHex.empty()) 
         return false;
     std::string::iterator it = chunkSizeHex.end() - 1;
     if (*it == '\r')
-        chunkSizeHex.erase(it);
+    	chunkSizeHex.erase(it);
     char *end;
     chunkSize = strtol(chunkSizeHex.c_str(), &end, 16);
     if (*end != '\0' || chunkSize < 0)
@@ -95,5 +95,5 @@ bool Request::extractChunkData(const std::string &body, size_t &pos, long chunkS
             return false;
         pos += 2;
         return true ;
-    }
+}
 

@@ -34,6 +34,9 @@ class Request
 		bool validateHeader();
 		bool parseBody(const std::string &request);
 
+		void setMaxBodySize(int maxBodySize);
+		bool setError(int code, const std::string &context);
+
 	private:
 		std::string _method;
 		std::string _version;
@@ -42,6 +45,7 @@ class Request
 		std::string _body;
 		std::string _query;
 		int			_contentLength;
+		int			_maxBodySize;
 		int			_statusCode;
 	
 		std::map<std::string, std::string> _headers;
@@ -64,9 +68,6 @@ class Request
 		// Body
 		bool unchunkedBody(const std::string &body);
 		bool extractChunkData(const std::string &body, size_t &pos, long chunkSize);
-
-		// Utils
-		bool setError(int code, const std::string &context);
 
 };
 

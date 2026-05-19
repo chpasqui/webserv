@@ -1,19 +1,17 @@
 #include "../../include/Request.hpp"
-#include "../../include/statusCode.hpp"
 #include "../../include/Debug.hpp"
-
-#include <vector>
 
 
 Request::Request() :
     _method(""),
 	_version(""),
 	_url(""),
-     _path("/"),
-     _body(""),
-     _query(""),
-     _contentLength(-1),
-     _statusCode(0) {}
+    _path("/"),
+    _body(""),
+    _query(""),
+    _contentLength(-1),
+    _maxBodySize(0),
+    _statusCode(0) {}
 
 Request::~Request(){}
 
@@ -63,6 +61,10 @@ const std::map<std::string, std::string>& Request::getHeaders() const{
 	return this->_headers;
 }
 
+void Request::setMaxBodySize(int maxBodySize){
+    _maxBodySize = maxBodySize;
+}
+
 /**
  * @brief Sets _statusCode and returns false, used to propagate errors.
  * @param code HTTP status code to set.
@@ -74,3 +76,4 @@ bool Request::setError(int code, const std::string &context) {
     (void)context;
     return false;
 }
+

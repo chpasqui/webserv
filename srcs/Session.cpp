@@ -4,12 +4,7 @@
 #include <ctime>
 #include <cstdlib>
 
- Session::Session(){}
-
-//Step 1: ce sera dans serveur, mais si aucun header cookie, generer un sessionId
-//Step 2: si y a un header Cookie, il faut que j'extracte le sessionId 
-//Step 3: dans buildReponse aller voir si y a un cookie
-//Step 4: rajouter le headerCookie dans la responseFormat
+ Session::Session() : _createdAt(std::time(NULL)) {}
 
 std::string Session::generateId(){
     std::ostringstream ss;
@@ -47,7 +42,9 @@ std::string Session::getId() const{
     return (_id);
 }
 
-
+time_t Session::getCreatedAt() const{
+	return (_createdAt);
+}
 
 Session::~Session(){}
 

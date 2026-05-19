@@ -3,7 +3,6 @@
 #include "../../include/statusCode.hpp"
 #include "../../include/Location.hpp"
 #include "../../include/Debug.hpp"
-#include "../../include/Cgi.hpp"
 
 #include <sys/stat.h>
 #include <string.h>
@@ -18,14 +17,12 @@
 void Response::build(Request &request, const ServerConfig *config)
 {
 	_config = config;
-	_loc = findLocation(request.getPath());
+	_loc = _config->findLocation(request.getPath());
 	if (request.getStatusCode() != 0)
 	{
 		setError(request.getStatusCode(), "error given from parse request");
 		return;
 	}
-	if (request.getContentLength() > _loc->getMaxBodySize())
-		return (setError(PAYLOAD_TOO_LARGE, "build: contentLenght > client_max_body_size"));
 	_internalPath = buildFileSystemPath(request.getPath());
 	if (_loc->getRedirCode() != 0)
 	{
@@ -45,29 +42,6 @@ void Response::build(Request &request, const ServerConfig *config)
 		return;
 	}
 	handleMethod(request);
-}
-
-/**
- * @brief Returns the longest-prefix matching location for the given URL.
- * @return Pointer to matching Location, or NULL if none found.
- */
-Location *Response::findLocation(const std::string &url)
-{
-	Location *best = NULL;
-	size_t bestLen = 0;
-
-	std::vector<Location *> locs = _config->getLocations();
-	std::vector<Location *>::iterator it = locs.begin();
-	for (; it != locs.end(); it++)
-	{
-		const std::string &prefix = (*it)->getPath();
-		if (url.substr(0, prefix.size()) == prefix && prefix.size() > bestLen)
-		{
-			best = *it;
-			bestLen = prefix.size();
-		}
-	}
-	return best;
 }
 
 /**
@@ -173,7 +147,6 @@ void Response::parseCgiHeaders(std::string &headerSection)
 		size_t colonPos = line.find(':');
 		if (colonPos == std::string::npos)
 		{
-			std::cout << RED << "this is where PHP fails" << RESET << std::endl;
 			continue;
 		}
 

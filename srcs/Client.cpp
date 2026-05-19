@@ -2,12 +2,12 @@
 #include "../include/Cgi.hpp"
 #include "../include/ServerConfig.hpp"
 #include "../include/Server.hpp"
+#include "../include/statusCode.hpp"
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <unistd.h>
-#include <iostream>
 
 #define BUFFERSIZE 1024
 
@@ -59,17 +59,26 @@ Client::Client(const Client &other) :	bodyoffset(other.bodyoffset),
 
 bool Client::bodyRead(std::string &buffer)
 {
-	size_t pos = buffer.find("\r\n\r\n");
-	buffer = buffer.substr(pos + 4);
 	if (this->_request->getContentLength() == -1)
 	{
 		if (buffer.find("0\r\n\r\n") == std::string::npos)
 			return false;
 		return true;
 	}
-	if (buffer.size() < (size_t)_request->getContentLength())
+	if (buffer.size() < (size_t)_request->getContentLength()){
 		return false;
+	}
+	buffer = buffer.substr(0, _request->getContentLength());
 	return true;
+}
+
+bool Client::checkMaxBodySize(){
+	Location *loc = _config->findLocation(_request->getPath());
+	int maxBodySize = loc->getMaxBodySize();
+	_request->setMaxBodySize(maxBodySize);
+	if (_request->getContentLength() > 0 && _request->getContentLength() > maxBodySize)
+		return(_request->setError(PAYLOAD_TOO_LARGE, "build: contentLenght > client_max_body_size"));
+	return true ;
 }
 
 void Client::parseRequest()
@@ -96,7 +105,7 @@ void Client::parseRequest()
 	}
 	if (this->_parsingStatus == PARSING_HEADERS && this->_buffer.find("\r\n\r\n") != std::string::npos)
 	{
-		if (!_request->parseHeader(_buffer))
+		if (!_request->parseHeader(_buffer) || !checkMaxBodySize())
 		{
 			this->_parsingStatus = COMPLETE;
 			return;
@@ -106,7 +115,9 @@ void Client::parseRequest()
 			this->_parsingStatus = COMPLETE;
 			return;
 		}
-		this->_parsingStatus = PARSING_BODY; // as soon as i pass to PARSEBODY this is where I need to parse my CGI
+		size_t pos = _buffer.find("\r\n\r\n");
+		_buffer = _buffer.substr(pos + 4);
+		this->_parsingStatus = PARSING_BODY; //INFO: as soon as i pass to PARSEBODY this is where I need to parse my CGI
 	}
 	if (this->_parsingStatus == PARSING_BODY && bodyRead(_buffer))
 	{
@@ -155,6 +166,12 @@ void Client::setResponse(Session &session, bool isNew)
 	this->_response = new Response(session, isNew);
 }
 
+void Client::setResponse()
+{
+	delete _response;
+	this->_response = new Response();
+}
+
 std::string Client::getResponseStr() const
 {
 	return _response->responseFormat(*_request);
@@ -165,17 +182,17 @@ Cgi *Client::getCgi(void) const
 	return this->_cgi;
 }
 
-void	Client::setCgi(Response *response, Request *request)
+void	Client::setCgi(Response *response, Request *request, Server *server)
 {
-	this->_cgi = new Cgi(response, request);
+	this->_cgi = new Cgi(response, request, server);
 }
 
-// void Client::setPid(pid_t pid)
+// void Client::setPid(pid_t pid) //WARN: Delete this ?
 // {
 // 	this->_pid = pid;
 // }
 
-// pid_t	Client::getPid(void) const
+// pid_t	Client::getPid(void) const //WARN: Delete this ?
 // {
 // 	return (this->_pid);
 // }
@@ -219,3 +236,4 @@ Client::~Client()
 	if (this->_cgi)
 		delete this->_cgi;
 }
+
