@@ -30,8 +30,8 @@ class ConfigParser {
 		int													parsingConfigFile(const std::string &filename);
 	private:
 		int													openFile(const std::string &filename);
-		int													getNextToken(std::string &token);
-		int													getNextLine(void);
+		void												getNextToken(std::string &token);
+		void												getNextLine(void);
 		bool												thereIsDefaultLocation(void) const;
 		bool												thereIsIndex(void) const;
 		static int											strToInt(const std::string &str);

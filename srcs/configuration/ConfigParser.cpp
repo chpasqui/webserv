@@ -70,28 +70,27 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 	if (openFile(filename) != 0)
 		return (1);
 
-	while (true)
-	{
-		if (!getNextToken(token))
-			break;
-		it = _dictionary.find(token);
-		if (it == _dictionary.end()) {
-			std::cerr << C_RED << token << ": Unknow token on line: " << _lineNumber << RESET  << std::endl;
-			return (1);
-		}
-		
-		try {
+	try {
+		while (true)
+		{
+			getNextToken(token);
+			it = _dictionary.find(token);
+			if (it == _dictionary.end()) {
+				std::cerr << C_RED << token << ": Unknow token on line: " << _lineNumber << RESET  << std::endl;
+				return (1);
+			}
 			(this->*it->second)();
 		}
-		catch (std::exception &e) {
-			std::cerr << C_RED << e.what() << RESET << std::endl;
-			if (_serverConfigs && !_serverConfigs->empty()) {
-				for (std::vector<ServerConfig *>::iterator it = _serverConfigs->begin(); it != _serverConfigs->end(); it++)
-					delete *it;
-			}
-			return (1);
-		}
 	}
+	catch (std::exception &e) {
+		std::cerr << C_RED << e.what() << RESET << std::endl;
+		if (_serverConfigs && !_serverConfigs->empty()) {
+			for (std::vector<ServerConfig *>::iterator it = _serverConfigs->begin(); it != _serverConfigs->end(); it++)
+				delete *it;
+		}
+		return (1);
+	}
+
 	if (_serverConfigs->size() == 0) {
 		std::cerr << C_RED << "Error: no server block is provided" << RESET << std::endl;
 		return (1);
@@ -121,46 +120,43 @@ int		ConfigParser::openFile(const std::string &filename) {
 
 //TODO:
 //- Ignore the end ligne with " #". OK
-//- Add a line number for errors. : Use a ss to get the line, and overload getNextToken() to take int OK
 //- Display a better error message.
 //- Fix leaks when exception is thrown. Still some leaks : OK
 //- Rename variables with wrong names OK 
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
-//- unform some function (like setMaxBodySize, setClientTimeout, etc...)
 
 /**
  * @brief get the next token in the config file and remove it from the file string
  * @return the token or an empty string if the end of the file has been reached
  */
-int	ConfigParser::getNextToken(std::string &token) {
-	if (getNextLine() == 1)
-		return (0);
+void	ConfigParser::getNextToken(std::string &token) {
+	getNextLine();
 	size_t pos = _currentLine.find_first_not_of(" \t\f\r\v\n");
 	_currentLine.erase(0, pos);
 	pos = _currentLine.find_first_of(" \t\f\r\v\n");
 	token = _currentLine.substr(0, pos);
 	_currentLine.erase(0, pos);
 	LOG_DEBUG("Token is: \"" << token) << "\"";
-	return (1);
 }
 
-int ConfigParser::getNextLine(void) {
+void ConfigParser::getNextLine(void) {
 	while (_currentLine.empty() || _currentLine.find_first_not_of(" \t\f\r\v\n") == std::string::npos || _currentLine.find("#") != std::string::npos) { //INFO: we don't really need \n, getline remove it, i keep it for safety
 		if(!getline(_configFile, _currentLine))
-			return (1);
+			throw(std::runtime_error("valid")); //TODO: change this for a custome exception
 		_lineNumber++;
+
 		if (*_currentLine.begin() == '#') {
 			if(!getline(_configFile, _currentLine))
-				return (1);
+				throw(std::runtime_error("valid")); //TODO: change this for a custome exception
 			_lineNumber++;
 			continue ;
 		}
+
 		size_t pos = _currentLine.find(" #");
 		if (pos != std::string::npos) {
 			_currentLine.erase(pos);
 		}
 	}
-	return (0);
 }
 
 bool	ConfigParser::thereIsDefaultLocation(void) const {
@@ -217,8 +213,7 @@ void	ConfigParser::processEndBraquetToken(void) {
 void	ConfigParser::processTokenHttp(void) {
 	std::string	braquet;
 
-	if (!getNextToken(braquet))
-		throw (std::invalid_argument("fail to get the nextToken for \"http\""));
+	getNextToken(braquet);
 	if (braquet != "{" || _contextLevel != NONE || _http)
 		throw (std::runtime_error("Unexcepted token after \"http\""));
 	_http = new Http();
@@ -229,8 +224,7 @@ void	ConfigParser::processTokenHttp(void) {
 void	ConfigParser::processServerToken(void) {
 		std::string	nextToken;
 
-	if (!getNextToken(nextToken))
-		throw (std::invalid_argument("fail to get the nextToken for \"server\""));
+	getNextToken(nextToken);
 	if (nextToken != "{" || _contextLevel != HTTP || _currentServer)
 		throw (std::runtime_error("Unexcepted token after \"server\""));
 	_serverConfigs->push_back(new ServerConfig( *_http));
@@ -243,8 +237,8 @@ void	ConfigParser::processLocationToken(void) {
 	std::string	path;
 	std::string	braquet;
 
-	if (!getNextToken(path) || !getNextToken(braquet))
-		throw (std::invalid_argument("fail to get the nextToken for \"location\""));
+	getNextToken(path);
+	getNextToken(braquet);
 	if (_currentLocation)
 		throw std::runtime_error("Nested location is not allowed");
 	if (braquet != "{" || _contextLevel!= SERVER)
@@ -263,8 +257,7 @@ void	ConfigParser::processLocationToken(void) {
 void	ConfigParser::processClientTimeoutToken(void) {
 	std::string	timeout;
 
-	if (!getNextToken(timeout))
-		throw (std::invalid_argument("fail to get the nextToken for \"cient_timeout\""));
+	getNextToken(timeout);
 
 	int n = ConfigParser::strToInt(timeout);
 	_currentContext->setClientTimeout(n);
@@ -277,8 +270,7 @@ void	ConfigParser::processClientTimeoutToken(void) {
 void	ConfigParser::processMaxBodySizeToken(void) {
 	std::string	maxBodySize;
 
-	if (!getNextToken(maxBodySize))
-		throw (std::invalid_argument("fail to get the nextToken for \"max_body_size\""));
+	getNextToken(maxBodySize);
 	
 	int n = ConfigParser::strToInt(maxBodySize);
 	_currentContext->setMaxBodySize(n);
@@ -290,7 +282,7 @@ void	ConfigParser::processMaxBodySizeToken(void) {
 void	ConfigParser::processRootToken(void) {
 	std::string nextToken;
 
-	if (!getNextToken(nextToken))
+	getNextToken(nextToken);
 		throw (std::invalid_argument("fail to get the nextToken for \"root\""));
 	_currentContext->setRoot(nextToken);
 }
@@ -301,7 +293,7 @@ void	ConfigParser::processRootToken(void) {
 void	ConfigParser::processListenToken(void) {
 	std::string	port;
 
-	if (!getNextToken(port))
+	getNextToken(port);
 		throw (std::invalid_argument("fail to get the nextToken for \"listen\""));
 
 	int n = ConfigParser::strToInt(port);
@@ -315,8 +307,7 @@ void	ConfigParser::processListenToken(void) {
 void	ConfigParser::processAutoindexToken(void) {
 	std::string value;
 
-	if (!getNextToken(value))
-		throw (std::invalid_argument("fail to get the nextToken for \"autoindex\""));
+	getNextToken(value);
 	if (value == "on")
 		_currentContext->setAutoindex(true);
 	else if (value == "off")
@@ -332,8 +323,8 @@ void	ConfigParser::processErrorPageToken(void) {
 	std::string	code;
 	std::string	pageToken;
 
-	if (!getNextToken(code) || !getNextToken(pageToken))
-		throw (std::invalid_argument("fail to get the nextToken for \"error_page\""));
+	getNextToken(code);
+	getNextToken(pageToken);
 
 	int n = ConfigParser::strToInt(code);
 	_currentContext->addErrorPage(n, pageToken);
@@ -345,8 +336,7 @@ void	ConfigParser::processErrorPageToken(void) {
 void	ConfigParser::processServerNameToken(void) {
 	std::string serverName;
 
-	if (!getNextToken(serverName))
-		throw (std::invalid_argument("fail to get the nextToken for \"server_name\""));
+	getNextToken(serverName);
 	_currentContext->setServerName(serverName);
 }
 
@@ -354,7 +344,7 @@ void	ConfigParser::processServerNameToken(void) {
 void	ConfigParser::processAllowedMethodsToken(void) {
 	std::string allowedMethods;
 
-	if (!getNextToken(allowedMethods))
+	getNextToken(allowedMethods);
 		throw (std::invalid_argument("fail to get the nextToken for \"allowed_methods\""));
 	_currentContext->setAllowedMethods(allowedMethods);
 }
@@ -362,8 +352,7 @@ void	ConfigParser::processAllowedMethodsToken(void) {
 void	ConfigParser::processIndexToken(void) {
 	std::string index;
 
-	if (!getNextToken(index))
-		throw (std::invalid_argument("fail to get the nextToken for \"index\""));
+	getNextToken(index);
 	_currentContext->addIndex(index);
 }
 
@@ -371,8 +360,8 @@ void	ConfigParser::processRedirectionToken(void) {
 	std::string	code;
 	std::string	redirectionPath;
 
-	if (!getNextToken(code) || !getNextToken(redirectionPath))
-		throw (std::invalid_argument("fail to get the nextToken for \"return\""));
+	getNextToken(code);
+	getNextToken(redirectionPath);
 
 	int n = ConfigParser::strToInt(code);
 	_currentContext->setRedireCode(n);
@@ -383,8 +372,8 @@ void	ConfigParser::processCgiPassToken(void) {
 	std::string	extension;
 	std::string	path;
 
-	if (!getNextToken(extension) || !getNextToken(path))
-		throw (std::invalid_argument("fail to get the nextToken for \"cgi_pass\""));
+	getNextToken(extension);
+	getNextToken(path);
 	if (*(extension.begin()) != '.')
 		throw (std::invalid_argument("an extension need to start with a point"));
 	_currentContext->addCgiExtension(extension, path);
@@ -399,3 +388,4 @@ int	ConfigParser::strToInt(const std::string &str) {
 		throw(std::invalid_argument("invalid number"));
 	return (nb);
 }
+
