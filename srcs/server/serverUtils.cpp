@@ -37,9 +37,12 @@ void	Server::timeoutCheck(void) {
 		Client* client = it->second;
 		LOG_DEBUG(C_CSTR << "client fd=" << it->first << " config=" << client->getServerConfig());
 		if (std::difftime(currentTime, client->getTimestamp()) >= client->getServerConfig()->getClientTimeout()){
-			if (client->getResponse() == NULL)
+			if (client->getResponse() == NULL){
 				client->setResponse();
-			client->getResponse()->setError(GATEWAY_TIMEOUT, "timeoutCheck: response is not NULL");
+				client->getResponse()->setError(REQUEST_TIMEOUT, "timeoutCheck: no request recieved");
+			}
+			else
+				client->getResponse()->setError(GATEWAY_TIMEOUT, "timeoutCheck: can't process or send infos");
 			if (client->getCgi()){
 				if (!addToEpoll(_epollFd, it->first, EPOLLOUT)){
 					++it;
