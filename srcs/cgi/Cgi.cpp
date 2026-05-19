@@ -61,7 +61,7 @@ void Cgi::buildEnv(const ServerConfig &config)
 	char* filename = realpath(_fileSystemPath.c_str(), NULL);
 	std::cout << filename << std::endl;
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
-	_tempEnv.push_back("SCRIPT_FILENAME=" + std::string(filename));
+	_tempEnv.push_back("SCRIPT_FILENAME=" + filename);
 	_tempEnv.push_back("REDIRECT_STATUS=200");
 	_tempEnv.push_back("REQUEST_METHOD=" + _request->getMethod());
 	_tempEnv.push_back("SCRIPT_NAME=" + this->_scriptName);
@@ -116,12 +116,12 @@ void Cgi::executeScript()
 	if (errno)
 		return ;
 	
-	pid_t pid = fork(); //
 	char* filename = realpath(_fileSystemPath.c_str(), NULL);
 	std::string fileName(filename);
 	size_t pos = fileName.find_last_of('/');
 	std::string directoryPath = fileName.substr(0, pos);
 	std::cout << directoryPath << std::endl;
+	pid_t pid = fork(); //
 	if (pid == 0)
 	{
 		if (chdir(directoryPath.c_str()) == -1)

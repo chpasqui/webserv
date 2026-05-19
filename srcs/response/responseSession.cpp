@@ -8,6 +8,7 @@
 #include <ctime>
 #include <sstream>
 #include <string>
+#include <fstream>
 
 static std::string readFile(const std::string &path)
 {
