@@ -4,6 +4,7 @@
 #include "../../include/ServerConfig.hpp"
 #include "../../include/Client.hpp"
 #include "../../include/Debug.hpp"
+#include "../../include/utils.hpp"
 
 #include <iostream>
 #include <fstream>

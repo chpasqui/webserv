@@ -15,7 +15,7 @@
 void Response::handleGetMethod(Request& request){
     struct stat sb;
     
-    if (request.getPath() == "/welcome"){
+    if (request.getPath() == "/"){
         serverSessionPage();
         return ;
     }

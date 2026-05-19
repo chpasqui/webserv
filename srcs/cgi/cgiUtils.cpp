@@ -52,11 +52,4 @@ std::string resolveHostname()
 	return (std::string(hostname));
 }
 
-std::string intToString(int number)
-{
-	std::stringstream ss;
-	ss << number;
-	std::string newString;
-	ss >> newString;
-	return newString;
-}
+

@@ -63,6 +63,5 @@ class Cgi
 std::string getHeaderVariable(const std::map<std::string, std::string> &header, const std::string &key);
 std::string parseShebang(const std::string &internalPath);
 std::string resolveHostname();
-std::string intToString(int number);
 
 #endif

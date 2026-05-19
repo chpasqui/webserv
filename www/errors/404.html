@@ -1,2 +1,293 @@
 <!DOCTYPE html>
-<html><body><h1>404 - Not Found</h1></body></html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Page introuvable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+ 
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+      --ink:       #1a1a18;
+      --ink-soft:  #5a5a52;
+      --paper:     #f5f2ea;
+      --paper-mid: #ede9de;
+      --accent:    #c4571a;
+      --accent-lt: #f0d5c2;
+    }
+ 
+    html, body {
+      height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'DM Mono', monospace;
+      overflow: hidden;
+    }
+ 
+    /* ── grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+ 
+    .scene {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+ 
+    /* ── left panel ── */
+    .left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 3rem 3rem 3rem 4rem;
+      border-right: 1px solid var(--paper-mid);
+    }
+ 
+    .logo {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+ 
+    .big-num {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(9rem, 18vw, 16rem);
+      font-weight: 700;
+      line-height: 0.85;
+      color: var(--ink);
+      letter-spacing: -0.04em;
+      position: relative;
+    }
+ 
+    .big-num span {
+      display: inline-block;
+      animation: drift 6s ease-in-out infinite;
+    }
+    .big-num span:nth-child(2) { animation-delay: -2s; color: var(--accent); }
+    .big-num span:nth-child(3) { animation-delay: -4s; }
+ 
+    @keyframes drift {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+ 
+    .stamp {
+      display: inline-block;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.7rem;
+      margin-bottom: 1.5rem;
+      transform: rotate(-1.5deg);
+    }
+ 
+    .bottom-left p {
+      font-size: 0.72rem;
+      line-height: 1.8;
+      color: var(--ink-soft);
+      max-width: 28ch;
+    }
+ 
+    /* ── right panel ── */
+    .right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem 4rem 3rem 3rem;
+      gap: 2.5rem;
+    }
+ 
+    .headline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 400;
+      line-height: 1.25;
+      max-width: 18ch;
+    }
+ 
+    .headline em {
+      font-style: italic;
+      color: var(--accent);
+    }
+ 
+    .body-text {
+      font-size: 0.75rem;
+      line-height: 1.9;
+      color: var(--ink-soft);
+      max-width: 38ch;
+    }
+ 
+    /* ── divider ── */
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .rule::before, .rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--paper-mid);
+    }
+    .rule span {
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+ 
+    /* ── links ── */
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+ 
+    .link-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid var(--paper-mid);
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      transition: color 0.2s, padding-left 0.2s;
+      cursor: pointer;
+    }
+ 
+    .link-item:first-child { border-top: 1px solid var(--paper-mid); }
+ 
+    .link-item:hover {
+      color: var(--accent);
+      padding-left: 0.5rem;
+    }
+ 
+    .link-item .arrow {
+      font-size: 0.9rem;
+      transform: translateX(0);
+      transition: transform 0.2s;
+    }
+    .link-item:hover .arrow { transform: translateX(4px); }
+ 
+    /* ── decorative dots ── */
+    .dots {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      z-index: 2;
+    }
+    .dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--paper-mid);
+    }
+    .dot.active { background: var(--accent); }
+ 
+    /* ── illustration ── */
+    .illustration {
+      position: absolute;
+      right: 4rem;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.07;
+      pointer-events: none;
+      font-family: 'Playfair Display', serif;
+      font-size: 22rem;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent);
+      line-height: 1;
+      z-index: 0;
+    }
+ 
+    /* ── fade-in ── */
+    .left, .right { animation: fadein 0.8s ease both; }
+    .right { animation-delay: 0.15s; }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+ 
+    @media (max-width: 680px) {
+      .scene { grid-template-columns: 1fr; overflow-y: auto; }
+      .left { border-right: none; border-bottom: 1px solid var(--paper-mid); padding: 2rem; }
+      .right { padding: 2rem; }
+      .illustration { display: none; }
+      html, body { overflow: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+ 
+    <div class="left">
+      <div class="logo">— votre site</div>
+ 
+      <div>
+        <div class="bottom-left">
+          <div class="big-num" aria-label="404">
+            <span>4</span><span>0</span><span>4</span>
+          </div>
+        </div>
+      </div>
+ 
+      <div class="bottom-left">
+        <div class="stamp">erreur</div>
+        <p>Cette page a disparu quelque part<br>dans l'espace numérique.</p>
+      </div>
+    </div>
+ 
+    <div class="right">
+      <h1 class="headline">
+        On ne trouve pas<br>ce que vous <em>cherchez.</em>
+      </h1>
+ 
+      <p class="body-text">
+        L'adresse que vous avez saisie n'existe plus,
+        a été déplacée, ou n'a peut-être jamais existé.
+        Pas d'inquiétude — on va vous remettre sur la bonne voie.
+      </p>
+ 
+      <div class="rule"><span>par ici</span></div>
+ 
+      <nav class="links" aria-label="Navigation de secours">
+        <a class="link-item" href="/">
+          <span>Retour à l'accueil</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="link-item" href="javascript:history.back()">
+          <span>Page précédente</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </nav>
+    </div>
+ 
+  </div>
+ 
+  <div class="dots" aria-hidden="true">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+</body>
+</html>

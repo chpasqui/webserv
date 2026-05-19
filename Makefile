@@ -14,6 +14,7 @@ SRCS        =   main.cpp \
 				Client.cpp \
 				Debug.cpp \
 				fdUtils.cpp \
+				utils.cpp \
 				server/Server.cpp \
 				server/serverEpoll.cpp \
 				server/serverUtils.cpp \
