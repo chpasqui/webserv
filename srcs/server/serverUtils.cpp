@@ -68,8 +68,6 @@ void	Server::timeoutCheck(void) {
 void	Server::signalHandler(int signal) {
 	if (signal == SIGINT)
 		std::cout << "\nSIGINT signal detected, stopping server\n";
-	// else if (signal == SIGQUIT)
-	// 	std::cout << "\nSIGQUIT signal detected, stopping server\n"; 
 	serverSignal = signal;
 }
 
