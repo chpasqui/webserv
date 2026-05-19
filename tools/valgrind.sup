@@ -3,3 +3,8 @@
 	Memcheck:Leak
 	obj:*/python*
 }
+{
+  ignore_php_leaks
+  Memcheck:Leak
+  obj:*/php*
+}
