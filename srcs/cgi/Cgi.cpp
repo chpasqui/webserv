@@ -58,8 +58,9 @@ void Cgi::buildEnv(const ServerConfig &config)
 	const std::map<std::string, std::string> &header = _request->getHeaders();
 	std::string extension = this->_response->getCgiExtension();
 	this->_scriptName = this->_fileSystemPath.substr(0, this->_fileSystemPath.find(extension) + extension.length());
-	char* filename = realpath(_fileSystemPath.c_str(), NULL);
-	std::cout << filename << std::endl;
+	size_t pos = this->_fileSystemPath.find_last_of('/');
+	std::string filename = this->_fileSystemPath.substr(pos + 1, this->_fileSystemPath.length());
+
 	_tempEnv.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	_tempEnv.push_back("SCRIPT_FILENAME=" + filename);
 	_tempEnv.push_back("REDIRECT_STATUS=200");
@@ -82,9 +83,15 @@ void Cgi::buildEnv(const ServerConfig &config)
 
 	for (std::map<std::string, std::string>::const_iterator it = header.begin(); it != header.end(); ++it)
 	{
-		std::string key = "HTTP_" + it->first;
+		std::string httpPostFix;
 		for (size_t i = 0; i < it->first.size(); i++)
-			key += std::toupper(it->first[i]);
+		{
+			if (it->first[i] == '-')
+				httpPostFix += '_';
+			else
+				httpPostFix += std::toupper(it->first[i]);
+		}
+		std::string key = "HTTP_" + httpPostFix;
 		_tempEnv.push_back(key + "=" + it->second);
 	}
 
