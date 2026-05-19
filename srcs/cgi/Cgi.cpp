@@ -81,7 +81,8 @@ void Cgi::buildEnv(const ServerConfig &config)
 	for (std::map<std::string, std::string>::const_iterator it = header.begin(); it != header.end(); ++it)
 	{
 		std::string key = "HTTP_" + it->first;
-		std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+		for (size_t i = 0; i < it->first.size(); i++)
+			key += std::toupper(it->first[i]);
 		_tempEnv.push_back(key + "=" + it->second);
 	}
 
