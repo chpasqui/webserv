@@ -2,6 +2,9 @@ This project has been created as part of the 42 curriculum by jrandet, hdougoud,
 
 # Description : presents the project, including its goal and a brief overview
 
+
+
+
 # Instructions : relevant information about compilation, installation, and/or execution
 For compiling the project make re, you can choose the level or log by making make re LOG_LEVEL=level number 
 level number 1 = error
@@ -20,7 +23,6 @@ nc localhost 8080 < tools/<select the request to be sent>
 you may also use telnet localhost 8080 and send request manually
 
 or curl (see how to use) or directly open a browser and try to reach different.
-
 
 
 # Resources
@@ -52,4 +54,5 @@ to see full documentation : https://docs.google.com/spreadsheets/d/1VZfzkXoYSBPI
 - challenge different point of view
 - review specific code
 - create brief dyoxygen comment
+- to make beautiful html pages
 - help to write readme documentation
