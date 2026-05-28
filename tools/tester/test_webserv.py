@@ -9,6 +9,7 @@ import sys
 import socket
 import os
 import time
+import subprocess
 
 HOST = sys.argv[1] if len(sys.argv) > 1 else "localhost"
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8080
@@ -26,6 +27,14 @@ failed = 0
 results = []
 
 # ── Utilitaires ───────────────────────────────────────────────────────────────
+
+def parsing_error():
+    """Test le comportement de differents fichier de configurations"""
+    path = os.getcwd() + "/tools/tester/test_files"
+    for filename in os.listdir(path):
+        print(filename)
+        proc = subprocess.Popen(["./webserv", path + "/" + filename])
+        proc.wait()
 
 def send_raw(request: str, timeout: float = 3.0) -> str:
     """Envoie une requête HTTP brute, retourne la réponse complète."""
@@ -75,6 +84,10 @@ def section(title: str):
     print(f"\n{BOLD}{CYAN}── {title} {'─' * (50 - len(title))}{RESET}")
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
+
+section("Parsing - configfiles")
+parsing_error()
+
 
 section("GET - Fichiers statiques")
 
