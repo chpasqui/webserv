@@ -86,7 +86,11 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 		}
 	}
 	catch (ConfigParser::EndOfConfigFile &e) {
-		LOG_INFO(e.what());
+		if (_serverConfigs->size() == 0) {
+			std::cerr << C_RED << "Error: no server block is provided" << RESET << std::endl;
+			return (1);
+		}
+		std::cout << C_GREEN << e.what() << RESET;
 	}
 	catch (std::exception &e) {
 		std::cerr << C_RED << "Error: "<< e.what() << " on line : " << _lineNumber << RESET << std::endl;
@@ -96,12 +100,6 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 		}
 		return (1);
 	}
-
-	if (_serverConfigs->size() == 0) {
-		std::cerr << C_RED << "Error: no server block is provided" << RESET << std::endl;
-		return (1);
-	}
-	std::cout << C_GREEN << "End of configFile: no error" << RESET << std::endl;
 	return (0);
 }
 
@@ -394,6 +392,6 @@ int	ConfigParser::strToInt(const std::string &str) {
 }
 
 const char *ConfigParser::EndOfConfigFile::what(void) const throw() {
-	return ("end of config file");
+	return ("End of configuration file. No errors");
 }
 

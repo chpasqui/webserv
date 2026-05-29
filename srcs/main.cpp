@@ -20,7 +20,7 @@ static int	checkResponse(const std::string &response);
 int main(int ac, char **av) {
 	std::string configFileName;
 	std::vector<ServerConfig*> configs;
-	std::srand(static_cast<unsigned int>(std::time(NULL))); //voir si laisser la
+	//std::srand(static_cast<unsigned int>(std::time(NULL))); //voir si laisser la
 
 	{
 		if (checkInputArgs(ac, av, configFileName) == 1)
@@ -35,7 +35,10 @@ int main(int ac, char **av) {
 
 	try {
 		server.setupListeningSockets(configs);
-		server.run(); // server instance out of scope if declared outside, I need it here but run does not 
+		std::cout << C_BLUE << "\nThe server listens on the following ports: \n";
+		for (std::vector<ServerConfig*>::iterator it = configs.begin(); it != configs.end(); it++)
+			std::cout << (*it)->getPort() << "\n";
+		server.run(); // server instance out of s cope if declared outside, I need it here but run does not 
 	}
 	catch(const std::exception& e) {
 		std::cerr << e.what() << '\n';
@@ -71,7 +74,7 @@ static int	checkInputArgs(int ac, char **av, std::string &filename) {
 		}
 		while (!status && i < 5);
 		if (status == 1)
-			filename = "config/default.conf";
+			filename = "config/complete.conf";
 		else {
 			std::cerr << C_YELLOW << "no configuration file provided. stopping webserv" << RESET << std::endl;
 			return (1);
