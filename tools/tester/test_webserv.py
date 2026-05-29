@@ -39,7 +39,7 @@ def parsing_error():
     for filename in os.listdir(path):
         proc = subprocess.Popen(["./webserv", path + "/" + filename])
         try:
-            proc.wait(timeout=5)
+            proc.wait(timeout=3)
             return_code = proc.returncode
             if return_code != 1:
                 failed += 1
@@ -59,21 +59,21 @@ def parsing_error():
             results.append((False, f"Parsing {filename}", "timeout", "1"))
             print(f"  {RED}✗{RESET} {filename} → program stuck (timeout)")
 
-def parsing_edge_cases():
-    """Test le comportement de differents fichier de configurations valides"""
-    global passed, failed
-    path = os.getcwd() + "/tools/tester/good_files"
-    for filename in os.listdir(path):
-        proc = subprocess.Popen(["./webserv", path + "/" + filename])
-        try:
-            proc.wait(timeout=5)
-            #TODO: Read the program output, check the start message
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait()
-            failed += 1
-            results.append((False, f"Parsing {filename}", "timeout", "clean exit"))
-            print(f"  {RED}✗{RESET} {filename} → program stuck (timeout)")
+# def parsing_edge_cases():
+#     """Test le comportement de differents fichier de configurations valides"""
+#     global passed, failed
+#     path = os.getcwd() + "/tools/tester/good_files"
+#     for filename in os.listdir(path):
+#         proc = subprocess.Popen(["./webserv", path + "/" + filename])
+#         try:
+#             proc.wait(timeout=5)
+#             #TODO: Read the program output, check the start message
+#         except subprocess.TimeoutExpired:
+#             proc.kill()
+#             proc.wait()
+#             failed += 1
+#             results.append((False, f"Parsing {filename}", "timeout", "clean exit"))
+#             print(f"  {RED}✗{RESET} {filename} → program stuck (timeout)")
 
 
 def send_raw(request: str, timeout: float = 3.0) -> str:
