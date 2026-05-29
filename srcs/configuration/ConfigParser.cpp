@@ -79,6 +79,9 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 				std::cerr << C_RED << "Error: Unknow token \"" << token << "\" on line : " << _lineNumber << RESET  << std::endl;
 				return (1);
 			}
+			if (token != "http" && token != "server" && token != "location")
+				if (!_currentContext)
+					return (1);
 			(this->*it->second)();
 		}
 	}
@@ -122,7 +125,6 @@ int		ConfigParser::openFile(const std::string &filename) {
 }
 
 //TODO:
-//- Read {}
 //- Fix leaks when exception is thrown. Still some leaks : OK
 //- Ajuste the size of bodySize in config file (1m = * 1'000'000), the parsin check the numbers of chars.
 //- Add to the test_webserv.py some test for the config files parsing
