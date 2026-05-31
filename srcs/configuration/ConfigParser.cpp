@@ -81,8 +81,10 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 				return (1);
 			}
 			if (token != "http" && token != "server" && token != "location")
-				if (!_currentContext)
+				if (!_currentContext) {
+					std::cerr << C_RED << "Error: unexcepted token \"" << token << "\" on line : " << _lineNumber << RESET << std::endl;
 					return (1);
+				}
 			(this->*it->second)();
 		}
 	}
@@ -194,6 +196,7 @@ void	ConfigParser::processEndBraquetToken(void) {
 		case HTTP:
 			delete (_http);
 			_http = 0;
+			_currentContext = 0;
 			break;
 		case SERVER:
 			if (!thereIsDefaultLocation()) {
@@ -201,6 +204,7 @@ void	ConfigParser::processEndBraquetToken(void) {
 				Location *location = new Location(*_currentServer, "/");
 				location->addIndex("index.html");
 				_currentServer->addLocation(location);
+				_currentContext = _http;
 			}
 			_currentServer = 0;
 			break;
@@ -210,6 +214,7 @@ void	ConfigParser::processEndBraquetToken(void) {
 				_currentLocation->addIndex("index.html");
 			}
 			_currentLocation = 0;
+			_currentContext = _currentServer;
 			break;
 		default:
 			throw std::invalid_argument("Unexcepted token \"}\"");
