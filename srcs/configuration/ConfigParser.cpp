@@ -86,6 +86,10 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 		}
 	}
 	catch (ConfigParser::EndOfConfigFile &e) {
+		if (_contextLevel != NONE) {
+			std::cerr << C_RED << "Error: missing braquet" << RESET << std::endl;
+			return (1);
+		}
 		if (_serverConfigs->size() == 0) {
 			std::cerr << C_RED << "Error: no server block is provided" << RESET << std::endl;
 			return (1);
