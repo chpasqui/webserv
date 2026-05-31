@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <stdlib.h>
@@ -390,7 +391,7 @@ int	ConfigParser::strToInt(const std::string &str) {
 	std::stringstream ss(str);
 
 	ss >> nb;
-	if (ss.fail() || nb < 0)
+	if (ss.fail() || !ss.eof() || nb < 0)
 		throw(std::invalid_argument("invalid number"));
 	return (nb);
 }
