@@ -159,7 +159,7 @@ void ConfigParser::getNextLine(void) {
 			continue ;
 		}
 
-		size_t pos = _currentLine.find(" #");
+		size_t pos = _currentLine.find("#");
 		if (pos != std::string::npos) {
 			_currentLine.erase(pos);
 		}
