@@ -10,9 +10,9 @@ Session& Server::resolveSession(const std::string& cookieHeader, bool& isNew)
 		sessionId = Session::generateId();
 		_sessions[sessionId].setId(sessionId);
 		isNew = true;
-		std::cout << C_YELLOW << "NEW session: " << sessionId << RESET << std::endl;
+		LOG_INFO(C_YELLOW << "NEW session: " << sessionId);
     }
 	else
-		std::cout << C_GREEN << "EXISTING session: " << sessionId << RESET << std::endl;
+			LOG_INFO(C_GREEN << "EXISTING session: " << sessionId);
 	return (_sessions[sessionId]);
 }

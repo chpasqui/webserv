@@ -37,7 +37,7 @@ void Response::build(Request &request, const ServerConfig *config)
 	}
 	if (isCGI())
 	{
-		LOG_DEBUG("the path sent is " << this->_internalPath << std::endl);
+		LOG_DEBUG("the path sent is " << this->_internalPath);
 		this->_isCgi = true;
 		return;
 	}

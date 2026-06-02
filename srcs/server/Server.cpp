@@ -2,13 +2,11 @@
 #include "../../include/Session.hpp"
 #include "../../include/Cgi.hpp"
 #include "../../include/statusCode.hpp"
+#include "../../include/Debug.hpp"
 
-#include <algorithm>
 #include <iostream>
 #include <ctime>
-#include <stdexcept>
 #include <string>
-#include <string.h>
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -18,7 +16,6 @@
 #include <map>
 #include <csignal>
 #include <signal.h>
-#include "../include/color.hpp"
 #include <wait.h>
 
 #define MAX_EVENTS 1024
@@ -98,6 +95,7 @@ bool Server::acceptNewConnection(int listeningFd)
 	// add the multiple serverconfigs in one fd and map with the host name (multiple config for one port)
 	const ServerConfig *config = _listenFds[listeningFd];
 	_clients.insert(std::make_pair(clientFd, new Client(clientFd, config)));
+	LOG_INFO("new connection on socket: " << clientFd);
 	return (true);
 }
 

@@ -35,7 +35,7 @@ int main(int ac, char **av) {
 
 	try {
 		server.setupListeningSockets(configs);
-		std::cout << C_BLUE << "\nThe server listens on the following ports: \n";
+		std::cout << C_BLUE << "The server listens on the following ports: \n";
 		for (std::vector<ServerConfig*>::iterator it = configs.begin(); it != configs.end(); it++)
 			std::cout << (*it)->getPort() << "\n";
 		server.run(); // server instance out of s cope if declared outside, I need it here but run does not 

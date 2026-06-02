@@ -97,7 +97,7 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 			std::cerr << C_RED << "Error: no server block is provided" << RESET << std::endl;
 			return (1);
 		}
-		std::cout << C_GREEN << e.what() << RESET;
+		std::cout << C_GREEN << e.what() << RESET << std::endl;
 	}
 	catch (std::exception &e) {
 		std::cerr << C_RED << "Error: "<< e.what() << " on line : " << _lineNumber << RESET << std::endl;
