@@ -98,7 +98,7 @@ void Cgi::buildEnv(const ServerConfig &config)
 	for (std::vector<std::string>::iterator it = _tempEnv.begin(); it != _tempEnv.end(); ++it)
 	{
 		this->_finalEnv.push_back((strdup((*it).c_str())));
-		LOG_INFO(GREEN << *it);
+		LOG_DEBUG(GREEN << *it);
 	}
 	this->_finalEnv.push_back(NULL);
 }
@@ -127,7 +127,7 @@ void Cgi::executeScript()
 	std::string fileName(filename);
 	size_t pos = fileName.find_last_of('/');
 	std::string directoryPath = fileName.substr(0, pos);
-	std::cout << directoryPath << std::endl;
+	LOG_DEBUG(directoryPath);
 	pid_t pid = fork(); //
 	if (pid == 0)
 	{

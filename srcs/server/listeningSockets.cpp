@@ -1,16 +1,15 @@
 #include "../../include/Server.hpp"
 
-#include <iostream>
 #include <string>
 #include <stdexcept>
 #include <string.h>
-#include <stdio.h>
-#include <errno.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sstream>
 
 /**
  * @brief Construct a new Server:: Server object by looping through 
@@ -93,8 +92,11 @@ void	Server::bindAndListen(int &listenFd, int port) const {
 
 	if (bind(listenFd, (struct sockaddr*)&server_addr, addrlen) == -1)
 	{
+		std::stringstream msg;
 		close(listenFd);
-		throw std::runtime_error("Server: bind() failed.");
+		msg << "Server: bind() failed on port ";
+		msg << port;
+		throw std::runtime_error(msg.str());
 	}
 	if (listen(listenFd, BACKLOG) == -1)
 	{
