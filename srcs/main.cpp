@@ -20,6 +20,7 @@ static int	checkResponse(const std::string &response);
 int main(int ac, char **av) {
 	std::string configFileName;
 	std::vector<ServerConfig*> configs;
+	Server server(configs);
 	//std::srand(static_cast<unsigned int>(std::time(NULL))); //voir si laisser la
 
 	{
@@ -31,10 +32,9 @@ int main(int ac, char **av) {
 			return (1);
 	}
 
-	Server server;
 
 	try {
-		server.setupListeningSockets(configs);
+		server.setupListeningSockets();
 		std::cout << C_BLUE << "The server listens on the following ports: \n";
 		for (std::vector<ServerConfig*>::iterator it = configs.begin(); it != configs.end(); it++)
 			std::cout << C_BLUE << (*it)->getPort() << RESET << "\n";
