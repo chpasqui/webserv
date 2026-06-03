@@ -1,7 +1,5 @@
 #include "../include/Debug.hpp"
 
-#include <iostream>
-
 Debug::Debug() {
 	LOG_DEBUG(C_CSTR << "Debug: Default constructor called");
 	return ;

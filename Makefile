@@ -3,11 +3,16 @@ DIR_SRC     =   ./srcs
 DIR_BUILD   =   ./build
 DIR_INCLUDE =   ./include
 CXX         =   g++
-CXXFLAGS    =   -std=c++98 -Wall -Werror -Wextra -g
+CXXFLAGS    =   -std=c++98 -Wall -Werror -Wextra
 
 ifdef LOG_LEVEL
-	CXXFLAGS += -DLOG_LEVEL=$(LOG_LEVEL) -g
+	CXXFLAGS += -DLOG_LEVEL=$(LOG_LEVEL)
 endif
+
+ifdef DEBUG
+	CXXFLAGS += -g
+endif
+
 LDINCLUDE   =   -I$(DIR_INCLUDE)
 
 SRCS        =   main.cpp \
