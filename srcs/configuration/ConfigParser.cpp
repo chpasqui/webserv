@@ -2,7 +2,6 @@
 #include <errno.h>
 #include <iostream>
 #include <iterator>
-#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <stdlib.h>
@@ -90,7 +89,7 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 	}
 	catch (ConfigParser::EndOfConfigFile &e) {
 		if (_contextLevel != NONE) {
-			std::cerr << C_RED << "Error: missing braquet" << RESET << std::endl;
+			std::cerr << C_RED << "Error: missing closing braquet" << RESET << std::endl;
 			return (1);
 		}
 		if (_serverConfigs->size() == 0) {
@@ -101,10 +100,6 @@ int	ConfigParser::parsingConfigFile(const std::string &filename) {
 	}
 	catch (std::exception &e) {
 		std::cerr << C_RED << "Error: "<< e.what() << " on line : " << _lineNumber << RESET << std::endl;
-		if (_serverConfigs && !_serverConfigs->empty()) {
-			for (std::vector<ServerConfig *>::iterator it = _serverConfigs->begin(); it != _serverConfigs->end(); it++)
-				delete *it;
-		}
 		return (1);
 	}
 	return (0);

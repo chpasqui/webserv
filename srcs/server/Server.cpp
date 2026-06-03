@@ -26,7 +26,18 @@
 
 int serverSignal = 0;
 
-Server::Server() :	_epollFd(-1),
+// Server::Server() :
+// _epollFd(-1),
+// _configs(),
+// _listenFds(),
+// _clients(),
+// _pipeFd()
+// {
+// }
+
+Server::Server(std::vector<ServerConfig*> &configs) :
+_epollFd(-1),
+_configs(configs),
 _listenFds(),
 _clients(),
 _pipeFd()
@@ -309,7 +320,7 @@ void Server::writeToClient(int fd)
 		updateTimeStamp(client);
 		client->sendoffset += nbytes;
 		if (client->sendoffset >= response.size())
-		{
+			{
 			closeConnection(client); 
 			return ;
 		}
@@ -336,11 +347,11 @@ Server::~Server()
 	_clients.clear();
 
 	std::map<int, const ServerConfig*>::iterator listenIt = this->_listenFds.begin();
-	for (; listenIt != this->_listenFds.end(); ++listenIt)
-	{
-		close(listenIt->first);
-		delete (listenIt->second);
-	}
+	for (; listenIt != this->_listenFds.end(); ++listenIt)										//INFO:	The two separate loops are necessary.
+		close(listenIt->first);																//		If a parsing error occurs, the `listenFds`,
+	for (std::vector<ServerConfig*>::iterator it = _configs.begin(); it != _configs.end(); it++)//		the map is not initialised and the member _configs is not cleaned up.
+		delete *it;
 	_listenFds.clear();
 	safeClose(this->_epollFd);
+	LOG_DEBUG("Server: destructor called");
 }

@@ -3,7 +3,6 @@
 
 #include <map>
 #include <vector>
-#include <set>
 #include <stdint.h>
 
 #include "ServerConfig.hpp"
@@ -19,8 +18,9 @@ extern void safeClose(int &fd);
 class Server
 {
 public:
-	Server();
-	void setupListeningSockets(const std::vector<ServerConfig *> &serverConfigsVec);
+	// Server();
+	Server(std::vector<ServerConfig*> &configs);
+	void setupListeningSockets(void);
 	~Server();
 	void createEpollInstance(void);
 	int getEpollFd(void) const;
@@ -44,13 +44,13 @@ public:
 
 private:
 	int _epollFd;
+	std::vector<ServerConfig*> &_configs;
 	std::map<int, const ServerConfig *> _listenFds; // if it wasnt a pointer, server would own another copy of the serverconfig which is wasteful
 	std::map<int, Client *> _clients;
 	std::map<std::string, Session> _sessions;
 	std::map<int, Client *> _pipeFd;
 
 	Session &resolveSession(const std::string &cookieHeader, bool &isNew);
-	
 };
 
 #endif

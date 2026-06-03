@@ -1,11 +1,9 @@
 #include "../../include/Server.hpp"
 
-#include <iostream>
 #include <string>
 #include <stdexcept>
 #include <string.h>
 #include <stdio.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/epoll.h>
@@ -14,7 +12,7 @@
 
 /**
  * @brief Construct a new Server:: Server object by looping through 
- * the @param serverConfigsVec and for each configuration, it will:
+ * the vector _configs and for each configuration, it will:
  * 1. create the epollfd
  * 2. loop through the vector of all the configs and create one listenfd for
  * each config, bind that listenfd to the specific port in the config,
@@ -22,10 +20,9 @@
  * 3. because fds are created incrementally, it will start at 5, 6, 7 etc.
  * (0 stdin, 1 stdout, 2 stderr, 3 epollfd, 4 listeningsocket, 5 listeningsocket)
  * so for the map call, we do _listenFds[4] = serverConfig[0]; then [5] <==> [1], etc.
- * 
- * @param serverConfigsVec (loop through)
+ *
  */
-void Server::setupListeningSockets(const std::vector<ServerConfig *>& serverConfigsVec) {
+void Server::setupListeningSockets(void) {
 	createEpollInstance();
 	std::string errorMsg;
 	
@@ -34,11 +31,11 @@ void Server::setupListeningSockets(const std::vector<ServerConfig *>& serverConf
 	signal(SIGCHLD, SIG_IGN);
 	signal(SIGPIPE, SIG_IGN);
 	
-	for (size_t i = 0; i < serverConfigsVec.size(); ++i)
+	for (size_t i = 0; i < _configs.size(); ++i)
 	{
 		int listenFd = openListeningSocket();
-		bindAndListen(listenFd, serverConfigsVec[i]->getPort());
-		this->_listenFds[listenFd] = serverConfigsVec[i];
+		bindAndListen(listenFd, _configs[i]->getPort());
+		this->_listenFds[listenFd] = _configs[i];
 		if (!addToEpoll(this->_epollFd, listenFd, EPOLLIN))
 			throw(std::runtime_error(errorMsg));
 	}
