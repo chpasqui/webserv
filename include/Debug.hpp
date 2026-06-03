@@ -7,7 +7,7 @@
 # include "color.hpp"
 
 #ifndef LOG_LEVEL
-# define LOG_LEVEL 0
+# define LOG_LEVEL 2
 #endif
 
 enum DEBUG_LEVEL {

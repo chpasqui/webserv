@@ -70,6 +70,6 @@ void	Server::timeoutCheck(void) {
 
 void	Server::signalHandler(int signal) {
 	if (signal == SIGINT)
-		std::cout << C_YELLOW << "\nSIGINT signal detected, stopping server\n";
+		std::cout << C_YELLOW << "\nSIGINT signal detected, stopping server" << RESET << std::endl;
 	serverSignal = signal;
 }
