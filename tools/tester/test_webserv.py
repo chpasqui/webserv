@@ -13,6 +13,7 @@ import subprocess
 
 HOST = sys.argv[1] if len(sys.argv) > 1 else "localhost"
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8080
+VALGRIND = ["valgrind", "--leak-check=full", "--show-leak-kinds=all", "--track-fds=yes", "--trace-children=no", "--child-silent-after-fork=yes", "--error-exitcode=42"]
 
 # ── Couleurs ──────────────────────────────────────────────────────────────────
 GREEN  = "\033[92m"
@@ -22,8 +23,10 @@ CYAN   = "\033[96m"
 RESET  = "\033[0m"
 BOLD   = "\033[1m"
 
+proc = None
 passed = 0
 failed = 0
+log_file = os.getcwd() + "/tools/tester/webserv_tester.log"
 results = []
 
 # ── Utilitaires ───────────────────────────────────────────────────────────────
@@ -36,8 +39,10 @@ def parsing_error():
     """Test le comportement de differents fichier de configurations invalides"""
     global passed, failed
     path = os.getcwd() + "/tools/tester/test_files"
+    tmp_file = "--log-file=" + os.getcwd() + "/tools/tester/tmp.log"
     for filename in os.listdir(path):
-        proc = subprocess.Popen(["./webserv", path + "/" + filename])
+        cmd = VALGRIND + [tmp_file, "./webserv", path + "/" + filename]
+        proc = subprocess.Popen(cmd)
         try:
             proc.wait(timeout=3)
             return_code = proc.returncode
@@ -46,6 +51,8 @@ def parsing_error():
                 results.append((False, f"Parsing {filename}", return_code, 1))
                 if (return_code == -11):
                     print(f"  {RED}✗{RESET} {filename} → SEGFAULT (signal 11)")
+                elif (return_code == 42):
+                    print(f"  {RED}✗{RESET} {filename} → VALGRIND ERROR (signal 42)")
                 else:
                     print(f"  {RED}✗{RESET} {filename} → ANORMAL_ERROR code (", return_code, ")")
             elif return_code == 0 or return_code == 1:
@@ -58,6 +65,10 @@ def parsing_error():
             failed += 1
             results.append((False, f"Parsing {filename}", "timeout", "1"))
             print(f"  {RED}✗{RESET} {filename} → program stuck (timeout)")
+        with open(os.getcwd() + "/tools/tester/tmp.log", "r", encoding="utf-8") as tmp:
+            tmp_content = tmp.read()
+        with open(log_file, "a", encoding="utf-8") as log:
+            log.write(tmp_content)
 
 # def parsing_edge_cases():
 #     """Test le comportement de differents fichier de configurations valides"""
@@ -122,6 +133,7 @@ def check(name: str, response: str, expected_status: int, extra_check=None):
 
 def section(title: str):
     print(f"\n{BOLD}{CYAN}── {title} {'─' * (50 - len(title))}{RESET}")
+
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 
