@@ -10,6 +10,7 @@ import socket
 import os
 import time
 import subprocess
+import signal
 
 HOST = sys.argv[1] if len(sys.argv) > 1 else "localhost"
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8080
@@ -23,10 +24,14 @@ CYAN   = "\033[96m"
 RESET  = "\033[0m"
 BOLD   = "\033[1m"
 
-proc = None
+serv_proc = None
 passed = 0
 failed = 0
+tmp_file = os.getcwd() + "/tools/tester/tmp.log"
 log_file = os.getcwd() + "/tools/tester/webserv_tester.log"
+with open(log_file, "r+") as file:
+    file.seek(0)
+    file.truncate(0)
 results = []
 
 # ── Utilitaires ───────────────────────────────────────────────────────────────
@@ -39,9 +44,8 @@ def parsing_error():
     """Test le comportement de differents fichier de configurations invalides"""
     global passed, failed
     path = os.getcwd() + "/tools/tester/test_files"
-    tmp_file = "--log-file=" + os.getcwd() + "/tools/tester/tmp.log"
     for filename in os.listdir(path):
-        cmd = VALGRIND + [tmp_file, "./webserv", path + "/" + filename]
+        cmd = VALGRIND + ["--log-file=" + tmp_file, "./webserv", path + "/" + filename]
         proc = subprocess.Popen(cmd)
         try:
             proc.wait(timeout=3)
@@ -65,10 +69,8 @@ def parsing_error():
             failed += 1
             results.append((False, f"Parsing {filename}", "timeout", "1"))
             print(f"  {RED}✗{RESET} {filename} → program stuck (timeout)")
-        with open(os.getcwd() + "/tools/tester/tmp.log", "r", encoding="utf-8") as tmp:
-            tmp_content = tmp.read()
-        with open(log_file, "a", encoding="utf-8") as log:
-            log.write(tmp_content)
+        transfer_files_data(filename)
+
 
 # def parsing_edge_cases():
 #     """Test le comportement de differents fichier de configurations valides"""
@@ -85,6 +87,25 @@ def parsing_error():
 #             failed += 1
 #             results.append((False, f"Parsing {filename}", "timeout", "clean exit"))
 #             print(f"  {RED}✗{RESET} {filename} → program stuck (timeout)")
+
+def transfer_files_data(filename):
+    """Transfert la data de fichier 1 vers fichier 2"""
+    global tmp_file, log_file
+    with open(tmp_file, "r", encoding="utf-8") as tmp:
+        tmp_content = tmp.read()
+    with open(log_file, "a", encoding="utf-8") as log:
+        log.write(f"\n\n---------------------- {filename} ----------------------\n")
+        log.write(tmp_content)
+        log.write("------------------------------------------------------------------\n")
+
+def launch_webserv():
+    """Demarre Webserv avec le bon fichier de configuration"""
+    global serv_proc
+    path = os.getcwd() + "/config/complete.conf"
+    cmd = VALGRIND + ["--log-file=" + tmp_file, "./webserv", path]
+    serv_proc = subprocess.Popen(cmd)
+    print("launch webserv ...")
+    time.sleep(1) #INFO: Allow the web server time to start up
 
 
 def send_raw(request: str, timeout: float = 3.0) -> str:
@@ -140,208 +161,231 @@ def section(title: str):
 section("Parsing - configfiles")
 parsing_error()
 
+launch_webserv() 
+if (serv_proc.poll() is None):
 
-section("GET - Fichiers statiques")
+    section("GET - Fichiers statiques")
 
-r = send_raw("GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET /index.html → 200", r, 200)
+    r = send_raw("GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET /index.html → 200", r, 200)
 
-r = send_raw("GET /doesnotexist.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET fichier inexistant → 404", r, 404)
+    r = send_raw("GET /doesnotexist.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET fichier inexistant → 404", r, 404)
 
-r = send_raw("GET /static/index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET /static/index.html → 200", r, 200)
-
-
-section("Autoindex")
-
-r = send_raw("GET /files/ HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET /files/ autoindex on → 200", r, 200,
-      lambda resp: "<a" in resp.lower() or "href" in resp.lower())
-
-r = send_raw("GET /private/ HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET /private/ autoindex off → 403", r, 403)
+    r = send_raw("GET /static/index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET /static/index.html → 200", r, 200)
 
 
-section("POST - Upload")
+    section("Autoindex")
 
-r = send_raw(
-    "POST /uploads/test_upload.txt HTTP/1.1\r\n"
-    "Host: localhost\r\n"
-    "Content-Length: 13\r\n"
-    "\r\n"
-    "hello webserv"
-)
-check("POST /uploads/test_upload.txt → 201", r, 201)
+    r = send_raw("GET /files/ HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET /files/ autoindex on → 200", r, 200,
+        lambda resp: "<a" in resp.lower() or "href" in resp.lower())
 
-# Conflit : même fichier une 2ème fois → 409
-r = send_raw(
-    "POST /uploads/test_upload.txt HTTP/1.1\r\n"
-    "Host: localhost\r\n"
-    "Content-Length: 13\r\n"
-    "\r\n"
-    "hello webserv"
-)
-check("POST fichier déjà existant → 409", r, 409)
-
-# URI se terminant par / → 400
-r = send_raw(
-    "POST /uploads/ HTTP/1.1\r\n"
-    "Host: localhost\r\n"
-    "Content-Length: 5\r\n"
-    "\r\n"
-    "hello"
-)
-check("POST sur URI '/' → 400", r, 400)
-
-# Body trop grand → 413
-r = send_raw(
-    "POST /uploads/big/fat.txt HTTP/1.1\r\n"
-    "Host: localhost\r\n"
-    "Content-Length: 200\r\n"
-    "\r\n" + "x" * 200
-)
-check("POST body > client_max_body_size → 413", r, 413)
+    r = send_raw("GET /private/ HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET /private/ autoindex off → 403", r, 403)
 
 
-section("DELETE")
+    section("POST - Upload")
 
-r = send_raw("DELETE /uploads/test_upload.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("DELETE fichier existant → 200/204", r, 204)
+    r = send_raw(
+        "POST /uploads/test_upload.txt HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Length: 13\r\n"
+        "\r\n"
+        "hello webserv"
+    )
+    check("POST /uploads/test_upload.txt → 201", r, 201)
 
-r = send_raw("DELETE /uploads/test_upload.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("DELETE fichier inexistant → 404", r, 404)
+    # Conflit : même fichier une 2ème fois → 409
+    r = send_raw(
+        "POST /uploads/test_upload.txt HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Length: 13\r\n"
+        "\r\n"
+        "hello webserv"
+    )
+    check("POST fichier déjà existant → 409", r, 409)
 
+    # URI se terminant par / → 400
+    r = send_raw(
+        "POST /uploads/ HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Length: 5\r\n"
+        "\r\n"
+        "hello"
+    )
+    check("POST sur URI '/' → 400", r, 400)
 
-section("Methods not allowed")
-
-r = send_raw("DELETE /static/index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("DELETE sur location GET-only → 405", r, 405)
-
-r = send_raw(
-    "POST /static/whatever HTTP/1.1\r\n"
-    "Host: localhost\r\n"
-    "Content-Length: 3\r\n"
-    "\r\n"
-    "abc"
-)
-check("POST sur location GET-only → 405", r, 405)
-
-
-section("Redirections")
-
-r = send_raw("GET /oldPage HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET /oldPage → 301", r, 301,
-      lambda resp: "Location" in resp)
-
-r = send_raw("GET /temp HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET /temp → 302", r, 302,
-      lambda resp: "Location" in resp)
-
-
-section("Parsing HTTP - Cas d'erreur RFC 7230")
-
-# Sans Host → 400
-r = send_raw("GET / HTTP/1.1\r\n\r\n")
-check("Requête sans Host → 400", r, 400)
-
-# Transfer-Encoding + Content-Length ensemble → 400
-r = send_raw(
-    "POST /uploads/x.txt HTTP/1.1\r\n"
-    "Host: localhost\r\n"
-    "Content-Length: 5\r\n"
-    "Transfer-Encoding: chunked\r\n"
-    "\r\n"
-    "5\r\nhello\r\n0\r\n\r\n"
-)
-check("TE + Content-Length → 400 (RFC 7230 §3.3.3)", r, 400)
-
-# HTTP/1.0 (pas de Host requis)
-r = send_raw("GET / HTTP/1.0\r\n\r\n")
-check("HTTP/1.0 sans Host → 200 ou 400 (pas de hang)", r, get_status(r))
+    # Body trop grand → 413
+    r = send_raw(
+        "POST /uploads/big/fat.txt HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Length: 200\r\n"
+        "\r\n" + "x" * 200
+    )
+    check("POST body > client_max_body_size → 413", r, 413)
 
 
-section("Chunked Transfer-Encoding")
+    section("DELETE")
 
-chunked_body = "5\r\nhello\r\n6\r\n world\r\n0\r\n\r\n"
-r = send_raw(
-    "POST /uploads/chunked.txt HTTP/1.1\r\n"
-    "Host: localhost\r\n"
-    "Transfer-Encoding: chunked\r\n"
-    "\r\n" + chunked_body
-)
-check("POST chunked → 201", r, 201)
+    r = send_raw("DELETE /uploads/test_upload.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("DELETE fichier existant → 200/204", r, 204)
 
-# Nettoyage
-send_raw("DELETE /uploads/chunked.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    r = send_raw("DELETE /uploads/test_upload.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("DELETE fichier inexistant → 404", r, 404)
 
 
-section("CGI")
+    section("Methods not allowed")
 
-r = send_raw("GET /cgi-bin/hello.py HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET /cgi-bin/hello.py → 200", r, 200)
+    r = send_raw("DELETE /static/index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("DELETE sur location GET-only → 405", r, 405)
 
-r = send_raw(
-    "POST /cgi-bin/echo.py HTTP/1.1\r\n"
-    "Host: localhost\r\n"
-    "Content-Length: 4\r\n"
-    "\r\n"
-    "test"
-)
-check("POST /cgi-bin/echo.py → 200", r, 200,
-      lambda resp: "test" in resp)
-
-r = send_raw("GET /cgi-bin/hello.php HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET /cgi-bin/hello.php → 200", r, 200)
-
-# CGI avec query string
-r = send_raw("GET /cgi-bin/echo.py?foo=bar HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("CGI query string → 200", r, 200)
+    r = send_raw(
+        "POST /static/whatever HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Length: 3\r\n"
+        "\r\n"
+        "abc"
+    )
+    check("POST sur location GET-only → 405", r, 405)
 
 
-section("Multi-port (8081)")
+    section("Redirections")
 
-old_port = PORT
-PORT = 8081
-r = send_raw("GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
-check("GET port 8081 → 200", r, 200)
-PORT = old_port
+    r = send_raw("GET /oldPage HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET /oldPage → 301", r, 301,
+        lambda resp: "Location" in resp)
+
+    r = send_raw("GET /temp HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET /temp → 302", r, 302,
+        lambda resp: "Location" in resp)
 
 
-section("Resilience")
+    section("Parsing HTTP - Cas d'erreur RFC 7230")
 
-# Requête incomplète → timeout propre, pas de hang
-start = time.time()
-r = send_raw("GET / HTTP/1.1\r\n", timeout=4.0)
-elapsed = time.time() - start
-ok = elapsed < 5.0
-if ok:
-    passed += 1
-    print(f"  {GREEN}✓{RESET} Requête incomplète → timeout propre ({elapsed:.1f}s)")
+    # Sans Host → 400
+    r = send_raw("GET / HTTP/1.1\r\n\r\n")
+    check("Requête sans Host → 400", r, 400)
+
+    # Transfer-Encoding + Content-Length ensemble → 400
+    r = send_raw(
+        "POST /uploads/x.txt HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Length: 5\r\n"
+        "Transfer-Encoding: chunked\r\n"
+        "\r\n"
+        "5\r\nhello\r\n0\r\n\r\n"
+    )
+    check("TE + Content-Length → 400 (RFC 7230 §3.3.3)", r, 400)
+
+    # HTTP/1.0 (pas de Host requis)
+    r = send_raw("GET / HTTP/1.0\r\n\r\n")
+    check("HTTP/1.0 sans Host → 200 ou 400 (pas de hang)", r, get_status(r))
+
+
+    section("Chunked Transfer-Encoding")
+
+    chunked_body = "5\r\nhello\r\n6\r\n world\r\n0\r\n\r\n"
+    r = send_raw(
+        "POST /uploads/chunked.txt HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Transfer-Encoding: chunked\r\n"
+        "\r\n" + chunked_body
+    )
+    check("POST chunked → 201", r, 201)
+
+    # Nettoyage
+    send_raw("DELETE /uploads/chunked.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
+
+    section("CGI")
+
+    r = send_raw("GET /cgi-bin/hello.py HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET /cgi-bin/hello.py → 200", r, 200)
+
+    r = send_raw(
+        "POST /cgi-bin/echo.py HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Length: 4\r\n"
+        "\r\n"
+        "test"
+    )
+    check("POST /cgi-bin/echo.py → 200", r, 200,
+        lambda resp: "test" in resp)
+
+    r = send_raw("GET /cgi-bin/hello.php HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET /cgi-bin/hello.php → 200", r, 200)
+
+    # CGI avec query string
+    r = send_raw("GET /cgi-bin/echo.py?foo=bar HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("CGI query string → 200", r, 200)
+
+
+    section("Multi-port (8081)")
+
+    old_port = PORT
+    PORT = 8081
+    r = send_raw("GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
+    check("GET port 8081 → 200", r, 200)
+    PORT = old_port
+
+
+    section("Resilience")
+
+    # Requête incomplète → timeout propre, pas de hang
+    start = time.time()
+    r = send_raw("GET / HTTP/1.1\r\n", timeout=4.0)
+    elapsed = time.time() - start
+    ok = elapsed < 5.0
+    if ok:
+        passed += 1
+        print(f"  {GREEN}✓{RESET} Requête incomplète → timeout propre ({elapsed:.1f}s)")
+    else:
+        failed += 1
+        print(f"  {RED}✗{RESET} Requête incomplète → hang détecté ({elapsed:.1f}s)")
+    results.append((ok, "Requête incomplète sans hang", 0, 0))
+
+    # Connexion ouverte silencieuse
+    start = time.time()
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(5.0)
+    try:
+        s.connect((HOST, PORT))
+        time.sleep(0.5)
+        # Pendant ce temps, une autre requête doit passer
+        r2 = send_raw("GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
+        ok2 = get_status(r2) == 200
+    finally:
+        s.close()
+    if ok2:
+        passed += 1
+        print(f"  {GREEN}✓{RESET} Connexion idle n'empêche pas les autres requêtes")
+    else:
+        failed += 1
+        print(f"  {RED}✗{RESET} Connexion idle bloque le serveur")
+    results.append((ok2, "Connexion idle non bloquante", 0, 0))
+
+    #Check valgrinds errors
+    serv_proc.send_signal(signal.SIGINT)
+    serv_proc.wait()
+    returncode = serv_proc.returncode
+    if (returncode == 42):
+        failed += 1
+        results.append((False, "Valgrind Error (check webserv_tester.log)", 42, 0))
+    elif (returncode != 0):
+        failed += 1
+        results.append((False, "Valgrind Error (check webserv_tester.log)", 42, 0))
+    else:
+        results.append((True, "Webserv has finished running without any errors", 0, 0))
+        passed += 1
+    transfer_files_data("complete.conf")
+
 else:
     failed += 1
-    print(f"  {RED}✗{RESET} Requête incomplète → hang détecté ({elapsed:.1f}s)")
-results.append((ok, "Requête incomplète sans hang", 0, 0))
+    results.append((False, "Failed to launch webserv: stopping tester here", ": \"Process canceled\"", ": \"Webserv running\""))
 
-# Connexion ouverte silencieuse
-start = time.time()
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.settimeout(5.0)
-try:
-    s.connect((HOST, PORT))
-    time.sleep(0.5)
-    # Pendant ce temps, une autre requête doit passer
-    r2 = send_raw("GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
-    ok2 = get_status(r2) == 200
-finally:
-    s.close()
-if ok2:
-    passed += 1
-    print(f"  {GREEN}✓{RESET} Connexion idle n'empêche pas les autres requêtes")
-else:
-    failed += 1
-    print(f"  {RED}✗{RESET} Connexion idle bloque le serveur")
-results.append((ok2, "Connexion idle non bloquante", 0, 0))
+if os.path.exists(tmp_file):
+    os.remove(tmp_file)
 
 
 # ── Résumé ────────────────────────────────────────────────────────────────────
@@ -361,5 +405,6 @@ if failed:
         if not ok:
             print(f"  - {name} (got {got}, expected {exp})")
     print()
+
 
 sys.exit(0 if failed == 0 else 1)
