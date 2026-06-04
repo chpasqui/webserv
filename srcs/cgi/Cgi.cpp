@@ -183,6 +183,7 @@ void Cgi::executeScript()
 	safeClose(stdoutPipe[WRITE_END]);
 	_pipeReadEnd = stdoutPipe[READ_END];
 	this->_pid = pid;
+	free(filename);
 }
 
 
