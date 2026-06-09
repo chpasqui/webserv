@@ -2,11 +2,11 @@
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-$name    = '';
-$message = '';
+$name    = htmlspecialchars($_POST['name']    ?? '');
+$message = htmlspecialchars($_POST['message'] ?? '');
 
 if ($method === 'POST') {
-    $raw  = file_get_contents('php://stdin');
+    $raw  = file_get_contents('php://input');   // au lieu de 'php://stdin'
     parse_str($raw, $data);
     $name    = htmlspecialchars($data['name']    ?? '');
     $message = htmlspecialchars($data['message'] ?? '');
