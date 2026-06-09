@@ -1,4 +1,4 @@
-This project has been created as part of the 42 curriculum by jrandet, hdougoud, chpasqui
+_This project has been created as part of the 42 curriculum by jrandet, hdougoud, chpasqui_
 
 # webserv
 
