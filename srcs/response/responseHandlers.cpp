@@ -33,8 +33,9 @@ void Response::handleGetMethod(Request& request){
         return;
     }
     if (!S_ISDIR(sb.st_mode)){
-        serveFile();
-        return ;
+        if (serveFile())
+            return ;
+        setSyscallError("serveFile: file can not open");
     }
     if (request.getPath()[request.getPath().size() - 1] != '/'){
         _statusCode = MOVED_PERMANENTLY;
@@ -63,10 +64,8 @@ void Response::handleGetMethod(Request& request){
  */
 bool Response::serveFile() {
     std::ifstream file(_internalPath.c_str());
-    if (!file.is_open()) {
-        setSyscallError("serveFile: file can not open");
+    if (!file.is_open())
         return false;
-    }
     std::ostringstream ss;
     ss << file.rdbuf();
     _body = ss.str();
