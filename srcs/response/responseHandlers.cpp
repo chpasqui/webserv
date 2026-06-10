@@ -14,11 +14,7 @@
  */
 void Response::handleGetMethod(Request& request){
     struct stat sb;
-    
-    if (request.getPath() == "/"){
-        serverSessionPage();
-        return ;
-    }
+
     if (request.getPath() == "/login.html" && !_session->data["user"].empty()){
         _statusCode = MOVED_PERMANENTLY;
         _headers["Location"] = "/";
@@ -71,6 +67,8 @@ bool Response::serveFile() {
     _body = ss.str();
     _statusCode = OK;
     _headers["Content-Type"] = extractContentType();
+    if (_session && _headers["Content-Type"] == "text/html")
+        applySessionTemplate(_body);
     return true;
 }
 

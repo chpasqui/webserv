@@ -10,16 +10,6 @@
 #include <string>
 #include <fstream>
 
-static std::string readFile(const std::string &path)
-{
-    std::ifstream f(path.c_str());
-    if (!f.is_open())
-        return "";
-    std::ostringstream ss;
-    ss << f.rdbuf();
-    return ss.str();
-}
-
 static void replaceAll(std::string &str, const std::string &from, const std::string &to)
 {
     size_t pos = 0;
@@ -30,32 +20,15 @@ static void replaceAll(std::string &str, const std::string &from, const std::str
     }
 }
 
-void Response::serverSessionPage()
+void Response::applySessionTemplate(std::string &html)
 {
-    std::string tmpl = readFile("www/index.html");
-
-    if (tmpl.empty())
-    {
-        _body = "<html><body><p>Session page unavailable</p></body></html>";
-        _statusCode = INTERNAL_SERVER_ERROR;
-        _headers["Content-Type"] = "text/html";
-        return;
-    }
-
     double sessionTime = std::difftime(std::time(NULL), _session->getCreatedAt());
-    std::string user        = _session->data["user"];
-    std::string sessionId   = _session->getId();
 
-    replaceAll(tmpl, "{{USER}}",         user);
-    replaceAll(tmpl, "{{SESSION_ID}}",   sessionId);
-    replaceAll(tmpl, "{{SESSION_TIME}}", intToString(sessionTime));
-    replaceAll(tmpl, "{{IS_NEW}}",       _isNewSession ? "true" : "false");
-
-    _body = tmpl;
-    _statusCode = OK;
-    _headers["Content-Type"] = "text/html";
+    replaceAll(html, "{{USER}}",         _session->data["user"]);
+    replaceAll(html, "{{SESSION_ID}}",   _session->getId());
+    replaceAll(html, "{{SESSION_TIME}}", intToString(sessionTime));
+    replaceAll(html, "{{IS_NEW}}",       _isNewSession ? "true" : "false");
 }
-
 
 void Response::handleLogin(Request& request){
     std::string body = request.getBody();

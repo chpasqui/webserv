@@ -67,7 +67,7 @@ class Response {
 		std::string getCgiExtension(void);
 		int 		getStatusCode(void) const;
 
-		void serverSessionPage();
+		void applySessionTemplate(std::string &html);
 		void handleLogin(Request& request);
 		void serverLogoutPage();
 };
